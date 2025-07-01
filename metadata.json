@@ -1,0 +1,6 @@
+{
+  "name": "Zen Editor",
+  "description": "A full-screen, distraction-free text editor that allows users to write and format text with ease. Features include styling options like bold, italics, lists, headings, and font size adjustments for a seamless writing experience.",
+  "requestFramePermissions": [],
+  "prompt": ""
+}
