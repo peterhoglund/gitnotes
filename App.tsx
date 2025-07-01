@@ -7,7 +7,7 @@ import AppShell from './components/layout/AppShell';
 import EditorToolbar from './components/editor/EditorToolbar';
 import EditorCanvas from './components/editor/EditorCanvas';
 import CodeBlockMenu from './components/editor/CodeBlockMenu';
-import DeviceAuthModal from './components/DeviceAuthModal';
+// import DeviceAuthModal from './components/DeviceAuthModal'; // Removed
 import { useEditorContext } from './hooks/useEditorContext';
 import { useTheme } from './hooks/useTheme';
 import { useCodeHighlight } from './hooks/useCodeHighlight';
@@ -90,7 +90,6 @@ const App: React.FC = () => {
 			<EditorProvider>
                 <GitHubProvider>
                     <ZenEditor />
-                    <DeviceAuthModal />
                 </GitHubProvider>
 			</EditorProvider>
 		</ThemeProvider>

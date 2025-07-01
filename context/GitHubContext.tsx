@@ -18,7 +18,6 @@ type GitHubState = {
   isLoading: boolean;
   isSaving: boolean;
   error: Error | null;
-  deviceAuthInfo: { user_code: string; verification_uri: string } | null;
   login: () => void;
   logout: () => void;
   loadFile: (file: gh.GitHubFile) => Promise<void>;
@@ -38,8 +37,6 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
-  const [authPolling, setAuthPolling] = useState<{ deviceCode: string; interval: number } | null>(null);
-  const [deviceAuthInfo, setDeviceAuthInfo] = useState<GitHubState['deviceAuthInfo']>(null);
 
   const clearState = useCallback(() => {
     setUser(null);
@@ -77,59 +74,39 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   }, [clearState]);
 
   useEffect(() => {
-    const savedToken = localStorage.getItem('gh_token');
-    if (savedToken) {
-      setToken(savedToken);
-      init(savedToken);
-    } else {
-      setIsLoading(false);
-    }
-  }, [init]);
-
-  const login = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const { device_code, interval, user_code, verification_uri } = await gh.getDeviceCode();
-      setDeviceAuthInfo({ user_code, verification_uri });
-      setAuthPolling({ deviceCode: device_code, interval });
-    } catch (e: any) {
-      console.error("GitHub sign-in failed:", e);
-      const friendlyError = new Error(
-          "Sign-in failed. This could be due to a network issue or browser security restrictions (CORS). This authentication method may not be suitable for a web application."
-      );
-      setError(friendlyError);
-      alert(friendlyError.message);
-      setAuthPolling(null);
-      setIsLoading(false);
-      setDeviceAuthInfo(null);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!authPolling) {
-        setDeviceAuthInfo(null);
-        return;
+    const handleAuth = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get('code');
+      const savedToken = localStorage.getItem('gh_token');
+      
+      if (code) {
+        window.history.replaceState({}, document.title, window.location.pathname);
+        setIsLoading(true);
+        try {
+          const { token: accessToken } = await gh.exchangeCodeForToken(code);
+          localStorage.setItem('gh_token', accessToken);
+          setToken(accessToken);
+          await init(accessToken);
+        } catch(e: any) {
+          console.error("Auth Error:", e);
+          setError(e);
+          setIsLoading(false);
+        }
+      } else if (savedToken) {
+        setToken(savedToken);
+        await init(savedToken);
+      } else {
+        setIsLoading(false);
+      }
     };
     
-    const poller = setInterval(async () => {
-      try {
-        const { access_token } = await gh.pollForToken(authPolling.deviceCode);
-        setAuthPolling(null);
-        setToken(access_token);
-        localStorage.setItem('gh_token', access_token);
-        await init(access_token);
-      } catch (e: any) {
-        if (e.message !== 'authorization_pending') {
-          console.error('Polling error', e);
-          setError(e);
-          setAuthPolling(null);
-        }
-      }
-    }, (authPolling.interval + 1) * 1000);
+    handleAuth();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-    return () => clearInterval(poller);
-  }, [authPolling, init]);
+  const login = useCallback(() => {
+    window.location.href = gh.getLoginUrl();
+  }, []);
 
   const logout = useCallback(() => {
     setToken(null);
@@ -258,10 +235,9 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     tree,
     activeFile,
     fileContent,
-    isLoading: isLoading || !!authPolling,
+    isLoading,
     isSaving,
     error,
-    deviceAuthInfo,
     login,
     logout,
     loadFile,

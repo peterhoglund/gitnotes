@@ -1,6 +1,8 @@
 // In a real app, this would be handled by an environment variable.
 const CLIENT_ID = 'e2b347201c13d6a6549a';
-const GH_OAUTH_URL = 'https://github.com/login/oauth';
+// A public gatekeeper for demo purposes.
+// In a real app, you would host your own.
+const GATEKEEPER_URL = 'https://gatekeeper.probot.dev';
 export const API_URL = 'https://api.github.com';
 
 // --- Types ---
@@ -10,18 +12,8 @@ export interface GitHubUser {
   name: string | null;
 }
 
-export interface DeviceCodeResponse {
-  device_code: string;
-  user_code: string;
-  verification_uri: string;
-  expires_in: number;
-  interval: number;
-}
-
 export interface AccessTokenResponse {
-  access_token: string;
-  token_type: string;
-  scope: string;
+  token: string;
 }
 
 export type GitHubFile = {
@@ -45,45 +37,30 @@ export type GitHubDir = {
 
 export type GitHubContent = GitHubFile | GitHubDir;
 
-// --- OAuth Device Flow ---
+// --- OAuth Web Application Flow ---
 
-export async function getDeviceCode(): Promise<DeviceCodeResponse> {
-  const response = await fetch(`${GH_OAUTH_URL}/device/code`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-    },
-    body: JSON.stringify({ client_id: CLIENT_ID, scope: 'repo' }),
-  });
-  if (!response.ok) throw new Error('Failed to get device code');
-  return response.json();
+export function getLoginUrl(): string {
+  const ghOauthUrl = 'https://github.com/login/oauth/authorize';
+  return `${ghOauthUrl}?client_id=${CLIENT_ID}&scope=repo`;
 }
 
-export async function pollForToken(deviceCode: string): Promise<AccessTokenResponse> {
-  const response = await fetch(`${GH_OAUTH_URL}/access_token`, {
-    method: 'POST',
+export async function exchangeCodeForToken(code: string): Promise<AccessTokenResponse> {
+  const response = await fetch(`${GATEKEEPER_URL}/authenticate/${code}`, {
+    method: 'GET',
     headers: {
-      'Content-Type': 'application/json',
       'Accept': 'application/json',
     },
-    body: JSON.stringify({
-      client_id: CLIENT_ID,
-      device_code: deviceCode,
-      grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
-    }),
   });
-  if (!response.ok) throw new Error('Polling for token failed');
+  if (!response.ok) {
+    throw new Error('Failed to exchange code for token');
+  }
   const data = await response.json();
-  if (data.error) {
-    if (data.error === 'authorization_pending') {
-      // This is expected, the caller should handle polling
-      throw new Error('authorization_pending');
-    }
-    throw new Error(data.error_description || 'An unknown error occurred');
+  if (!data.token) {
+    throw new Error('Token not found in gatekeeper response');
   }
   return data;
 }
+
 
 // --- GitHub API Helpers ---
 
