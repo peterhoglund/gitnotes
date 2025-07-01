@@ -88,12 +88,18 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
   const login = useCallback(async () => {
     setIsLoading(true);
+    setError(null);
     try {
       const { device_code, interval, user_code, verification_uri } = await gh.getDeviceCode();
       setDeviceAuthInfo({ user_code, verification_uri });
       setAuthPolling({ deviceCode: device_code, interval });
     } catch (e: any) {
-      setError(e);
+      console.error("GitHub sign-in failed:", e);
+      const friendlyError = new Error(
+          "Sign-in failed. This could be due to a network issue or browser security restrictions (CORS). This authentication method may not be suitable for a web application."
+      );
+      setError(friendlyError);
+      alert(friendlyError.message);
       setAuthPolling(null);
       setIsLoading(false);
       setDeviceAuthInfo(null);

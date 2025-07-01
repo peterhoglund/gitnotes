@@ -25,9 +25,19 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({ isSidePanelOpen }) => {
     };
   }, []);
 
-  const handleAction = (action: () => void) => {
-    action();
+  const handleLogin = () => {
+    login();
     setIsOpen(false);
+  };
+  
+  const handleLogout = () => {
+      logout();
+      setIsOpen(false);
+  };
+
+  const handleToggleTheme = () => {
+      toggleTheme();
+      setIsOpen(false);
   };
 
   const userName = user?.name || user?.login || 'Guest';
@@ -49,7 +59,7 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({ isSidePanelOpen }) => {
           
           <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400">Appearance</div>
           <button
-            onClick={() => handleAction(toggleTheme)}
+            onClick={handleToggleTheme}
             className="dropdown-item w-full text-left px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded-md flex items-center gap-3"
           >
             {theme === 'light' ? <MoonIcon /> : <SunIcon />}
@@ -60,14 +70,14 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({ isSidePanelOpen }) => {
 
           {user ? (
             <button
-                onClick={() => handleAction(logout)}
+                onClick={handleLogout}
                 className="dropdown-item w-full text-left px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded-md"
             >
                 Log Out
             </button>
           ) : (
             <button
-                onClick={() => handleAction(login)}
+                onClick={handleLogin}
                 disabled={isLoading}
                 className="dropdown-item w-full text-left px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded-md flex items-center gap-3 justify-center"
             >
