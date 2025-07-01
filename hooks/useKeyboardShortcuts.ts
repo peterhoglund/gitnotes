@@ -3,22 +3,12 @@ import { useFormatState } from './useFormatState';
 import { useCodeHighlight } from './useCodeHighlight';
 import { useEditorContext } from './useEditorContext';
 
-interface KeyboardShortcutsProps {
-  saveFile: () => Promise<void>;
-}
-
-export const useKeyboardShortcuts = ({ saveFile }: KeyboardShortcutsProps) => {
+export const useKeyboardShortcuts = () => {
     const { editorRef } = useEditorContext();
     const { updateFormatState, ensureParagraph } = useFormatState();
     const { highlightAll, highlightBlock } = useCodeHighlight();
 
     const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
-        if ((e.metaKey || e.ctrlKey) && e.key === 's') {
-			e.preventDefault();
-			saveFile();
-			return;
-		}
-
 		if ((e.metaKey || e.ctrlKey) && e.key === 'a') {
 			e.preventDefault();
 			if (editorRef.current) {
@@ -56,7 +46,7 @@ export const useKeyboardShortcuts = ({ saveFile }: KeyboardShortcutsProps) => {
 			document.execCommand('outdent');
 			updateFormatState();
 		}
-	}, [updateFormatState, highlightBlock, editorRef, saveFile]);
+	}, [updateFormatState, highlightBlock, editorRef]);
 
 	const handleKeyUp = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
 		updateFormatState();

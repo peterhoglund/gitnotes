@@ -1,13 +1,10 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect } from 'react';
 import { ThemeProvider } from './context/ThemeContext';
 import { EditorProvider } from './context/EditorContext';
-import { GitHubProvider } from './context/GitHubContext';
-import { useGitHub } from './hooks/useGitHub';
 import AppShell from './components/layout/AppShell';
 import EditorToolbar from './components/editor/EditorToolbar';
 import EditorCanvas from './components/editor/EditorCanvas';
 import CodeBlockMenu from './components/editor/CodeBlockMenu';
-// import DeviceAuthModal from './components/DeviceAuthModal'; // Removed
 import { useEditorContext } from './hooks/useEditorContext';
 import { useTheme } from './hooks/useTheme';
 import { useCodeHighlight } from './hooks/useCodeHighlight';
@@ -19,37 +16,17 @@ const ZenEditor: React.FC = () => {
     const { editorRef, editorWidth, setEditorWidth } = useEditorContext();
     const { theme } = useTheme();
     const { highlightAll } = useCodeHighlight();
+    const { handleKeyDown, handleKeyUp, handlePaste } = useKeyboardShortcuts();
     const { updateFormatState } = useFormatState();
 
-    const { 
-      fileContent, 
-      setActiveFileContent,
-      saveFile 
-    } = useGitHub();
-
-    const { handleKeyDown, handleKeyUp, handlePaste } = useKeyboardShortcuts({ saveFile });
-
-    // Effect to load file content into editor
-    useEffect(() => {
-        if (editorRef.current) {
-            const contentToLoad = fileContent ?? INITIAL_CONTENT;
-            if (editorRef.current.innerHTML !== contentToLoad) {
-                editorRef.current.innerHTML = contentToLoad;
-                highlightAll(editorRef.current);
-                updateFormatState();
-            }
-        }
-    }, [fileContent, highlightAll, updateFormatState, editorRef]);
-    
-    const handleContentChange = useCallback((e: React.FormEvent<HTMLDivElement>) => {
-       setActiveFileContent(e.currentTarget.innerHTML);
-    }, [setActiveFileContent]);
-
-
-    // Existing effects
     useEffect(() => {
         document.execCommand('styleWithCSS', false, 'true');
     }, []);
+    
+    useEffect(() => {
+        updateFormatState();
+        highlightAll(editorRef.current);
+    }, [theme, updateFormatState, highlightAll, editorRef]);
 
     useEffect(() => {
         // A short delay ensures the editor is fully rendered before initial highlighting.
@@ -61,7 +38,6 @@ const ZenEditor: React.FC = () => {
         }, 50);
     }, [highlightAll, updateFormatState, editorRef]);
 
-
     return (
         <AppShell>
             <main className="relative flex-grow flex flex-col overflow-hidden">
@@ -71,11 +47,11 @@ const ZenEditor: React.FC = () => {
                 <CodeBlockMenu />
                 <EditorCanvas
                     ref={editorRef}
+                    initialContent={INITIAL_CONTENT}
                     onSelectionChange={updateFormatState}
                     onKeyDown={handleKeyDown}
                     onKeyUp={handleKeyUp}
                     onPaste={handlePaste}
-                    onInput={handleContentChange}
                     editorWidth={editorWidth}
                     onEditorWidthChange={setEditorWidth}
                 />
@@ -88,9 +64,7 @@ const App: React.FC = () => {
 	return (
 		<ThemeProvider>
 			<EditorProvider>
-                <GitHubProvider>
-                    <ZenEditor />
-                </GitHubProvider>
+                <ZenEditor />
 			</EditorProvider>
 		</ThemeProvider>
 	);

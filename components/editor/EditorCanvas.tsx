@@ -5,7 +5,7 @@ interface EditorCanvasProps {
   onKeyDown: (event: React.KeyboardEvent<HTMLDivElement>) => void;
   onKeyUp: (event: React.KeyboardEvent<HTMLDivElement>) => void;
   onPaste: (event: React.ClipboardEvent<HTMLDivElement>) => void;
-  onInput: (event: React.FormEvent<HTMLDivElement>) => void;
+  initialContent: string;
   editorWidth: number;
   onEditorWidthChange: (width: number) => void;
 }
@@ -19,16 +19,25 @@ const EditorCanvas = forwardRef<HTMLDivElement, EditorCanvasProps>((
     onKeyDown, 
     onKeyUp, 
     onPaste, 
-    onInput,
+    initialContent, 
     editorWidth, 
     onEditorWidthChange 
   }, ref
 ) => {
+  const isInitialized = useRef(false);
   const [isResizing, setIsResizing] = useState(false);
   const editorContainerRef = useRef<HTMLDivElement>(null);
   const canvasWrapperRef = useRef<HTMLDivElement>(null);
   const [handlePositions, setHandlePositions] = useState({left: 0, right: 0});
   const isResizingRef = useRef(false);
+
+
+  useEffect(() => {
+    if (ref && typeof ref !== 'function' && ref.current && !isInitialized.current) {
+      ref.current.innerHTML = initialContent;
+      isInitialized.current = true;
+    }
+  }, [ref, initialContent]);
 
   useEffect(() => {
     const calculatePositions = () => {
@@ -125,7 +134,6 @@ const EditorCanvas = forwardRef<HTMLDivElement, EditorCanvasProps>((
           onKeyDown={onKeyDown}
           onKeyUp={onKeyUp}
           onPaste={onPaste}
-          onInput={onInput}
           className="prose max-w-none h-full w-full focus:outline-none p-4"
           suppressContentEditableWarning={true}
         />

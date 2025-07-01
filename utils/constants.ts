@@ -21,10 +21,21 @@ export const INITIAL_STATE: FormatState = {
 };
 
 export const INITIAL_CONTENT = `
-	<h1>Welcome to Zen Editor!</h1>
-	<p>This is your new document. Start typing here.</p>
-    <p>You can log in with your GitHub account via the profile menu in the bottom-left to save your files. A private repository named <code>web-docs</code> will be created for you automatically.</p>
-	<p>Enjoy your distraction-free writing experience!</p>
+	<h1>Title</h1>
+	<h2>Header</h2>
+	<h3>Subheader</h3>
+	<p>This is a paragraph of normal text. Use the toolbar to style your content.</p>
+	<h6>This is an example of small text, useful for notes or captions.</h6>
+<pre><code class="language-js">
+// This is a code block.
+// Hover over the top-right corner to change the language!
+function helloWorld() {
+  console.log("Hello, from the Zen Editor!");
+}
+
+helloWorld();
+</code></pre>
+	<p><b>New:</b> Try typing <code>-&nbsp;</code> or <code>1.&nbsp;</code> at the start of a line and press space to automatically create a list!</p>
 `;
 
 export const LANGUAGES = [

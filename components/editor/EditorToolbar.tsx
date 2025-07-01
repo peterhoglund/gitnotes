@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import ToolbarButton from '../ToolbarButton';
 import Dropdown from '../Dropdown';
 import ColorPicker from '../ColorPicker';
-import ToolbarSaveButton from '../ToolbarSaveButton';
 import {
   BoldIcon, ItalicIcon, UnderlineIcon, StrikethroughIcon, CodeIcon,
   ListIcon, ListOrderedIcon, AlignLeftIcon, AlignCenterIcon, AlignRightIcon,
@@ -41,9 +40,6 @@ const EditorToolbar = () => {
 
   return (
     <div className="toolbar-wrapper bg-white rounded-xl shadow-md p-2 flex items-center gap-x-1 text-gray-800">
-      <ToolbarSaveButton />
-      <div className="toolbar-divider h-6 border-l border-gray-300 mx-2"></div>
-      
       <Dropdown
         label="Style"
         items={BLOCK_TYPES}

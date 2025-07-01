@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTheme } from '../hooks/useTheme';
-import { useGitHub } from '../hooks/useGitHub';
-import { ProfileIcon, SunIcon, MoonIcon, GitHubIcon } from './icons';
+import { ProfileIcon, SunIcon, MoonIcon } from './icons';
 
 interface ProfileMenuProps {
   isSidePanelOpen: boolean;
@@ -9,8 +8,8 @@ interface ProfileMenuProps {
 
 const ProfileMenu: React.FC<ProfileMenuProps> = ({ isSidePanelOpen }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(true); // Mock login state
   const { theme, toggleTheme } = useTheme();
-  const { user, login, logout, isLoading } = useGitHub();
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -25,41 +24,32 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({ isSidePanelOpen }) => {
     };
   }, []);
 
-  const handleLogin = () => {
-    login();
-    setIsOpen(false);
-  };
-  
-  const handleLogout = () => {
-      logout();
-      setIsOpen(false);
+  const handleLoginToggle = () => {
+    setIsLoggedIn(prev => !prev);
+    setIsOpen(false); // Close menu after action
   };
 
-  const handleToggleTheme = () => {
-      toggleTheme();
-      setIsOpen(false);
+  const handleThemeToggle = () => {
+    toggleTheme();
+    setIsOpen(false); // Close menu after action
   };
-
-  const userName = user?.name || user?.login || 'Guest';
-  const userHandle = user?.login ? `@${user.login}` : 'Not logged in';
 
   return (
     <div className="relative" ref={menuRef}>
        {isOpen && (
         <div className="dropdown-panel absolute bottom-full left-0 mb-2 z-20 w-60 bg-white rounded-lg shadow-xl border border-gray-200 p-2">
-          {user && (
-            <div className="flex items-center p-2 mb-2 border-b border-gray-100 dark:border-zinc-700">
-               <img src={user.avatar_url} alt="GitHub Avatar" className="w-10 h-10 rounded-full" />
-                <div className="ml-3 flex-1 overflow-hidden">
-                  <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">{userName}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{userHandle}</p>
-                </div>
-            </div>
-          )}
-          
+          <div className="flex items-center p-2 mb-2 border-b border-gray-100 dark:border-zinc-700">
+             <div className="p-1.5 rounded-full flex items-center justify-center bg-gray-100 dark:bg-zinc-700 text-gray-600 dark:text-gray-300">
+                <ProfileIcon />
+              </div>
+              <div className="ml-3 flex-1">
+                <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">{isLoggedIn ? 'Jane Doe' : 'Guest'}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{isLoggedIn ? 'jane.doe@example.com' : 'Not logged in'}</p>
+              </div>
+          </div>
           <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400">Appearance</div>
           <button
-            onClick={handleToggleTheme}
+            onClick={handleThemeToggle}
             className="dropdown-item w-full text-left px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded-md flex items-center gap-3"
           >
             {theme === 'light' ? <MoonIcon /> : <SunIcon />}
@@ -68,23 +58,12 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({ isSidePanelOpen }) => {
           
           <div className="border-t border-gray-100 dark:border-zinc-700 my-2"></div>
 
-          {user ? (
-            <button
-                onClick={handleLogout}
-                className="dropdown-item w-full text-left px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded-md"
-            >
-                Log Out
-            </button>
-          ) : (
-            <button
-                onClick={handleLogin}
-                disabled={isLoading}
-                className="dropdown-item w-full text-left px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded-md flex items-center gap-3 justify-center"
-            >
-                <GitHubIcon />
-                <span>Sign in with GitHub</span>
-            </button>
-          )}
+          <button
+            onClick={handleLoginToggle}
+            className="dropdown-item w-full text-left px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded-md"
+          >
+            {isLoggedIn ? 'Log Out' : 'Log In'}
+          </button>
         </div>
       )}
       <button
@@ -93,17 +72,11 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({ isSidePanelOpen }) => {
         className={`profile-button w-full flex items-center p-2 rounded-md text-left ${isSidePanelOpen ? '' : 'justify-center'}`}
       >
         <div className="flex-shrink-0">
-          {user ? (
-            <img src={user.avatar_url} alt="GitHub Avatar" className="w-6 h-6 rounded-full" />
-          ) : (
-            <div className="w-6 h-6 flex items-center justify-center">
-              <ProfileIcon />
-            </div>
-          )}
+          <ProfileIcon />
         </div>
         {isSidePanelOpen && (
             <div className="ml-3 flex-1 overflow-hidden">
-                <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">{userName}</p>
+                <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">{isLoggedIn ? 'Jane Doe' : 'Guest'}</p>
             </div>
         )}
       </button>
