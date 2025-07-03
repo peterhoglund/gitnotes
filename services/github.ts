@@ -80,8 +80,20 @@ export const getUserProfile = (token: string): Promise<GitHubUser> => {
 	return apiFetch('/user', token);
 };
 
-export const getUserEmails = (token: string): Promise<{ email: string; primary: boolean }[]> => {
-	return apiFetch('/user/emails', token);
+export const getUserEmails = async (
+	token: string,
+): Promise<{ email: string; primary: boolean }[]> => {
+	try {
+		return await apiFetch('/user/emails', token);
+	} catch (error: any) {
+		if (error.message?.includes('Not Found')) {
+			console.warn(
+				'GET /user/emails returned 404 – token probably lacks "user:email" scope. Returning empty list.',
+			);
+			return [];
+		}
+		throw error;
+	}
 };
 
 // Encodes each part of a path, preserving slashes.
