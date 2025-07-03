@@ -49,8 +49,20 @@ export const getTokenScopes = async (token: string): Promise<string[]> => {
     }
 };
 
-export const getUserRepos = (token: string): Promise<Repository[]> => {
-    return apiFetch('/user/repos?sort=pushed&per_page=100', token);
+export const getUserRepos = async (token: string): Promise<Repository[]> => {
+    try {
+        const repos = await apiFetch('/user/repos?sort=pushed&per_page=100', token);
+        return repos || [];
+    } catch (error: any) {
+        // The GitHub API might return 404 if the user has no repos.
+        // Instead of throwing an error, we'll treat it as an empty list.
+        if (error.message && error.message.includes('Not Found')) {
+            console.warn("GET /user/repos returned 404. This might mean the user has no repositories. Returning empty list.");
+            return [];
+        }
+        // For other errors (like auth), re-throw.
+        throw error;
+    }
 };
 
 export const createRepo = (token: string, name: string): Promise<Repository> => {
