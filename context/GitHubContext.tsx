@@ -181,7 +181,8 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         setError(null);
         try {
             const contents = await api.getRepoContents(token, repo.full_name, '');
-            setFileTree(updateNodeInTree(contents, '', {})); // Initial sort
+            const filteredContents = contents.filter(item => !item.name.startsWith('.'));
+            setFileTree(updateNodeInTree(filteredContents, '', {})); // Initial sort and filter
             setActiveFile(null);
         } catch (err: any) {
             setError(err.message);
@@ -322,7 +323,8 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
              setFileTree(currentTree => updateNodeInTree(currentTree, path, { isLoading: true, isOpen: true }));
             try {
                 const contents = await api.getRepoContents(token, selectedRepo.full_name, path);
-                setFileTree(currentTree => updateNodeInTree(currentTree, path, { children: contents, isLoading: false }));
+                const filteredContents = contents.filter(item => !item.name.startsWith('.'));
+                setFileTree(currentTree => updateNodeInTree(currentTree, path, { children: filteredContents, isLoading: false }));
             } catch (err: any) {
                 setError(err.message);
                 setFileTree(currentTree => updateNodeInTree(currentTree, path, { isLoading: false, isOpen: false }));
@@ -336,10 +338,11 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         const parentPath = path.includes('/') ? path.substring(0, path.lastIndexOf('/')) : '';
         try {
             const contents = await api.getRepoContents(token, selectedRepo.full_name, parentPath);
+            const filteredContents = contents.filter(item => !item.name.startsWith('.'));
             if (parentPath === '') {
-                setFileTree(updateNodeInTree(contents, '', {}));
+                setFileTree(updateNodeInTree(filteredContents, '', {}));
             } else {
-                setFileTree(currentTree => updateNodeInTree(currentTree, parentPath, { children: contents, isLoading: false, isOpen: true }));
+                setFileTree(currentTree => updateNodeInTree(currentTree, parentPath, { children: filteredContents, isLoading: false, isOpen: true }));
             }
         } catch (err: any) {
             setError(err.message);
@@ -386,6 +389,7 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             if (node.type === 'dir') {
                 const itemsToDelete: { path: string; sha: string }[] = [];
                 const collectItems = async (path: string) => {
+                    // Important: Do not filter dotfiles here, as we need to delete them.
                     const contents = await api.getRepoContents(token, selectedRepo.full_name, path);
                     for (const item of contents) {
                         if (item.type === 'dir') {
