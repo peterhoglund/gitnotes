@@ -5,6 +5,7 @@ const GITHUB_API_BASE = 'https://api.github.com';
 
 const apiFetchWithHeaders = async (url: string, token: string, options: RequestInit = {}) => {
 	const response = await fetch(`${GITHUB_API_BASE}${url}`, {
+		cache: 'no-store',
 		...options,
 		headers: {
 			...options.headers,
