@@ -1,4 +1,3 @@
-
 import { Repository, GitHubUser, RepoContentNode, FileContent } from '../types/github';
 
 const GITHUB_API_BASE = 'https://api.github.com';
@@ -88,12 +87,30 @@ export const getUserEmails = (token: string): Promise<{email: string, primary: b
     return apiFetch('/user/emails', token);
 }
 
-export const getRepoContents = (token: string, repoFullName: string, path: string): Promise<RepoContentNode[]> => {
-    return apiFetch(`/repos/${repoFullName}/contents/${encodeURIComponent(path)}`, token);
+// Encodes each part of a path, preserving slashes.
+const encodePath = (p: string) =>
+	p
+		.split('/')
+		.map(encodeURIComponent)
+		.join('/');
+
+
+export const getRepoContents = async (token: string, repoFullName: string, path: string): Promise<RepoContentNode[]> => {
+    try {
+        const contents = await apiFetch(`/repos/${repoFullName}/contents/${encodePath(path)}`, token);
+        return contents || [];
+    } catch (error: any) {
+        // If a repo is empty, or a directory is empty, the contents endpoint returns 404. Treat this as an empty directory.
+        if (error.message && error.message.includes('Not Found')) {
+            console.warn(`GET /repos/${repoFullName}/contents/${path} returned 404. This might be an empty repository or directory. Returning empty list.`);
+            return [];
+        }
+        throw error;
+    }
 };
 
 export const getFileContent = (token: string, repoFullName: string, path: string): Promise<FileContent> => {
-    return apiFetch(`/repos/${repoFullName}/contents/${encodeURIComponent(path)}`, token);
+    return apiFetch(`/repos/${repoFullName}/contents/${encodePath(path)}`, token);
 };
 
 export const updateFile = async (token: string, repoFullName: string, path: string, content: string, sha?: string): Promise<{content: RepoContentNode}> => {
@@ -107,7 +124,7 @@ export const updateFile = async (token: string, repoFullName: string, path: stri
         body.sha = sha;
     }
     
-    return apiFetch(`/repos/${repoFullName}/contents/${encodeURIComponent(path)}`, token, {
+    return apiFetch(`/repos/${repoFullName}/contents/${encodePath(path)}`, token, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
