@@ -41,6 +41,9 @@ export const getUserRepos = (token: string): Promise<Repository[]> => {
 export const createRepo = (token: string, name: string): Promise<Repository> => {
     return apiFetch('/user/repos', token, {
         method: 'POST',
+        headers: { // Explicitly set Content-Type for POST requests with a body.
+            'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
             name,
             private: true,
