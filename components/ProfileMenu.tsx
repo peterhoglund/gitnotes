@@ -30,6 +30,50 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({ isSidePanelOpen }) => {
     setIsOpen(false);
   }, []);
 
+  const handleLogin = useCallback(() => {
+    setAuthError(null);
+    if (typeof netlify === 'undefined') {
+        setAuthError('Authentication provider is not available.');
+        return;
+    }
+    const authenticator = new netlify.default({});
+    authenticator.authenticate(
+      { provider: 'github', scope: 'read:user user:email' },
+      (err: Error | null, data: { token: string } | null) => {
+        setIsOpen(false);
+        if (err || !data) {
+          const errorMessage = 'GitHub authentication failed: ' + (err?.message || 'Unknown error');
+          setAuthError(errorMessage);
+          console.error(errorMessage);
+          return;
+        }
+        localStorage.setItem('gh_token', data.token);
+        setToken(data.token);
+      }
+    );
+  }, []);
+
+  const handleSwitchAccount = useCallback(() => {
+    setIsOpen(false);
+
+    localStorage.removeItem('gh_token');
+    setToken(null);
+    setUser(null);
+
+    const logoutWindow = window.open('https://github.com/logout', '_blank', 'width=600,height=400');
+    
+    const startTime = Date.now();
+    const timeout = 30000; // 30 seconds
+
+    const timer = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        if ((logoutWindow && logoutWindow.closed) || elapsed > timeout) {
+            clearInterval(timer);
+            handleLogin();
+        }
+    }, 500);
+  }, [handleLogin]);
+
   useEffect(() => {
     if (token) {
       const fetchUserData = async () => {
@@ -81,29 +125,6 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({ isSidePanelOpen }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleLogin = () => {
-    setAuthError(null);
-    if (typeof netlify === 'undefined') {
-        setAuthError('Authentication provider is not available.');
-        return;
-    }
-    const authenticator = new netlify.default({});
-    authenticator.authenticate(
-      { provider: 'github', scope: 'read:user user:email' },
-      (err: Error | null, data: { token: string } | null) => {
-        setIsOpen(false);
-        if (err || !data) {
-          const errorMessage = 'GitHub authentication failed: ' + (err?.message || 'Unknown error');
-          setAuthError(errorMessage);
-          console.error(errorMessage);
-          return;
-        }
-        localStorage.setItem('gh_token', data.token);
-        setToken(data.token);
-      }
-    );
-  };
-
   const handleThemeToggle = () => {
     toggleTheme();
     setIsOpen(false);
@@ -114,7 +135,7 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({ isSidePanelOpen }) => {
   return (
     <div className="relative" ref={menuRef}>
        {isOpen && (
-        <div className="dropdown-panel absolute bottom-full left-0 mb-2 z-20 w-60 bg-white rounded-lg shadow-xl border border-gray-200 p-2">
+        <div className="dropdown-panel absolute bottom-full left-0 mb-2 z-20 w-60 bg-white dark:bg-zinc-800 rounded-lg shadow-xl border border-gray-200 dark:border-zinc-700 p-2">
           {isLoggedIn ? (
             <>
               <div className="flex items-center p-2 mb-2 border-b border-gray-100 dark:border-zinc-700">
@@ -143,7 +164,7 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({ isSidePanelOpen }) => {
           <div className="px-2 pt-1.5 pb-1 text-xs font-semibold text-gray-500 dark:text-gray-400">Appearance</div>
           <button
             onClick={handleThemeToggle}
-            className="dropdown-item w-full text-left px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded-md flex items-center gap-3"
+            className="dropdown-item w-full text-left px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-zinc-700 rounded-md flex items-center gap-3"
           >
             {theme === 'light' ? <MoonIcon /> : <SunIcon />}
             <span>Switch to {theme === 'light' ? 'Dark' : 'Light'} Mode</span>
@@ -153,8 +174,14 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({ isSidePanelOpen }) => {
             <>
               <div className="border-t border-gray-100 dark:border-zinc-700 my-2"></div>
               <button
+                onClick={handleSwitchAccount}
+                className="dropdown-item w-full text-left px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-zinc-700 rounded-md"
+              >
+                Switch GitHub Account
+              </button>
+              <button
                 onClick={handleLogout}
-                className="dropdown-item w-full text-left px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded-md"
+                className="dropdown-item w-full text-left px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-zinc-700 rounded-md"
               >
                 Log Out
               </button>
