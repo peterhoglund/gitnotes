@@ -3,15 +3,25 @@ import React, { useState } from 'react';
 import ProfileMenu from '../ProfileMenu';
 import { FileTree } from '../FileTree';
 import RepoSelector from '../RepoSelector';
+import ConnectRepo from '../ConnectRepo';
 import { SidebarOpenIcon, SidebarCloseIcon } from '../icons';
 import { useGitHub } from '../../hooks/useGitHub';
 
 const SidePanel = () => {
     const [isOpen, setIsOpen] = useState(true);
-    const { user, selectedRepo } = useGitHub();
+    const { user, selectedRepo, tokenScopes } = useGitHub();
 
-    const showFileTree = user && selectedRepo;
-    const showRepoSelector = user && !selectedRepo;
+    const hasRepoScope = tokenScopes.includes('repo');
+    const showConnectRepo = user && !hasRepoScope;
+    const showRepoSelector = user && hasRepoScope && !selectedRepo;
+    const showFileTree = user && hasRepoScope && selectedRepo;
+
+    const renderContent = () => {
+        if (showConnectRepo) return <ConnectRepo isOpen={isOpen} />;
+        if (showRepoSelector) return <RepoSelector isOpen={isOpen} />;
+        if (showFileTree) return <FileTree isOpen={isOpen} />;
+        return null; // Default empty state
+    }
 
     return (
         <aside className={`side-panel flex-shrink-0 flex flex-col transition-all duration-300 ${isOpen ? 'w-64' : 'w-20'}`}>
@@ -27,8 +37,7 @@ const SidePanel = () => {
             </header>
 
             <nav className="flex-grow overflow-y-auto overflow-x-hidden">
-                {showRepoSelector && <RepoSelector isOpen={isOpen} />}
-                {showFileTree && <FileTree isOpen={isOpen} repoName={selectedRepo.full_name} />}
+                {renderContent()}
             </nav>
 
             <footer className="side-panel-footer p-2 flex-shrink-0">

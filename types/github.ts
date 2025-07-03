@@ -18,3 +18,21 @@ export interface Repository {
   description: string | null;
   updated_at: string;
 }
+
+// Represents a file or directory in the file tree.
+export interface RepoContentNode {
+  name: string;
+  path: string;
+  sha: string;
+  type: 'file' | 'dir';
+  // Properties for interactive tree
+  children?: RepoContentNode[];
+  isOpen?: boolean;
+  isLoading?: boolean;
+}
+
+// Represents the response when fetching a single file's content.
+export interface FileContent extends RepoContentNode {
+  content: string; // Base64 encoded string
+  encoding: 'base64';
+}

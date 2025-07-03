@@ -46,6 +46,7 @@ export const RefreshCwIcon = ({ className = '' }) => <i className={`fa-solid fa-
 export const BookIcon = () => <i className="fa-solid fa-book fa-fw" style={{...faStyle, fontSize: '16px', width: 'auto'}} aria-hidden="true"></i>;
 export const PlusIcon = () => <i className="fa-solid fa-plus fa-fw" style={{...faStyle, fontSize: '16px'}} aria-hidden="true"></i>;
 export const LockIcon = () => <i className="fa-solid fa-lock fa-fw" style={{...faStyle, fontSize: '14px', width: 'auto', color: 'inherit'}} aria-hidden="true"></i>;
+export const SaveIcon = () => <i className="fa-solid fa-save fa-fw" style={{...faStyle, fontSize: '16px'}} aria-hidden="true"></i>;
 
 
 export const BlockBackgroundColorIcon = () => (

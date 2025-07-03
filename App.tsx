@@ -3,6 +3,7 @@ import React, { useEffect } from 'react';
 import { ThemeProvider } from './context/ThemeContext';
 import { EditorProvider } from './context/EditorContext';
 import { GitHubProvider } from './context/GitHubContext';
+import { useGitHub } from './hooks/useGitHub';
 import AppShell from './components/layout/AppShell';
 import EditorToolbar from './components/editor/EditorToolbar';
 import EditorCanvas from './components/editor/EditorCanvas';
@@ -12,7 +13,6 @@ import { useTheme } from './hooks/useTheme';
 import { useCodeHighlight } from './hooks/useCodeHighlight';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useFormatState } from './hooks/useFormatState';
-import { INITIAL_CONTENT } from './utils/constants';
 
 const ZenEditor: React.FC = () => {
     const { editorRef, editorWidth, setEditorWidth } = useEditorContext();
@@ -20,6 +20,7 @@ const ZenEditor: React.FC = () => {
     const { highlightAll } = useCodeHighlight();
     const { handleKeyDown, handleKeyUp, handlePaste } = useKeyboardShortcuts();
     const { updateFormatState } = useFormatState();
+    const { activeFile, initialContent } = useGitHub();
 
     useEffect(() => {
         document.execCommand('styleWithCSS', false, 'true');
@@ -31,14 +32,22 @@ const ZenEditor: React.FC = () => {
     }, [theme, updateFormatState, highlightAll, editorRef]);
 
     useEffect(() => {
-        // A short delay ensures the editor is fully rendered before initial highlighting.
-        setTimeout(() => {
-            if(editorRef.current) {
-                highlightAll(editorRef.current);
-                updateFormatState();
+        if (editorRef.current) {
+            const newContent = activeFile ? activeFile.content : initialContent;
+            // Only update if content is actually different to avoid resetting cursor
+            if (editorRef.current.innerHTML !== newContent) {
+                editorRef.current.innerHTML = newContent;
             }
-        }, 50);
-    }, [highlightAll, updateFormatState, editorRef]);
+            // A short delay ensures the editor is fully rendered before highlighting.
+            setTimeout(() => {
+                if(editorRef.current) {
+                    highlightAll(editorRef.current);
+                    updateFormatState();
+                }
+            }, 50);
+        }
+    }, [activeFile, initialContent, editorRef, highlightAll, updateFormatState]);
+
 
     return (
         <AppShell>
@@ -48,8 +57,11 @@ const ZenEditor: React.FC = () => {
                 </div>
                 <CodeBlockMenu />
                 <EditorCanvas
+                    // Use a key to force re-mount when switching files.
+                    // This is crucial for correctly setting initial content in an uncontrolled component.
+                    key={activeFile?.path || 'initial'}
                     ref={editorRef}
-                    initialContent={INITIAL_CONTENT}
+                    initialContent={activeFile ? activeFile.content : initialContent}
                     onSelectionChange={updateFormatState}
                     onKeyDown={handleKeyDown}
                     onKeyUp={handleKeyUp}
