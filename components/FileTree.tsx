@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { FolderIcon, FolderOpenIcon, FileIcon, ChevronDownIcon, ChevronRightIcon } from './icons';
+import { FolderIcon, FolderOpenIcon, FileIcon, ChevronDownIcon, ChevronRightIcon, BookIcon } from './icons';
 
 type TreeNode = {
   id: string;
@@ -40,7 +41,7 @@ const fileSystemData: TreeNode[] = [
 ];
 
 
-export const FileTree: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
+export const FileTree: React.FC<{ isOpen: boolean; repoName?: string }> = ({ isOpen, repoName }) => {
     const [expandedFolders, setExpandedFolders] = useState(new Set(['1', '4']));
     const [activeFile, setActiveFile] = useState<string | null>('5');
 
@@ -104,8 +105,17 @@ export const FileTree: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
     };
 
     return (
-        <div>
-            <div className={`px-2 text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2 transition-opacity duration-200 ${isOpen ? 'opacity-100' : 'opacity-0'}`}>{isOpen ? 'FILES' : ''}</div>
+        <div className="py-4 px-2">
+            {isOpen && (
+                repoName ? (
+                    <div className="px-2 text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2 flex items-center gap-2" title={`Connected to ${repoName}`}>
+                        <BookIcon />
+                        <span className="truncate">{repoName}</span>
+                    </div>
+                ) : (
+                    <div className={`px-2 text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2 transition-opacity duration-200 ${isOpen ? 'opacity-100' : 'opacity-0'}`}>FILES</div>
+                )
+            )}
             {fileSystemData.map(node => renderNode(node, 0))}
         </div>
     );

@@ -1,6 +1,8 @@
+
 import React, { useEffect } from 'react';
 import { ThemeProvider } from './context/ThemeContext';
 import { EditorProvider } from './context/EditorContext';
+import { GitHubProvider } from './context/GitHubContext';
 import AppShell from './components/layout/AppShell';
 import EditorToolbar from './components/editor/EditorToolbar';
 import EditorCanvas from './components/editor/EditorCanvas';
@@ -62,11 +64,13 @@ const ZenEditor: React.FC = () => {
 
 const App: React.FC = () => {
 	return (
-		<ThemeProvider>
-			<EditorProvider>
-                <ZenEditor />
-			</EditorProvider>
-		</ThemeProvider>
+		<GitHubProvider>
+			<ThemeProvider>
+				<EditorProvider>
+					<ZenEditor />
+				</EditorProvider>
+			</ThemeProvider>
+		</GitHubProvider>
 	);
 };
 
