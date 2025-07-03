@@ -1,3 +1,4 @@
+
 import { Repository, GitHubUser, RepoContentNode, FileContent } from '../types/github';
 
 const GITHUB_API_BASE = 'https://api.github.com';
@@ -149,6 +150,41 @@ export const updateFile = async (
 
 	return apiFetch(buildContentsUrl(repoFullName, path), token, {
 		method: 'PUT',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify(body),
+	});
+};
+
+export const createFile = async (
+	token: string,
+	repoFullName: string,
+	path: string,
+	content: string,
+): Promise<{ content: RepoContentNode }> => {
+	const body = {
+		message: `feat: create ${path}`,
+		content: btoa(unescape(encodeURIComponent(content))),
+	};
+
+	return apiFetch(buildContentsUrl(repoFullName, path), token, {
+		method: 'PUT',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify(body),
+	});
+};
+
+export const deleteFile = async (
+	token: string,
+	repoFullName: string,
+	path: string,
+	sha: string,
+): Promise<void> => {
+	const body = {
+		message: `feat: delete ${path}`,
+		sha,
+	};
+	await apiFetch(buildContentsUrl(repoFullName, path), token, {
+		method: 'DELETE',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify(body),
 	});

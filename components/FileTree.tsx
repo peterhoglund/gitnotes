@@ -1,8 +1,11 @@
 
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useGitHub } from '../hooks/useGitHub';
 import { useEditorContext } from '../hooks/useEditorContext';
-import { FolderIcon, FolderOpenIcon, FileIcon, ChevronDownIcon, ChevronRightIcon, BookIcon, RefreshCwIcon, SaveIcon } from './icons';
+import { 
+    FolderIcon, FolderOpenIcon, FileIcon, ChevronDownIcon, ChevronRightIcon, BookIcon, RefreshCwIcon, SaveIcon,
+    FilePlusIcon, FolderPlusIcon, TrashIcon, EllipsisVerticalIcon
+} from './icons';
 import { RepoContentNode } from '../types/github';
 
 
@@ -16,12 +19,55 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
         loadFile, 
         saveFile,
         toggleFolder,
+        createFile,
+        createFolder,
+        deleteNode,
     } = useGitHub();
     const { editorRef } = useEditorContext();
+    const [contextMenuPath, setContextMenuPath] = useState<string | null>(null);
+    const menuRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+                setContextMenuPath(null);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     const handleSave = () => {
         if (editorRef.current && activeFile) {
             saveFile(editorRef.current.innerHTML);
+        }
+    };
+
+    const handleCreate = async (type: 'file' | 'folder') => {
+        const name = window.prompt(`Enter name for new ${type}:`);
+        if (!name || name.trim() === '') return;
+        if (name.includes('/')) {
+            alert('Name cannot contain slashes.');
+            return;
+        }
+
+        const path = name; // For now, create at root.
+
+        try {
+            if (type === 'file') {
+                await createFile(path);
+            } else {
+                await createFolder(path);
+            }
+        } catch (e) {
+            // Error is handled and displayed by the context
+        }
+    };
+
+    const handleRemove = (node: RepoContentNode) => {
+        const confirmDelete = window.confirm(`Are you sure you want to delete "${node.name}"? This action cannot be undone.`);
+        if (confirmDelete) {
+            deleteNode(node);
         }
     };
     
@@ -29,9 +75,10 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
         const isFolder = node.type === 'dir';
         const isExpanded = isFolder && node.isOpen;
         const isActive = !isFolder && activeFile?.path === node.path;
+        const showContextMenu = contextMenuPath === node.path;
 
         return (
-            <div key={node.path}>
+            <div key={node.path} className="relative group">
                 <div 
                     className={`file-tree-item flex items-center text-sm py-1.5 my-0.5 rounded-md cursor-pointer text-gray-700 dark:text-gray-300 ${isActive ? 'active' : ''}`}
                     style={ isOpen ? { paddingLeft: `${level * 16 + 8}px` } : {justifyContent: 'center', paddingLeft: '8px'} }
@@ -53,7 +100,41 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
                     </div>
 
                     {isOpen && <span className="ml-1 truncate flex-1">{node.name}</span>}
+
+                    {isOpen && (
+                        <button
+                            className="ml-auto mr-1 p-1 rounded hover:bg-gray-300 dark:hover:bg-zinc-700 opacity-0 group-hover:opacity-100 focus:opacity-100"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setContextMenuPath(node.path === contextMenuPath ? null : node.path);
+                            }}
+                            title="More options"
+                        >
+                            <EllipsisVerticalIcon />
+                        </button>
+                    )}
                 </div>
+
+                {showContextMenu && isOpen && (
+                     <div
+                        ref={menuRef}
+                        className="dropdown-panel absolute z-20 right-2 mt-0 w-40 bg-white dark:bg-zinc-800 rounded-lg shadow-xl border border-gray-200 dark:border-zinc-700 p-1"
+                        style={{ top: '100%'}}
+                    >
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setContextMenuPath(null);
+                                handleRemove(node);
+                            }}
+                            className="dropdown-item w-full text-left px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/50 rounded-md flex items-center gap-3"
+                        >
+                            <TrashIcon /> <span>Remove</span>
+                        </button>
+                    </div>
+                )}
+
+
                 {isFolder && isExpanded && isOpen && (
                     <div>
                         {node.isLoading && <div className="pl-12 py-1"><RefreshCwIcon className="animate-spin" /></div>}
@@ -86,6 +167,22 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
                 >
                     <BookIcon />
                     <span className="truncate flex-1">{selectedRepo.full_name}</span>
+                    <button
+                        onClick={() => handleCreate('file')}
+                        disabled={isSaving}
+                        className="p-1 rounded-md hover:bg-gray-200 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="New File"
+                    >
+                        <FilePlusIcon />
+                    </button>
+                     <button
+                        onClick={() => handleCreate('folder')}
+                        disabled={isSaving}
+                        className="p-1 rounded-md hover:bg-gray-200 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="New Folder"
+                    >
+                        <FolderPlusIcon />
+                    </button>
                     <button 
                         onClick={handleSave}
                         disabled={!activeFile || isSaving}

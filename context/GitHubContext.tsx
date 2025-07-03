@@ -23,6 +23,15 @@ const updateNodeInTree = (nodes: RepoContentNode[], path: string, updates: Parti
     });
 };
 
+const removeNodeFromTree = (nodes: RepoContentNode[], path: string): RepoContentNode[] => {
+    return nodes.filter(node => node.path !== path).map(node => {
+        if (node.children) {
+            return { ...node, children: removeNodeFromTree(node.children, path) };
+        }
+        return node;
+    });
+};
+
 interface GitHubContextType {
     token: string | null;
     user: GitHubUser | null;
@@ -46,6 +55,9 @@ interface GitHubContextType {
     loadFile: (path: string) => Promise<void>;
     saveFile: (content: string) => Promise<void>;
     toggleFolder: (path: string) => Promise<void>;
+    createFile: (path: string) => Promise<void>;
+    createFolder: (path: string) => Promise<void>;
+    deleteNode: (node: RepoContentNode) => Promise<void>;
 }
 
 export const GitHubContext = createContext<GitHubContextType | undefined>(undefined);
@@ -318,11 +330,98 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         }
     }, [token, selectedRepo, fileTree]);
 
+    const refreshPath = useCallback(async (path: string) => {
+        if (!token || !selectedRepo) return;
+        
+        const parentPath = path.includes('/') ? path.substring(0, path.lastIndexOf('/')) : '';
+        try {
+            const contents = await api.getRepoContents(token, selectedRepo.full_name, parentPath);
+            if (parentPath === '') {
+                setFileTree(updateNodeInTree(contents, '', {}));
+            } else {
+                setFileTree(currentTree => updateNodeInTree(currentTree, parentPath, { children: contents, isLoading: false, isOpen: true }));
+            }
+        } catch (err: any) {
+            setError(err.message);
+        }
+    }, [token, selectedRepo]);
+
+    const createFile = useCallback(async (path: string) => {
+        if (!token || !selectedRepo) return;
+        setIsSaving(true);
+        setError(null);
+        try {
+            await api.createFile(token, selectedRepo.full_name, path, '<!-- New file -->');
+            await refreshPath(path);
+        } catch (err: any) {
+            setError(err.message);
+            throw err;
+        } finally {
+            setIsSaving(false);
+        }
+    }, [token, selectedRepo, refreshPath]);
+
+    const createFolder = useCallback(async (path: string) => {
+        if (!token || !selectedRepo) return;
+        const gitkeepPath = `${path}/.gitkeep`;
+        setIsSaving(true);
+        setError(null);
+        try {
+            await api.createFile(token, selectedRepo.full_name, gitkeepPath, '');
+            await refreshPath(path);
+        } catch(err: any) {
+            setError(err.message);
+            throw err;
+        } finally {
+            setIsSaving(false);
+        }
+    }, [token, selectedRepo, refreshPath]);
+
+    const deleteNode = useCallback(async (node: RepoContentNode) => {
+        if (!token || !selectedRepo) return;
+        setIsSaving(true);
+        setError(null);
+
+        try {
+            if (node.type === 'dir') {
+                const itemsToDelete: { path: string; sha: string }[] = [];
+                const collectItems = async (path: string) => {
+                    const contents = await api.getRepoContents(token, selectedRepo.full_name, path);
+                    for (const item of contents) {
+                        if (item.type === 'dir') {
+                            await collectItems(item.path);
+                        } else {
+                            itemsToDelete.push({ path: item.path, sha: item.sha });
+                        }
+                    }
+                };
+                await collectItems(node.path);
+                
+                for (const item of itemsToDelete.reverse()) { // Delete from deepest first
+                    await api.deleteFile(token, selectedRepo.full_name, item.path, item.sha);
+                }
+            } else { // file
+                await api.deleteFile(token, selectedRepo.full_name, node.path, node.sha);
+            }
+
+            if (activeFile?.path.startsWith(node.path)) {
+                setActiveFile(null);
+            }
+            
+            await refreshPath(node.path);
+
+        } catch (err: any) {
+            setError(err.message);
+            throw err;
+        } finally {
+            setIsSaving(false);
+        }
+    }, [token, selectedRepo, activeFile, refreshPath]);
 
     const value = {
         token, user, repositories, selectedRepo, isLoading, isSaving, error, tokenScopes, fileTree, activeFile, initialContent: INITIAL_CONTENT,
         login, logout, switchAccount, connectRepoAccess, selectRepo, clearRepoSelection, createAndSelectRepo,
-        loadFile, saveFile, toggleFolder
+        loadFile, saveFile, toggleFolder, createFile, createFolder, deleteNode
     };
 
     return (
