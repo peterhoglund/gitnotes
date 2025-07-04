@@ -55,7 +55,7 @@ interface GitHubContextType {
     loadFile: (path: string) => Promise<void>;
     saveFile: (content: string) => Promise<void>;
     toggleFolder: (path: string) => Promise<void>;
-    createFile: (path: string) => Promise<void>;
+    createFile: (path: string, content?: string) => Promise<void>;
     createFolder: (path: string) => Promise<void>;
     deleteNode: (node: RepoContentNode) => Promise<void>;
 }
@@ -349,12 +349,12 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         }
     }, [token, selectedRepo]);
 
-    const createFile = useCallback(async (path: string) => {
+    const createFile = useCallback(async (path: string, content = '<!-- New file -->') => {
         if (!token || !selectedRepo) return;
         setIsSaving(true);
         setError(null);
         try {
-            await api.createFile(token, selectedRepo.full_name, path, '<!-- New file -->');
+            await api.createFile(token, selectedRepo.full_name, path, content);
             await refreshPath(path);
         } catch (err: any) {
             setError(err.message);

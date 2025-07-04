@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import ToolbarButton from '../ToolbarButton';
 import Dropdown from '../Dropdown';
@@ -6,9 +7,11 @@ import {
   BoldIcon, ItalicIcon, UnderlineIcon, StrikethroughIcon, CodeIcon,
   ListIcon, ListOrderedIcon, AlignLeftIcon, AlignCenterIcon, AlignRightIcon,
   AlignJustifyIcon, EllipsisVerticalIcon, TextColorIcon, HighlighterIcon, BlockBackgroundColorIcon,
+  SaveIcon, RefreshCwIcon,
 } from '../icons';
 import { useEditorContext } from '../../hooks/useEditorContext';
 import { useFormatState } from '../../hooks/useFormatState';
+import { useGitHub } from '../../hooks/useGitHub';
 
 const BLOCK_TYPES = [
   { value: 'h1', label: 'Title' },
@@ -20,8 +23,9 @@ const BLOCK_TYPES = [
 ];
 
 const EditorToolbar = () => {
-  const { formatState } = useEditorContext();
+  const { formatState, editorRef } = useEditorContext();
   const { handleCommand } = useFormatState();
+  const { activeFile, isSaving, saveFile } = useGitHub();
 
   const [isOverflowOpen, setIsOverflowOpen] = useState(false);
   const overflowRef = useRef<HTMLDivElement>(null);
@@ -38,8 +42,25 @@ const EditorToolbar = () => {
     };
   }, []);
 
+  const handleSave = () => {
+      if (editorRef.current && activeFile) {
+          saveFile(editorRef.current.innerHTML);
+      }
+  };
+
   return (
     <div className="toolbar-wrapper bg-white rounded-xl shadow-md p-2 flex items-center gap-x-1 text-gray-800">
+      <ToolbarButton
+          onClick={handleSave}
+          isActive={false}
+          title={isSaving ? "Saving..." : "Save current file (Cmd/Ctrl+S)"}
+          disabled={!activeFile || isSaving}
+        >
+          {isSaving ? <RefreshCwIcon className="animate-spin" /> : <SaveIcon />}
+      </ToolbarButton>
+
+      <div className="toolbar-divider h-6 border-l border-gray-300 mx-2"></div>
+
       <Dropdown
         label="Style"
         items={BLOCK_TYPES}

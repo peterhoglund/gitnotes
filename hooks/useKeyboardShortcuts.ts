@@ -1,14 +1,25 @@
+
 import { useCallback } from 'react';
 import { useFormatState } from './useFormatState';
 import { useCodeHighlight } from './useCodeHighlight';
 import { useEditorContext } from './useEditorContext';
+import { useGitHub } from './useGitHub';
 
 export const useKeyboardShortcuts = () => {
     const { editorRef } = useEditorContext();
+    const { activeFile, isSaving, saveFile } = useGitHub();
     const { updateFormatState, ensureParagraph } = useFormatState();
     const { highlightAll, highlightBlock } = useCodeHighlight();
 
     const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
+		if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+			e.preventDefault();
+			if (activeFile && !isSaving && editorRef.current) {
+				saveFile(editorRef.current.innerHTML);
+			}
+			return;
+		}
+		
 		if ((e.metaKey || e.ctrlKey) && e.key === 'a') {
 			e.preventDefault();
 			if (editorRef.current) {
@@ -46,7 +57,7 @@ export const useKeyboardShortcuts = () => {
 			document.execCommand('outdent');
 			updateFormatState();
 		}
-	}, [updateFormatState, highlightBlock, editorRef]);
+	}, [updateFormatState, highlightBlock, editorRef, activeFile, isSaving, saveFile]);
 
 	const handleKeyUp = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
 		updateFormatState();
