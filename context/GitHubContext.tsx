@@ -44,6 +44,8 @@ interface GitHubContextType {
     fileTree: RepoContentNode[];
     activeFile: { path: string; content: string; sha: string; } | null;
     initialContent: string;
+    isDirty: boolean;
+    setIsDirty: React.Dispatch<React.SetStateAction<boolean>>;
     
     login: () => void;
     logout: () => void;
@@ -80,6 +82,7 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [isSaving, setIsSaving] = useState<boolean>(false);
+    const [isDirty, setIsDirty] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
 
     const clearState = useCallback((fullLogout = true) => {
@@ -95,6 +98,7 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         setActiveFile(null);
         setTokenScopes([]);
         setError(null);
+        setIsDirty(false);
     }, []);
     
     const performAuth = useCallback((scope: string, callback: (err: Error | null, data: { token: string } | null) => void) => {
@@ -184,6 +188,7 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             const filteredContents = contents.filter(item => !item.name.startsWith('.'));
             setFileTree(updateNodeInTree(filteredContents, '', {})); // Initial sort and filter
             setActiveFile(null);
+            setIsDirty(false);
         } catch (err: any) {
             setError(err.message);
             setFileTree([]);
@@ -202,6 +207,7 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         setSelectedRepo(repo);
         localStorage.setItem('gh_repo', JSON.stringify(repo));
         setActiveFile(null);
+        setIsDirty(false);
         setFileTree([]);
     }, []);
 
@@ -210,6 +216,7 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         setSelectedRepo(null);
         setFileTree([]);
         setActiveFile(null);
+        setIsDirty(false);
     }, []);
 
     const logout = useCallback(() => {
@@ -265,6 +272,7 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             const fileData = await api.getFileContent(token, selectedRepo.full_name, path);
             const content = fileData.encoding === 'base64' ? decodeURIComponent(escape(atob(fileData.content))) : fileData.content;
             setActiveFile({ path, content, sha: fileData.sha });
+            setIsDirty(false);
         } catch(err: any) {
             setError(err.message);
         } finally {
@@ -285,6 +293,7 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                 activeFile.sha
             );
             setActiveFile(prev => prev ? { ...prev, content, sha: response.content.sha } : null);
+            setIsDirty(false);
         } catch(err: any) {
             setError(err.message);
             throw err;
@@ -354,8 +363,14 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         setIsSaving(true);
         setError(null);
         try {
-            await api.createFile(token, selectedRepo.full_name, path, content);
+            const response = await api.createFile(token, selectedRepo.full_name, path, content);
             await refreshPath(path);
+            setActiveFile({
+                path: response.content.path,
+                content: content,
+                sha: response.content.sha
+            });
+            setIsDirty(false);
         } catch (err: any) {
             setError(err.message);
             throw err;
@@ -410,6 +425,7 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
             if (activeFile?.path.startsWith(node.path)) {
                 setActiveFile(null);
+                setIsDirty(false);
             }
             
             await refreshPath(node.path);
@@ -424,6 +440,7 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
     const value = {
         token, user, repositories, selectedRepo, isLoading, isSaving, error, tokenScopes, fileTree, activeFile, initialContent: INITIAL_CONTENT,
+        isDirty, setIsDirty,
         login, logout, switchAccount, connectRepoAccess, selectRepo, clearRepoSelection, createAndSelectRepo,
         loadFile, saveFile, toggleFolder, createFile, createFolder, deleteNode
     };

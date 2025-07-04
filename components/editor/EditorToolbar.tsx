@@ -25,7 +25,7 @@ const BLOCK_TYPES = [
 const EditorToolbar = () => {
   const { formatState, editorRef } = useEditorContext();
   const { handleCommand } = useFormatState();
-  const { activeFile, isSaving, saveFile } = useGitHub();
+  const { activeFile, isSaving, isDirty, saveFile } = useGitHub();
 
   const [isOverflowOpen, setIsOverflowOpen] = useState(false);
   const overflowRef = useRef<HTMLDivElement>(null);
@@ -43,7 +43,7 @@ const EditorToolbar = () => {
   }, []);
 
   const handleSave = () => {
-      if (editorRef.current && activeFile) {
+      if (editorRef.current && activeFile && isDirty) {
           saveFile(editorRef.current.innerHTML);
       }
   };
@@ -54,7 +54,7 @@ const EditorToolbar = () => {
           onClick={handleSave}
           isActive={false}
           title={isSaving ? "Saving..." : "Save current file (Cmd/Ctrl+S)"}
-          disabled={!activeFile || isSaving}
+          disabled={!activeFile || isSaving || !isDirty}
         >
           {isSaving ? <RefreshCwIcon className="animate-spin" /> : <SaveIcon />}
       </ToolbarButton>

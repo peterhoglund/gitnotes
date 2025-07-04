@@ -20,7 +20,7 @@ const ZenEditor: React.FC = () => {
     const { highlightAll } = useCodeHighlight();
     const { handleKeyDown, handleKeyUp, handlePaste } = useKeyboardShortcuts();
     const { updateFormatState } = useFormatState();
-    const { activeFile, initialContent } = useGitHub();
+    const { activeFile, initialContent, isDirty, setIsDirty } = useGitHub();
 
     useEffect(() => {
         document.execCommand('styleWithCSS', false, 'true');
@@ -47,6 +47,37 @@ const ZenEditor: React.FC = () => {
             }, 50);
         }
     }, [activeFile, initialContent, editorRef, highlightAll, updateFormatState]);
+
+    // Effect to track if the editor content is "dirty" (changed from saved state)
+    useEffect(() => {
+        const editor = editorRef.current;
+        if (!editor) return;
+
+        const handleContentChange = () => {
+            if (activeFile) {
+                const isNowDirty = editor.innerHTML !== activeFile.content;
+                if (isNowDirty !== isDirty) {
+                    setIsDirty(isNowDirty);
+                }
+            } else if (isDirty) {
+                // No active file, so it can't be dirty
+                setIsDirty(false);
+            }
+        };
+
+        const mutationObserver = new MutationObserver(handleContentChange);
+        mutationObserver.observe(editor, {
+            attributes: true,
+            childList: true,
+            subtree: true,
+            characterData: true,
+        });
+
+        // Initial check
+        handleContentChange();
+
+        return () => mutationObserver.disconnect();
+    }, [activeFile, editorRef, isDirty, setIsDirty]);
 
 
     return (

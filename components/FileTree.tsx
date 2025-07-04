@@ -41,8 +41,9 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
 
     const handleCreate = async (type: 'file' | 'folder', basePath: string) => {
         setNewItemMenuPath(null); // Close menu on click
+        const defaultName = type === 'file' ? 'new-page.md' : 'new-folder';
         const promptMessage = `Enter name for new ${type}${basePath ? ` in '${basePath}'` : ''}:`;
-        const name = window.prompt(promptMessage);
+        const name = window.prompt(promptMessage, defaultName);
         if (!name || name.trim() === '') return;
         if (name.includes('/')) {
             alert('Name cannot contain slashes.');
@@ -53,8 +54,7 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
 
         try {
             if (type === 'file') {
-                // Use a default placeholder for new markdown files
-                const content = name.endsWith('.md') ? '# New Page\n' : '<!-- New file -->';
+                const content = name.endsWith('.md') || name.endsWith('.mdx') ? `# ${name.replace(/\.mdx?$/, '')}\n\n` : `<!-- ${name} -->`;
                 await createFile(path, content);
             } else {
                 await createFolder(path);
@@ -80,81 +80,84 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
         const showNewItemMenu = newItemMenuPath === node.path;
 
         return (
-            <div key={node.path} className="relative group">
-                <div 
-                    className={`file-tree-item flex items-center text-sm py-1.5 my-0.5 rounded-md cursor-pointer text-gray-700 dark:text-gray-300 ${isActive ? 'active' : ''}`}
-                    style={ isOpen ? { paddingLeft: `${level * 16 + 8}px` } : {justifyContent: 'center', paddingLeft: '8px'} }
-                    onClick={() => isFolder ? toggleFolder(node.path) : loadFile(node.path)}
-                    title={node.name}
-                >
-                    <div className="flex-shrink-0 w-5 h-5 flex items-center justify-center">
-                        {isFolder && (isExpanded ? <ChevronDownIcon /> : <ChevronRightIcon />)}
-                    </div>
-                    
-                    <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center text-gray-500 dark:text-gray-400">
-                        {isFolder ? (isExpanded ? <FolderOpenIcon /> : <FolderIcon />) : (<FileIcon />)}
-                    </div>
+            <React.Fragment key={node.path}>
+                <div className="relative group">
+                    <div 
+                        className={`file-tree-item flex items-center text-sm py-1.5 my-0.5 rounded-md cursor-pointer text-gray-700 dark:text-gray-300 ${isActive ? 'active' : ''}`}
+                        style={ isOpen ? { paddingLeft: `${level * 16 + 8}px` } : {justifyContent: 'center', paddingLeft: '8px'} }
+                        onClick={() => isFolder ? toggleFolder(node.path) : loadFile(node.path)}
+                        title={node.name}
+                    >
+                        <div className="flex-shrink-0 w-5 h-5 flex items-center justify-center">
+                            {isFolder && (isExpanded ? <ChevronDownIcon /> : <ChevronRightIcon />)}
+                        </div>
+                        
+                        <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center text-gray-500 dark:text-gray-400">
+                            {isFolder ? (isExpanded ? <FolderOpenIcon /> : <FolderIcon />) : (<FileIcon />)}
+                        </div>
 
-                    {isOpen && <span className="ml-1 truncate flex-1">{node.name}</span>}
+                        {isOpen && <span className="ml-1 truncate flex-1">{node.name}</span>}
 
-                    {isOpen && (
-                        <div className="ml-auto mr-1 flex items-center opacity-0 group-hover:opacity-100 focus-within:opacity-100">
-                           {isFolder && (
+                        {isOpen && (
+                            <div className="ml-auto mr-1 flex items-center opacity-0 group-hover:opacity-100 focus-within:opacity-100">
+                               {isFolder && (
+                                    <button
+                                        className="p-1 rounded hover:bg-gray-300 dark:hover:bg-zinc-700"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setNewItemMenuPath(node.path === newItemMenuPath ? null : node.path);
+                                            setContextMenuPath(null);
+                                        }}
+                                        title="New..."
+                                    >
+                                        <PlusIcon />
+                                    </button>
+                                )}
                                 <button
                                     className="p-1 rounded hover:bg-gray-300 dark:hover:bg-zinc-700"
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        setNewItemMenuPath(node.path === newItemMenuPath ? null : node.path);
+                                        setContextMenuPath(node.path === contextMenuPath ? null : node.path);
+                                        setNewItemMenuPath(null);
                                     }}
-                                    title="New..."
+                                    title="More options"
                                 >
-                                    <PlusIcon />
+                                    <EllipsisVerticalIcon />
                                 </button>
-                            )}
+                            </div>
+                        )}
+                    </div>
+
+                    {showNewItemMenu && isOpen && (
+                         <div
+                            ref={newItemMenuRef}
+                            className="dropdown-panel absolute z-20 right-2 mt-0 w-40 bg-white dark:bg-zinc-800 rounded-lg shadow-xl border border-gray-200 dark:border-zinc-700 p-1"
+                            style={{ top: '100%'}}
+                        >
+                            <button onClick={() => handleCreate('file', node.path)} className="dropdown-item w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-zinc-700 rounded-md flex items-center gap-3">
+                                <FilePlusIcon /> New Page
+                            </button>
+                            <button onClick={() => handleCreate('folder', node.path)} className="dropdown-item w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-zinc-700 rounded-md flex items-center gap-3">
+                                <FolderPlusIcon /> New Folder
+                            </button>
+                        </div>
+                    )}
+
+                    {showContextMenu && isOpen && (
+                         <div
+                            ref={menuRef}
+                            className="dropdown-panel absolute z-20 right-2 mt-0 w-40 bg-white dark:bg-zinc-800 rounded-lg shadow-xl border border-gray-200 dark:border-zinc-700 p-1"
+                            style={{ top: '100%'}}
+                        >
                             <button
-                                className="p-1 rounded hover:bg-gray-300 dark:hover:bg-zinc-700"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setContextMenuPath(node.path === contextMenuPath ? null : node.path);
-                                }}
-                                title="More options"
+                                onClick={() => handleRemove(node)}
+                                className="dropdown-item w-full text-left px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/50 rounded-md flex items-center gap-3"
                             >
-                                <EllipsisVerticalIcon />
+                                <TrashIcon /> <span>Remove</span>
                             </button>
                         </div>
                     )}
                 </div>
-
-                {showNewItemMenu && isOpen && (
-                     <div
-                        ref={newItemMenuRef}
-                        className="dropdown-panel absolute z-20 right-2 mt-0 w-40 bg-white dark:bg-zinc-800 rounded-lg shadow-xl border border-gray-200 dark:border-zinc-700 p-1"
-                        style={{ top: '100%'}}
-                    >
-                        <button onClick={() => handleCreate('file', node.path)} className="dropdown-item w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-zinc-700 rounded-md flex items-center gap-3">
-                            <FilePlusIcon /> New Page
-                        </button>
-                        <button onClick={() => handleCreate('folder', node.path)} className="dropdown-item w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-zinc-700 rounded-md flex items-center gap-3">
-                            <FolderPlusIcon /> New Folder
-                        </button>
-                    </div>
-                )}
-
-                {showContextMenu && isOpen && (
-                     <div
-                        ref={menuRef}
-                        className="dropdown-panel absolute z-20 right-2 mt-0 w-40 bg-white dark:bg-zinc-800 rounded-lg shadow-xl border border-gray-200 dark:border-zinc-700 p-1"
-                        style={{ top: '100%'}}
-                    >
-                        <button
-                            onClick={() => handleRemove(node)}
-                            className="dropdown-item w-full text-left px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/50 rounded-md flex items-center gap-3"
-                        >
-                            <TrashIcon /> <span>Remove</span>
-                        </button>
-                    </div>
-                )}
-
 
                 {isFolder && isExpanded && isOpen && (
                     <div>
@@ -171,7 +174,7 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
                         )}
                     </div>
                 )}
-            </div>
+            </React.Fragment>
         );
     };
 
@@ -182,11 +185,11 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
     return (
         <div className="py-2 px-2 flex flex-col h-full">
             {selectedRepo && (
-                 <div className="px-2 pb-2">
+                 <div className="px-1 pb-2">
                     <button
                         onClick={() => handleCreate('file', '')}
                         disabled={isSaving}
-                        className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded-md font-semibold bg-blue-600 text-white hover:bg-blue-700 disabled:bg-blue-500 disabled:cursor-not-allowed transition-colors ${!isOpen ? 'px-2' : ''}`}
+                        className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${!isOpen ? 'justify-center' : 'justify-start'}`}
                     >
                         <FilePlusIcon />
                         {isOpen && <span>New Page</span>}
@@ -195,7 +198,7 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
             )}
             {selectedRepo && (
                 <div 
-                    className={`px-2 text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2 flex items-center gap-2 transition-opacity duration-200 ${isOpen ? 'opacity-100' : 'opacity-0 h-0'}`} 
+                    className={`px-2 text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 flex items-center gap-2 transition-opacity duration-200 ${isOpen ? 'opacity-100' : 'opacity-0 h-0'}`} 
                     title={`Connected to ${selectedRepo.full_name}`}
                 >
                     <BookIcon />
