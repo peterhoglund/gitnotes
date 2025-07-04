@@ -47,19 +47,17 @@ const RepoSelector: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
     }
 
     return (
-        <div className="flex flex-col h-full text-sm text-gray-800 dark:text-gray-200">
-            {isOpen && (
-                <div className="p-2 border-b border-gray-200 dark:border-zinc-800">
-                    <h2 className="font-semibold text-center mb-2">Select Repository</h2>
-                    <input
-                        type="text"
-                        placeholder="Filter repositories..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full px-2 py-1.5 bg-gray-100 dark:bg-zinc-700 border border-gray-300 dark:border-zinc-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                </div>
-            )}
+        <div className="flex flex-col h-full text-sm text-gray-800 dark:text-gray-200 overflow-hidden">
+            <div className={`p-2 border-b border-gray-200 dark:border-zinc-800 transition-all duration-300 overflow-hidden ${isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
+                <h2 className="font-semibold text-center mb-2 whitespace-nowrap">Select Repository</h2>
+                <input
+                    type="text"
+                    placeholder="Filter repositories..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full px-2 py-1.5 bg-gray-100 dark:bg-zinc-700 border border-gray-300 dark:border-zinc-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+            </div>
             <div className="p-2">
                 <button
                     onClick={handleCreateRepo}
@@ -68,34 +66,28 @@ const RepoSelector: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
                     title={defaultRepoExists ? `Select your existing '${DEFAULT_REPO_NAME}' repository.` : `Create and use a new private repository named '${DEFAULT_REPO_NAME}'.`}
                 >
                     {isCreating ? <RefreshCwIcon className="animate-spin" /> : <PlusIcon />}
-                    {isOpen && (defaultRepoExists ? 'Use Default Repo' : 'Create Default Repo')}
+                    <span className={`whitespace-nowrap transition-opacity duration-100 ${isOpen ? 'opacity-100' : 'opacity-0'}`}>
+                        {defaultRepoExists ? 'Use Default Repo' : 'Create Default Repo'}
+                    </span>
                 </button>
                 {(localError || contextError) && <p className="text-xs text-red-500 mt-2 text-center">{localError || contextError}</p>}
             </div>
 
             <div className="flex-grow overflow-y-auto px-2">
-                {isOpen ? (
-                    filteredRepos.map(repo => (
-                        <div
-                            key={repo.id}
-                            onClick={() => selectRepo(repo)}
-                            className="flex items-center gap-3 p-2 my-0.5 rounded-md cursor-pointer hover:bg-gray-200 dark:hover:bg-zinc-700"
-                            title={repo.full_name}
-                        >
-                            <BookIcon />
-                            <span className="truncate flex-1">{repo.name}</span>
+                {filteredRepos.map(repo => (
+                    <div
+                        key={repo.id}
+                        onClick={() => selectRepo(repo)}
+                        className={`flex items-center gap-3 p-2 my-0.5 rounded-md cursor-pointer hover:bg-gray-200 dark:hover:bg-zinc-700 ${!isOpen && 'justify-center'}`}
+                        title={repo.full_name}
+                    >
+                        <BookIcon />
+                        <span className={`truncate flex-1 whitespace-nowrap transition-opacity duration-100 ${isOpen ? 'opacity-100' : 'opacity-0'}`}>{repo.name}</span>
+                        <div className={`transition-opacity duration-100 ${isOpen ? 'opacity-100' : 'opacity-0'}`}>
                             {repo.private && <LockIcon />}
                         </div>
-                    ))
-                ) : (
-                    <div className="flex flex-col items-center gap-4 py-4">
-                        {repositories.slice(0, 5).map(repo => (
-                            <div key={repo.id} onClick={() => selectRepo(repo)} className="p-2 rounded-md cursor-pointer hover:bg-gray-200 dark:hover:bg-zinc-700" title={repo.name}>
-                                <BookIcon />
-                            </div>
-                        ))}
                     </div>
-                )}
+                ))}
             </div>
         </div>
     );

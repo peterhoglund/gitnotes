@@ -139,8 +139,8 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
             <React.Fragment key={node.path}>
                 <div className="relative group">
                     <div 
-                        className={`file-tree-item flex items-center text-sm py-1.5 my-0.5 rounded-md cursor-pointer text-gray-700 dark:text-gray-300 ${isActive ? 'active' : ''}`}
-                        style={ isOpen ? { paddingLeft: `${level * 16 + 8}px` } : {justifyContent: 'center', paddingLeft: '8px'} }
+                        className={`file-tree-item flex items-center text-sm py-1.5 my-0.5 rounded-md cursor-pointer text-gray-700 dark:text-gray-300 transition-all duration-200 ${isActive ? 'active' : ''} ${!isOpen ? 'justify-center' : ''}`}
+                        style={{ paddingLeft: isOpen ? `${level * 16 + 8}px` : '8px' }}
                         onClick={() => isFolder ? toggleFolder(node.path) : handleFileClick(node.path)}
                         title={node.name}
                     >
@@ -152,36 +152,34 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
                             {isFolder ? (isExpanded ? <FolderOpenIcon /> : <FolderIcon />) : (<FileIcon />)}
                         </div>
 
-                        {isOpen && <span className="ml-1 truncate flex-1">{node.name}</span>}
+                        <span className={`ml-1 truncate whitespace-nowrap transition-all duration-100 ${isOpen ? 'opacity-100 flex-1' : 'opacity-0 w-0'}`}>{node.name}</span>
 
-                        {isOpen && (
-                            <div className="ml-auto mr-1 flex items-center opacity-0 group-hover:opacity-100 focus-within:opacity-100">
-                               {isFolder && (
-                                    <button
-                                        className="p-1 rounded hover:bg-gray-300 dark:hover:bg-zinc-700"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setNewItemMenuPath(node.path === newItemMenuPath ? null : node.path);
-                                            setContextMenuPath(null);
-                                        }}
-                                        title="New..."
-                                    >
-                                        <PlusIcon />
-                                    </button>
-                                )}
+                        <div className={`ml-auto mr-1 flex items-center transition-opacity duration-100 ${isOpen ? 'opacity-0 group-hover:opacity-100 focus-within:opacity-100' : 'opacity-0 pointer-events-none'}`}>
+                           {isFolder && (
                                 <button
                                     className="p-1 rounded hover:bg-gray-300 dark:hover:bg-zinc-700"
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        setContextMenuPath(node.path === contextMenuPath ? null : node.path);
-                                        setNewItemMenuPath(null);
+                                        setNewItemMenuPath(node.path === newItemMenuPath ? null : node.path);
+                                        setContextMenuPath(null);
                                     }}
-                                    title="More options"
+                                    title="New..."
                                 >
-                                    <EllipsisVerticalIcon />
+                                    <PlusIcon />
                                 </button>
-                            </div>
-                        )}
+                            )}
+                            <button
+                                className="p-1 rounded hover:bg-gray-300 dark:hover:bg-zinc-700"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setContextMenuPath(node.path === contextMenuPath ? null : node.path);
+                                    setNewItemMenuPath(null);
+                                }}
+                                title="More options"
+                            >
+                                <EllipsisVerticalIcon />
+                            </button>
+                        </div>
                     </div>
 
                     {showNewItemMenu && isOpen && (
@@ -249,7 +247,7 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
                         title="New Page"
                     >
                         <FilePlusIcon />
-                        {isOpen && <span>New Page</span>}
+                        <span className={`whitespace-nowrap transition-opacity duration-100 ${isOpen ? 'opacity-100' : 'opacity-0'}`}>New Page</span>
                     </button>
                     <button
                         onClick={() => setIsSearching(s => !s)}
@@ -258,7 +256,7 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
                         title="Find Page"
                     >
                         <SearchIcon />
-                        {isOpen && <span>Find Page</span>}
+                        <span className={`whitespace-nowrap transition-opacity duration-100 ${isOpen ? 'opacity-100' : 'opacity-0'}`}>Find Page</span>
                     </button>
                 </div>
             )}
@@ -281,7 +279,7 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
             <div className="flex-grow overflow-y-auto min-h-0">
                 {!searchTerm && selectedRepo && (
                     <div 
-                        className={`px-2 text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 flex items-center gap-2 transition-opacity duration-200 ${isOpen ? 'opacity-100' : 'opacity-0 h-0'}`} 
+                        className={`px-2 text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 flex items-center gap-2 overflow-hidden transition-all duration-200 ${isOpen ? 'max-h-12 opacity-100' : 'max-h-0 opacity-0'}`} 
                         title={`Connected to ${selectedRepo.full_name}`}
                     >
                         <BookIcon />
