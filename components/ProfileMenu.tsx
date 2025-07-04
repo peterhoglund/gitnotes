@@ -107,7 +107,7 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({ isSidePanelOpen }) => {
             <ProfileIcon />
           )}
         </div>
-        <div className={`flex-1 overflow-hidden whitespace-nowrap transition-all duration-200 ${isSidePanelOpen ? 'ml-3 opacity-100' : 'opacity-0 w-0'}`}>
+        <div className={`overflow-hidden whitespace-nowrap transition-all duration-200 ${isSidePanelOpen ? 'flex-1 ml-3 opacity-100' : 'opacity-0 w-0'}`}>
             <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 truncate">{isLoggedIn ? user?.name : 'Guest'}</p>
         </div>
       </button>
