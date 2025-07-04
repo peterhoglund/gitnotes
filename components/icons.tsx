@@ -47,7 +47,7 @@ export const BookIcon = () => <i className="fa-solid fa-book fa-fw" style={{...f
 export const PlusIcon = () => <i className="fa-solid fa-plus fa-fw" style={{...faStyle, fontSize: '16px'}} aria-hidden="true"></i>;
 export const LockIcon = () => <i className="fa-solid fa-lock fa-fw" style={{...faStyle, fontSize: '14px', width: 'auto', color: 'inherit'}} aria-hidden="true"></i>;
 export const SaveIcon = () => <i className="fa-solid fa-save fa-fw" style={{...faStyle, fontSize: '16px'}} aria-hidden="true"></i>;
-export const FilePlusIcon = () => <i className="fa-solid fa-file-circle-plus fa-fw" style={{...faStyle, fontSize: '16px'}} aria-hidden="true"></i>;
+export const PenToSquareIcon = () => <i className="fa-solid fa-pen-to-square fa-fw" style={{...faStyle, fontSize: '16px'}} aria-hidden="true"></i>;
 export const FolderPlusIcon = () => <i className="fa-solid fa-folder-plus fa-fw" style={{...faStyle, fontSize: '16px'}} aria-hidden="true"></i>;
 export const TrashIcon = () => <i className="fa-solid fa-trash-can fa-fw" style={{...faStyle, fontSize: '16px'}} aria-hidden="true"></i>;
 export const SearchIcon = () => <i className="fa-solid fa-magnifying-glass fa-fw" style={{...faStyle, fontSize: '16px'}} aria-hidden="true"></i>;

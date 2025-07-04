@@ -50,7 +50,7 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({ isSidePanelOpen }) => {
               <div className="flex items-center p-2 border-b border-gray-100 dark:border-zinc-700 pb-3">
                 <img src={user.avatar_url} alt={user.name} className="w-8 h-8 rounded-full bg-gray-200 dark:bg-zinc-700" />
                 <div className="ml-3 flex-1 overflow-hidden">
-                  <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate" title={user.name}>{user.name}</p>
+                  <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 truncate" title={user.name}>{user.name}</p>
                   <p className="text-xs text-gray-500 dark:text-gray-400 truncate" title={user.email}>{user.email}</p>
                 </div>
               </div>
@@ -108,7 +108,7 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({ isSidePanelOpen }) => {
           )}
         </div>
         <div className={`ml-3 flex-1 overflow-hidden whitespace-nowrap transition-all duration-200 ${isSidePanelOpen ? 'opacity-100' : 'opacity-0 w-0'}`}>
-            <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">{isLoggedIn ? user?.name : 'Guest'}</p>
+            <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 truncate">{isLoggedIn ? user?.name : 'Guest'}</p>
         </div>
       </button>
     </div>

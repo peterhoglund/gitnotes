@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useGitHub } from '../hooks/useGitHub';
 import { 
     FolderIcon, FolderOpenIcon, FileIcon, ChevronDownIcon, ChevronRightIcon, BookIcon, RefreshCwIcon,
-    FilePlusIcon, FolderPlusIcon, TrashIcon, EllipsisVerticalIcon, PlusIcon, SearchIcon
+    PenToSquareIcon, FolderPlusIcon, TrashIcon, EllipsisVerticalIcon, PlusIcon, SearchIcon
 } from './icons';
 import { RepoContentNode } from '../types/github';
 
@@ -139,7 +139,7 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
             <React.Fragment key={node.path}>
                 <div className="relative group">
                     <div 
-                        className={`file-tree-item flex items-center text-sm py-1.5 my-0.5 rounded-md cursor-pointer text-gray-700 dark:text-gray-300 transition-all duration-200 ${isActive ? 'active' : ''} ${!isOpen ? 'justify-center' : ''}`}
+                        className={`file-tree-item flex items-center text-sm py-1 my-0.5 rounded-md cursor-pointer text-gray-600 dark:text-gray-400 transition-all duration-200 ${isActive ? 'active' : ''} ${!isOpen ? 'justify-center' : ''}`}
                         style={{ paddingLeft: isOpen ? `${level * 16 + 8}px` : '8px' }}
                         onClick={() => isFolder ? toggleFolder(node.path) : handleFileClick(node.path)}
                         title={node.name}
@@ -189,7 +189,7 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
                             style={{ top: '100%'}}
                         >
                             <button onClick={() => handleCreate('file', node.path)} className="dropdown-item w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-zinc-700 rounded-md flex items-center gap-3">
-                                <FilePlusIcon /> New Page
+                                <PenToSquareIcon /> New Page
                             </button>
                             <button onClick={() => handleCreate('folder', node.path)} className="dropdown-item w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-zinc-700 rounded-md flex items-center gap-3">
                                 <FolderPlusIcon /> New Folder
@@ -243,20 +243,20 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
                     <button
                         onClick={() => handleCreate('file', '')}
                         disabled={isSaving}
-                        className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors mb-1 ${!isOpen ? 'justify-center' : 'justify-start'}`}
+                        className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors mb-1 ${!isOpen ? 'justify-center' : 'justify-start'}`}
                         title="New Page"
                     >
-                        <FilePlusIcon />
+                        <PenToSquareIcon />
                         <span className={`whitespace-nowrap transition-opacity duration-100 ${isOpen ? 'opacity-100' : 'opacity-0'}`}>New Page</span>
                     </button>
                     <button
                         onClick={() => setIsSearching(s => !s)}
                         disabled={isSaving}
-                        className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${isSearching ? 'bg-gray-200 dark:bg-zinc-700' : ''} ${!isOpen ? 'justify-center' : 'justify-start'}`}
-                        title="Find Page"
+                        className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${isSearching ? 'bg-gray-200 dark:bg-zinc-700' : ''} ${!isOpen ? 'justify-center' : 'justify-start'}`}
+                        title="Search"
                     >
                         <SearchIcon />
-                        <span className={`whitespace-nowrap transition-opacity duration-100 ${isOpen ? 'opacity-100' : 'opacity-0'}`}>Find Page</span>
+                        <span className={`whitespace-nowrap transition-opacity duration-100 ${isOpen ? 'opacity-100' : 'opacity-0'}`}>Search</span>
                     </button>
                 </div>
             )}
@@ -302,7 +302,7 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
                                     className="dropdown-panel absolute z-20 right-0 mt-2 w-48 bg-white dark:bg-zinc-800 rounded-lg shadow-xl border border-gray-200 dark:border-zinc-700 p-1"
                                 >
                                     <button onClick={() => handleCreate('file', '')} className="dropdown-item w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-zinc-700 rounded-md flex items-center gap-3">
-                                        <FilePlusIcon /> New Page
+                                        <PenToSquareIcon /> New Page
                                     </button>
                                     <button onClick={() => handleCreate('folder', '')} className="dropdown-item w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-zinc-700 rounded-md flex items-center gap-3">
                                         <FolderPlusIcon /> New Folder
