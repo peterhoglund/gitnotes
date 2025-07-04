@@ -50,6 +50,7 @@ export const SaveIcon = () => <i className="fa-solid fa-save fa-fw" style={{...f
 export const FilePlusIcon = () => <i className="fa-solid fa-file-circle-plus fa-fw" style={{...faStyle, fontSize: '16px'}} aria-hidden="true"></i>;
 export const FolderPlusIcon = () => <i className="fa-solid fa-folder-plus fa-fw" style={{...faStyle, fontSize: '16px'}} aria-hidden="true"></i>;
 export const TrashIcon = () => <i className="fa-solid fa-trash-can fa-fw" style={{...faStyle, fontSize: '16px'}} aria-hidden="true"></i>;
+export const SearchIcon = () => <i className="fa-solid fa-magnifying-glass fa-fw" style={{...faStyle, fontSize: '16px'}} aria-hidden="true"></i>;
 
 
 export const BlockBackgroundColorIcon = () => (

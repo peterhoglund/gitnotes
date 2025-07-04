@@ -42,6 +42,7 @@ interface GitHubContextType {
     error: string | null;
     tokenScopes: string[];
     fileTree: RepoContentNode[];
+    allFilesForSearch: { path: string, name: string }[];
     activeFile: { path: string; content: string; sha: string; } | null;
     initialContent: string;
     isDirty: boolean;
@@ -78,6 +79,7 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         }
     });
     const [fileTree, setFileTree] = useState<RepoContentNode[]>([]);
+    const [allFilesForSearch, setAllFilesForSearch] = useState<{ path: string; name: string }[]>([]);
     const [activeFile, setActiveFile] = useState<{path: string, content: string, sha: string} | null>(null);
 
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -95,6 +97,7 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         setRepositories([]);
         setSelectedRepo(null);
         setFileTree([]);
+        setAllFilesForSearch([]);
         setActiveFile(null);
         setTokenScopes([]);
         setError(null);
@@ -197,11 +200,38 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         }
     }, [token]);
 
+    const fetchAllFiles = useCallback(async (repo: Repository) => {
+        if (!token) return;
+        try {
+            const repoDetails = await api.getRepoDetails(token, repo.full_name);
+            const defaultBranch = repoDetails.default_branch;
+            if (!defaultBranch) {
+                console.warn("Could not determine default branch for repo:", repo.full_name);
+                return;
+            }
+
+            const tree = await api.getRepoTreeRecursive(token, repo.full_name, defaultBranch);
+            const files = tree
+                .filter(item => item.type === 'blob' && !item.path.split('/').some(part => part.startsWith('.')))
+                .map(item => ({
+                    path: item.path,
+                    name: item.path.split('/').pop() || item.path
+                }));
+            setAllFilesForSearch(files);
+        } catch (err) {
+            console.error("Failed to fetch all files for search:", err);
+            setAllFilesForSearch([]);
+        }
+    }, [token]);
+
     useEffect(() => {
         if (selectedRepo && token && tokenScopes.includes('repo')) {
             fetchFileTree(selectedRepo);
+            fetchAllFiles(selectedRepo);
+        } else {
+            setAllFilesForSearch([]);
         }
-    }, [selectedRepo, token, tokenScopes, fetchFileTree]);
+    }, [selectedRepo, token, tokenScopes, fetchFileTree, fetchAllFiles]);
     
     const selectRepo = useCallback((repo: Repository) => {
         setSelectedRepo(repo);
@@ -209,6 +239,7 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         setActiveFile(null);
         setIsDirty(false);
         setFileTree([]);
+        setAllFilesForSearch([]);
     }, []);
 
     const clearRepoSelection = useCallback(() => {
@@ -217,6 +248,7 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         setFileTree([]);
         setActiveFile(null);
         setIsDirty(false);
+        setAllFilesForSearch([]);
     }, []);
 
     const logout = useCallback(() => {
@@ -439,7 +471,7 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     }, [token, selectedRepo, activeFile, refreshPath]);
 
     const value = {
-        token, user, repositories, selectedRepo, isLoading, isSaving, error, tokenScopes, fileTree, activeFile, initialContent: INITIAL_CONTENT,
+        token, user, repositories, selectedRepo, isLoading, isSaving, error, tokenScopes, fileTree, allFilesForSearch, activeFile, initialContent: INITIAL_CONTENT,
         isDirty, setIsDirty,
         login, logout, switchAccount, connectRepoAccess, selectRepo, clearRepoSelection, createAndSelectRepo,
         loadFile, saveFile, toggleFolder, createFile, createFolder, deleteNode

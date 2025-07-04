@@ -190,3 +190,24 @@ export const deleteFile = async (
 		body: JSON.stringify(body),
 	});
 };
+
+export const getRepoDetails = (
+    token: string,
+    repoFullName: string,
+): Promise<any> => {
+    return apiFetch(`/repos/${repoFullName}`, token);
+};
+
+export const getRepoTreeRecursive = async (
+	token: string,
+	repoFullName: string,
+	branch: string,
+): Promise<{ path: string; type: string }[]> => {
+	const commits = await apiFetch(`/repos/${repoFullName}/commits?sha=${branch}&per_page=1`, token);
+	if (!commits || commits.length === 0) return [];
+	
+	const treeSha = commits[0].commit.tree.sha;
+	const treeData = await apiFetch(`/repos/${repoFullName}/git/trees/${treeSha}?recursive=1`, token);
+	
+	return treeData.tree || [];
+};

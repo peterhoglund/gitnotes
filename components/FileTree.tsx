@@ -1,9 +1,9 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useGitHub } from '../hooks/useGitHub';
 import { 
     FolderIcon, FolderOpenIcon, FileIcon, ChevronDownIcon, ChevronRightIcon, BookIcon, RefreshCwIcon,
-    FilePlusIcon, FolderPlusIcon, TrashIcon, EllipsisVerticalIcon, PlusIcon
+    FilePlusIcon, FolderPlusIcon, TrashIcon, EllipsisVerticalIcon, PlusIcon, SearchIcon
 } from './icons';
 import { RepoContentNode } from '../types/github';
 
@@ -15,6 +15,7 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
         activeFile,
         isLoading, 
         isSaving,
+        allFilesForSearch,
         loadFile, 
         toggleFolder,
         createFile,
@@ -25,6 +26,10 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
     const [newItemMenuPath, setNewItemMenuPath] = useState<string | null>(null);
     const menuRef = useRef<HTMLDivElement>(null);
     const newItemMenuRef = useRef<HTMLDivElement>(null);
+
+    const [isSearching, setIsSearching] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+    const searchInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -38,6 +43,27 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
+
+    useEffect(() => {
+        if (isSearching) {
+            searchInputRef.current?.focus();
+        } else {
+            setSearchTerm('');
+        }
+    }, [isSearching]);
+
+    const filteredFiles = useMemo(() => {
+        if (!searchTerm.trim()) return [];
+        return allFilesForSearch.filter(file =>
+            file.path.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }, [allFilesForSearch, searchTerm]);
+
+    const handleFileClick = (path: string) => {
+        loadFile(path);
+        setIsSearching(false);
+        setSearchTerm('');
+    };
 
     const handleCreate = async (type: 'file' | 'folder', basePath: string) => {
         setNewItemMenuPath(null); // Close menu on click
@@ -178,62 +204,121 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
         );
     };
 
-    if (isLoading && fileTree.length === 0) {
+    if (isLoading && fileTree.length === 0 && !isSearching) {
         return <div className="flex justify-center p-4"><RefreshCwIcon className="animate-spin"/></div>
     }
 
     return (
         <div className="py-2 px-2 flex flex-col h-full">
             {selectedRepo && (
-                 <div className="px-1 pb-2">
+                 <div className="px-1 pb-2 flex items-center gap-2">
                     <button
                         onClick={() => handleCreate('file', '')}
                         disabled={isSaving}
-                        className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${!isOpen ? 'justify-center' : 'justify-start'}`}
+                        className={`flex-1 flex items-center gap-2 px-2 py-1.5 rounded-md font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${!isOpen ? 'justify-center' : 'justify-start'}`}
+                        title="New Page"
                     >
                         <FilePlusIcon />
                         {isOpen && <span>New Page</span>}
                     </button>
+                    <button
+                        onClick={() => setIsSearching(s => !s)}
+                        disabled={isSaving}
+                        className={`flex-1 flex items-center gap-2 px-2 py-1.5 rounded-md font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${isSearching ? 'bg-gray-200 dark:bg-zinc-700' : ''} ${!isOpen ? 'justify-center' : 'justify-start'}`}
+                        title="Find Page"
+                    >
+                        <SearchIcon />
+                        {isOpen && <span>Find Page</span>}
+                    </button>
                 </div>
             )}
-            {selectedRepo && (
-                <div 
-                    className={`px-2 text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 flex items-center gap-2 transition-opacity duration-200 ${isOpen ? 'opacity-100' : 'opacity-0 h-0'}`} 
-                    title={`Connected to ${selectedRepo.full_name}`}
-                >
-                    <BookIcon />
-                    <span className="truncate flex-1">{selectedRepo.name}</span>
-                    <div className="relative">
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setNewItemMenuPath(newItemMenuPath === '__root__' ? null : '__root__');
-                            }}
-                            disabled={isSaving}
-                            className="p-1 rounded-md hover:bg-gray-200 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                            title="New..."
-                        >
-                            <PlusIcon />
-                        </button>
-                        {newItemMenuPath === '__root__' && (
-                             <div
-                                ref={newItemMenuRef}
-                                className="dropdown-panel absolute z-20 right-0 mt-2 w-48 bg-white dark:bg-zinc-800 rounded-lg shadow-xl border border-gray-200 dark:border-zinc-700 p-1"
+
+            {selectedRepo && <div className="border-b border-gray-200 dark:border-zinc-700 mx-1 mb-2"></div>}
+            
+            {isSearching ? (
+                <div className="flex flex-col flex-grow overflow-y-auto min-h-0">
+                    <div className="px-1 pb-2">
+                        <input
+                            ref={searchInputRef}
+                            type="text"
+                            placeholder="Type to search files..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full px-2 py-1.5 text-sm bg-gray-100 dark:bg-zinc-700 border border-gray-300 dark:border-zinc-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+                    <div className="flex-grow overflow-y-auto">
+                        {filteredFiles.map(file => (
+                             <div 
+                                key={file.path}
+                                className={`file-tree-item flex items-center text-sm py-1.5 my-0.5 rounded-md cursor-pointer text-gray-700 dark:text-gray-300 ${activeFile?.path === file.path ? 'active' : ''}`}
+                                style={ isOpen ? { paddingLeft: `8px` } : {justifyContent: 'center', paddingLeft: '8px'} }
+                                onClick={() => handleFileClick(file.path)}
+                                title={file.path}
                             >
-                                <button onClick={() => handleCreate('file', '')} className="dropdown-item w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-zinc-700 rounded-md flex items-center gap-3">
-                                    <FilePlusIcon /> New Page
-                                </button>
-                                <button onClick={() => handleCreate('folder', '')} className="dropdown-item w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-zinc-700 rounded-md flex items-center gap-3">
-                                    <FolderPlusIcon /> New Folder
-                                </button>
+                                <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center text-gray-500 dark:text-gray-400">
+                                    <FileIcon />
+                                </div>
+
+                                {isOpen && (
+                                    <div className="ml-1 truncate flex-1">
+                                        <span className="block truncate">{file.name}</span>
+                                        <span className="block text-xs text-gray-400 dark:text-gray-500 truncate">
+                                            {file.path.includes('/') ? file.path.substring(0, file.path.lastIndexOf('/')) : '/'}
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                        {searchTerm && filteredFiles.length === 0 && (
+                            <div className="px-2 py-4 text-center text-xs text-gray-500 italic">
+                                No files found for "{searchTerm}".
                             </div>
                         )}
                     </div>
                 </div>
+            ) : (
+                <>
+                    {selectedRepo && (
+                        <div 
+                            className={`px-2 text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 flex items-center gap-2 transition-opacity duration-200 ${isOpen ? 'opacity-100' : 'opacity-0 h-0'}`} 
+                            title={`Connected to ${selectedRepo.full_name}`}
+                        >
+                            <BookIcon />
+                            <span className="truncate flex-1">{selectedRepo.name}</span>
+                            <div className="relative">
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setNewItemMenuPath(newItemMenuPath === '__root__' ? null : '__root__');
+                                    }}
+                                    disabled={isSaving}
+                                    className="p-1 rounded-md hover:bg-gray-200 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    title="New..."
+                                >
+                                    <PlusIcon />
+                                </button>
+                                {newItemMenuPath === '__root__' && (
+                                    <div
+                                        ref={newItemMenuRef}
+                                        className="dropdown-panel absolute z-20 right-0 mt-2 w-48 bg-white dark:bg-zinc-800 rounded-lg shadow-xl border border-gray-200 dark:border-zinc-700 p-1"
+                                    >
+                                        <button onClick={() => handleCreate('file', '')} className="dropdown-item w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-zinc-700 rounded-md flex items-center gap-3">
+                                            <FilePlusIcon /> New Page
+                                        </button>
+                                        <button onClick={() => handleCreate('folder', '')} className="dropdown-item w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-zinc-700 rounded-md flex items-center gap-3">
+                                            <FolderPlusIcon /> New Folder
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                    <div className="flex-grow overflow-y-auto">
+                        {fileTree.map(node => renderNode(node, 0))}
+                    </div>
+                </>
             )}
-            <div className="flex-grow overflow-y-auto">
-                {fileTree.map(node => renderNode(node, 0))}
-            </div>
         </div>
     );
 };
