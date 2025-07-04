@@ -13,7 +13,7 @@ const RepoSelector: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
 
     const filteredRepos = useMemo(() => {
         return repositories.filter(repo => 
-            repo.name.toLowerCase().includes(searchTerm.toLowerCase())
+            repo.full_name.toLowerCase().includes(searchTerm.toLowerCase())
         );
     }, [repositories, searchTerm]);
 

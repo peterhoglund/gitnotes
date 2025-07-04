@@ -199,7 +199,7 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
                     title={`Connected to ${selectedRepo.full_name}`}
                 >
                     <BookIcon />
-                    <span className="truncate flex-1">{selectedRepo.full_name}</span>
+                    <span className="truncate flex-1">{selectedRepo.name}</span>
                     <div className="relative">
                         <button
                             onClick={(e) => {

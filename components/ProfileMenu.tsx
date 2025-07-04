@@ -70,7 +70,7 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({ isSidePanelOpen }) => {
                 <div className="px-2 pt-1.5 pb-1 text-xs font-semibold text-gray-500 dark:text-gray-400">Repository</div>
                  <div className="px-2 py-1.5 text-sm text-gray-700 dark:text-gray-200 flex items-center gap-3">
                     <BookIcon />
-                    <span className="truncate font-medium">{selectedRepo.full_name}</span>
+                    <span className="truncate font-medium" title={selectedRepo.full_name}>{selectedRepo.name}</span>
                 </div>
                 <button onClick={() => handleAction(clearRepoSelection)} className="dropdown-item w-full text-left px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-zinc-700 rounded-md">
                     Switch Repository
