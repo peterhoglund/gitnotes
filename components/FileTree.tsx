@@ -154,7 +154,7 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
                             {isFolder ? (isExpanded ? <FolderOpenIcon /> : <FolderIcon />) : (<FileIcon />)}
                         </div>
 
-                        <span className={`ml-1 truncate whitespace-nowrap transition-all duration-100 ${isOpen ? 'opacity-100 flex-1' : 'opacity-0 w-0'}`}>{node.name}</span>
+                        <span className={`truncate whitespace-nowrap transition-all duration-100 ${isOpen ? 'ml-1 opacity-100 flex-1' : 'opacity-0 w-0'}`}>{node.name}</span>
 
                         <div className={`ml-auto mr-1 flex items-center transition-opacity duration-100 ${isOpen ? 'opacity-0 group-hover:opacity-100 focus-within:opacity-100' : 'opacity-0 pointer-events-none'}`}>
                            {isFolder && (
@@ -245,20 +245,20 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
                     <button
                         onClick={() => handleCreate('file', '')}
                         disabled={isSaving}
-                        className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors mb-1 ${!isOpen ? 'justify-center' : 'justify-start'}`}
+                        className={`w-full flex items-center px-2 py-1.5 rounded-md text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors mb-1 ${isOpen ? 'gap-2' : ''} ${!isOpen ? 'justify-center' : 'justify-start'}`}
                         title="New Page"
                     >
                         <PenToSquareIcon />
-                        <span className={`whitespace-nowrap transition-opacity duration-100 ${isOpen ? 'opacity-100' : 'opacity-0'}`}>New Page</span>
+                        <span className={`whitespace-nowrap transition-opacity duration-100 ${isOpen ? 'opacity-100' : 'opacity-0 w-0'}`}>New Page</span>
                     </button>
                     <button
                         onClick={() => setIsSearching(s => !s)}
                         disabled={isSaving}
-                        className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${isSearching ? 'bg-gray-200 dark:bg-zinc-700' : ''} ${!isOpen ? 'justify-center' : 'justify-start'}`}
+                        className={`w-full flex items-center px-2 py-1.5 rounded-md text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${isSearching ? 'bg-gray-200 dark:bg-zinc-700' : ''} ${isOpen ? 'gap-2' : ''} ${!isOpen ? 'justify-center' : 'justify-start'}`}
                         title="Search"
                     >
                         <SearchIcon />
-                        <span className={`whitespace-nowrap transition-opacity duration-100 ${isOpen ? 'opacity-100' : 'opacity-0'}`}>Search</span>
+                        <span className={`whitespace-nowrap transition-opacity duration-100 ${isOpen ? 'opacity-100' : 'opacity-0 w-0'}`}>Search</span>
                     </button>
                 </div>
             )}

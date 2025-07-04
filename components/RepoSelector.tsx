@@ -78,7 +78,7 @@ const RepoSelector: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
                     <div
                         key={repo.id}
                         onClick={() => selectRepo(repo)}
-                        className={`flex items-center gap-3 p-2 my-0.5 rounded-md cursor-pointer hover:bg-gray-200 dark:hover:bg-zinc-700 ${!isOpen && 'justify-center'}`}
+                        className={`flex items-center p-2 my-0.5 rounded-md cursor-pointer hover:bg-gray-200 dark:hover:bg-zinc-700 ${isOpen ? 'gap-3' : ''} ${!isOpen && 'justify-center'}`}
                         title={repo.full_name}
                     >
                         <BookIcon />
