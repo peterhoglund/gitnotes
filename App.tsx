@@ -8,6 +8,7 @@ import AppShell from './components/layout/AppShell';
 import EditorToolbar from './components/editor/EditorToolbar';
 import EditorCanvas from './components/editor/EditorCanvas';
 import CodeBlockMenu from './components/editor/CodeBlockMenu';
+import BlockEmojiMenu from './components/editor/BlockEmojiMenu';
 import { useEditorContext } from './hooks/useEditorContext';
 import { useTheme } from './hooks/useTheme';
 import { useCodeHighlight } from './hooks/useCodeHighlight';
@@ -87,6 +88,7 @@ const ZenEditor: React.FC = () => {
                     <EditorToolbar />
                 </div>
                 <CodeBlockMenu />
+                <BlockEmojiMenu />
                 <EditorCanvas
                     // Use a key to force re-mount when switching files.
                     // This is crucial for correctly setting initial content in an uncontrolled component.

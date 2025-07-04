@@ -12,11 +12,13 @@ export const StrikethroughIcon = () => <i className="fa-solid fa-strikethrough f
 export const CodeIcon = () => <i className="fa-solid fa-code fa-fw" style={faStyle} aria-hidden="true"></i>;
 export const ListIcon = () => <i className="fa-solid fa-list-ul fa-fw" style={faStyle} aria-hidden="true"></i>;
 export const ListOrderedIcon = () => <i className="fa-solid fa-list-ol fa-fw" style={faStyle} aria-hidden="true"></i>;
-export const EllipsisVerticalIcon = () => <i className="fa-solid fa-ellipsis-vertical fa-fw" style={{...faStyle, fontSize: '16px'}} aria-hidden="true"></i>;
+export const EllipsisVerticalIcon = ({ size = 'small' }: { size?: 'small' | 'large' }) => <i className="fa-solid fa-ellipsis-vertical fa-fw" style={size === 'large' ? faStyle : {...faStyle, fontSize: '16px'}} aria-hidden="true"></i>;
 export const TextColorIcon = () => <i className="fa-solid fa-font fa-fw" style={faStyle} aria-hidden="true"></i>;
 export const HighlighterIcon = () => <i className="fa-solid fa-highlighter fa-fw" style={faStyle} aria-hidden="true"></i>;
 export const SunIcon = () => <i className="fa-solid fa-sun fa-fw" style={faStyle} aria-hidden="true"></i>;
 export const MoonIcon = () => <i className="fa-solid fa-moon fa-fw" style={faStyle} aria-hidden="true"></i>;
+export const SmileyIcon = () => <i className="fa-regular fa-face-smile fa-fw" style={{...faStyle, fontSize: '18px'}} aria-hidden="true"></i>;
+
 
 // Profile & GitHub icons
 export const ProfileIcon = () => (
@@ -42,11 +44,11 @@ export const GitHubIcon = () => (
     </svg>
 );
 export const LogOutIcon = () => <i className="fa-solid fa-right-from-bracket fa-fw" style={{...faStyle, fontSize: '16px'}} aria-hidden="true"></i>;
-export const RefreshCwIcon = ({ className = '' }) => <i className={`fa-solid fa-rotate fa-fw ${className}`} style={{...faStyle, fontSize: '16px'}} aria-hidden="true"></i>;
+export const RefreshCwIcon = ({ className = '', size = 'small' }: { className?: string; size?: 'small' | 'large' }) => <i className={`fa-solid fa-rotate fa-fw ${className}`} style={size === 'large' ? faStyle : {...faStyle, fontSize: '16px'}} aria-hidden="true"></i>;
 export const BookIcon = () => <i className="fa-solid fa-book fa-fw" style={{...faStyle, fontSize: '16px', width: 'auto'}} aria-hidden="true"></i>;
 export const PlusIcon = () => <i className="fa-solid fa-plus fa-fw" style={{...faStyle, fontSize: '16px'}} aria-hidden="true"></i>;
 export const LockIcon = () => <i className="fa-solid fa-lock fa-fw" style={{...faStyle, fontSize: '14px', width: 'auto', color: 'inherit'}} aria-hidden="true"></i>;
-export const SaveIcon = () => <i className="fa-solid fa-save fa-fw" style={{...faStyle, fontSize: '16px'}} aria-hidden="true"></i>;
+export const SaveIcon = () => <i className="fa-solid fa-save fa-fw" style={faStyle} aria-hidden="true"></i>;
 export const PenToSquareIcon = () => <i className="fa-solid fa-pen-to-square fa-fw" style={{...faStyle, fontSize: '16px'}} aria-hidden="true"></i>;
 export const FolderPlusIcon = () => <i className="fa-solid fa-folder-plus fa-fw" style={{...faStyle, fontSize: '16px'}} aria-hidden="true"></i>;
 export const TrashIcon = () => <i className="fa-solid fa-trash-can fa-fw" style={{...faStyle, fontSize: '16px'}} aria-hidden="true"></i>;
@@ -91,4 +93,4 @@ export const SidebarOpenIcon = () => (
 const fileTreeIconStyle = { width: '16px', height: '16px' } as const;
 export const FolderIcon = () => <svg xmlns="http://www.w3.org/2000/svg" style={fileTreeIconStyle} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"></path></svg>;
 export const FolderOpenIcon = () => <svg xmlns="http://www.w3.org/2000/svg" style={fileTreeIconStyle} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 14 1.45-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2h3.93a2 2 0 0 1 1.66.9l.82 1.2a2 2 0 0 0 1.66.9H18a2 2 0 0 1 2 2v2"></path></svg>;
-export const FileIcon = () => <svg xmlns="http://www.w.org/2000/svg" style={fileTreeIconStyle} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>;
+export const FileIcon = () => <svg xmlns="http://www.w3.org/2000/svg" style={fileTreeIconStyle} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>;

@@ -14,4 +14,5 @@ export interface FormatState {
   isJustifyFull: boolean;
   highlightColor: string;
   blockBackgroundColor: string;
+  emoji: string;
 }

@@ -15,13 +15,28 @@ const CodeBlockMenu: React.FC = () => {
 
 	// ───── position the menu next to the hovered <pre> ─
 	useEffect(() => {
-		if (!hoveredCodeBlock) return;
-		const rect = hoveredCodeBlock.getBoundingClientRect();
+		if (!hoveredCodeBlock || !menuRef.current) {
+			setPos({ top: -9999, left: -9999 }); // Hide if no block or ref
+			return;
+		}
+
+		// The menu's `offsetParent` is the nearest positioned ancestor, which is `<main>`.
+		const offsetParent = menuRef.current.offsetParent as HTMLElement | null;
+		if (!offsetParent) return;
+
+		const preRect = hoveredCodeBlock.getBoundingClientRect();
+		const parentRect = offsetParent.getBoundingClientRect();
+
+		// We need to convert the <pre> block's viewport-relative coordinates
+		// into coordinates relative to the offsetParent (`<main>`).
+		const top = preRect.top - parentRect.top;
+		const left = preRect.right - parentRect.left;
+
 		setPos({
-			top: rect.top + window.scrollY + 8,
-			left: rect.right + window.scrollX - 8
+			top: top + 8, // 8px vertical offset from the top of the block
+			left: left - 8, // 8px horizontal offset from the right of the block
 		});
-	}, [hoveredCodeBlock]);
+	}, [hoveredCodeBlock, menuRef]);
 
 	// ───── close dropdown on outside click ────────────
 	useEffect(() => {

@@ -56,7 +56,7 @@ const EditorToolbar = () => {
           title={isSaving ? "Saving..." : "Save current file (Cmd/Ctrl+S)"}
           disabled={!activeFile || isSaving || !isDirty}
         >
-          {isSaving ? <RefreshCwIcon className="animate-spin" /> : <SaveIcon />}
+          {isSaving ? <RefreshCwIcon className="animate-spin" size="large" /> : <SaveIcon />}
       </ToolbarButton>
 
       <div className="toolbar-divider h-6 border-l border-gray-300 mx-2"></div>
@@ -105,7 +105,7 @@ const EditorToolbar = () => {
       
       <div className="relative" ref={overflowRef}>
         <ToolbarButton onClick={() => setIsOverflowOpen(prev => !prev)} isActive={isOverflowOpen} title="More options">
-          <EllipsisVerticalIcon />
+          <EllipsisVerticalIcon size="large" />
         </ToolbarButton>
         {isOverflowOpen && (
            <div className="dropdown-panel absolute top-full right-0 mt-2 z-20 bg-white rounded-lg shadow-xl border border-gray-200 p-2 flex flex-row items-center gap-x-1 w-max">

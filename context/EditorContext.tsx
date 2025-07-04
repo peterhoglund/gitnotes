@@ -10,7 +10,8 @@ import { INITIAL_STATE } from '../utils/constants';
 
 interface EditorContextType {
 	editorRef: React.RefObject<HTMLDivElement>;
-	menuRef: React.RefObject<HTMLDivElement>;	// ① shared ref
+	menuRef: React.RefObject<HTMLDivElement>;
+	emojiMenuRef: React.RefObject<HTMLDivElement>;
 	formatState: FormatState;
 	setFormatState: React.Dispatch<React.SetStateAction<FormatState>>;
 	editorWidth: number;
@@ -19,8 +20,12 @@ interface EditorContextType {
 	setHoveredCodeBlock: React.Dispatch<
 		React.SetStateAction<HTMLElement | null>
 	>;
+	hoveredEmojiBlock: HTMLElement | null;
+	setHoveredEmojiBlock: React.Dispatch<React.SetStateAction<HTMLElement | null>>;
 	cancelHideMenu: () => void;
 	hideMenu: () => void;
+	cancelHideEmojiMenu: () => void;
+	hideEmojiMenu: () => void;
 	addHoverListeners: (container: HTMLElement | null) => void;
 }
 
@@ -30,15 +35,19 @@ export const EditorContext =
 export const EditorProvider = ({ children }: { children: ReactNode }) => {
 	/* ─── refs & state ───────────────────────────── */
 	const editorRef = useRef<HTMLDivElement>(null);
-	const menuRef = useRef<HTMLDivElement>(null);		// ①
+	const menuRef = useRef<HTMLDivElement>(null);
+	const emojiMenuRef = useRef<HTMLDivElement>(null);
 	const [formatState, setFormatState] =
 		useState<FormatState>(INITIAL_STATE);
 	const [editorWidth, setEditorWidth] = useState(650);
 	const [hoveredCodeBlock, setHoveredCodeBlock] =
 		useState<HTMLElement | null>(null);
+	const [hoveredEmojiBlock, setHoveredEmojiBlock] =
+		useState<HTMLElement | null>(null);
 
-	/* ─── menu-hide timer ─────────────────────────── */
+	/* ─── menu-hide timers ─────────────────────────── */
 	const hideMenuTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const hideEmojiMenuTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 	const cancelHideMenu = useCallback(() => {
 		if (hideMenuTimeout.current) {
@@ -53,42 +62,82 @@ export const EditorProvider = ({ children }: { children: ReactNode }) => {
 		}, 300);
 	}, []);
 
-	/* ─── hover listeners for every <pre> ─────────── */
+	const cancelHideEmojiMenu = useCallback(() => {
+		if (hideEmojiMenuTimeout.current) {
+			clearTimeout(hideEmojiMenuTimeout.current);
+			hideEmojiMenuTimeout.current = null;
+		}
+	}, []);
+
+	const hideEmojiMenu = useCallback(() => {
+		hideEmojiMenuTimeout.current = setTimeout(() => {
+			setHoveredEmojiBlock(null);
+		}, 300);
+	}, []);
+
+	/* ─── hover listeners for all floating menus ───── */
 	const addHoverListeners = useCallback(
 		(container: HTMLElement | null) => {
 			if (!container) return;
-			container.querySelectorAll('pre').forEach(pre => {
+			
+			// Handle code blocks
+			const codeBlocks: HTMLElement[] = [];
+			if (container.tagName === 'PRE') {
+				codeBlocks.push(container);
+			} else {
+				container.querySelectorAll('pre').forEach(pre => codeBlocks.push(pre));
+			}
+
+			codeBlocks.forEach(pre => {
 				pre.onmouseenter = () => {
 					cancelHideMenu();
-					setHoveredCodeBlock(pre as HTMLElement);
+					setHoveredCodeBlock(pre);
 				};
-
 				pre.onmouseleave = (e: MouseEvent) => {
-					// ② ignore pointer moves into the menu
-					if (
-						menuRef.current &&
-						menuRef.current.contains(e.relatedTarget as Node)
-					)
-						return;
+					if (menuRef.current?.contains(e.relatedTarget as Node)) return;
 					hideMenu();
 				};
 			});
+
+			// Handle emoji blocks - check if the container is the block itself or find children
+			const emojiBlocks: HTMLElement[] = [];
+			if (container.classList.contains('custom-bg-block')) {
+				emojiBlocks.push(container);
+			} else {
+				container.querySelectorAll('.custom-bg-block').forEach(el => emojiBlocks.push(el as HTMLElement));
+			}
+			
+			emojiBlocks.forEach(block => {
+				block.onmouseenter = () => {
+					cancelHideEmojiMenu();
+					setHoveredEmojiBlock(block);
+				};
+				block.onmouseleave = (e: MouseEvent) => {
+					if (emojiMenuRef.current?.contains(e.relatedTarget as Node)) return;
+					hideEmojiMenu();
+				};
+			});
 		},
-		[cancelHideMenu, hideMenu],
+		[cancelHideMenu, hideMenu, setHoveredCodeBlock, cancelHideEmojiMenu, hideEmojiMenu, setHoveredEmojiBlock, menuRef, emojiMenuRef],
 	);
 
 	/* ─── provider value ──────────────────────────── */
 	const value: EditorContextType = {
 		editorRef,
-		menuRef,					// ① expose ref
+		menuRef,
+		emojiMenuRef,
 		formatState,
 		setFormatState,
 		editorWidth,
 		setEditorWidth,
 		hoveredCodeBlock,
 		setHoveredCodeBlock,
+		hoveredEmojiBlock,
+		setHoveredEmojiBlock,
 		cancelHideMenu,
 		hideMenu,
+		cancelHideEmojiMenu,
+		hideEmojiMenu,
 		addHoverListeners,
 	};
 

@@ -18,6 +18,7 @@ export const INITIAL_STATE: FormatState = {
 	isJustifyFull: false,
 	highlightColor: TRANSPARENT,
 	blockBackgroundColor: TRANSPARENT,
+	emoji: '',
 };
 
 export const INITIAL_CONTENT = `
@@ -50,3 +51,5 @@ export const LANGUAGES = [
   { value: 'py', label: 'Python' },
   { value: 'bash', label: 'Bash' },
 ];
+
+export const EMOJIS = ['💡', 'ℹ️', '⚠️', '✅', '👍', '📌', '💬', '🔥', '🎯', '🎉', '❓', '🛑'];

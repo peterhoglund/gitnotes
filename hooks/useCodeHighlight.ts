@@ -55,40 +55,23 @@ function createRangeByOffset(element: Node, offset: number) {
 export const useCodeHighlight = () => {
   const { addHoverListeners, editorRef } = useEditorContext();
   
-  const highlightAll = useCallback((container: HTMLElement | null) => {
-    if (!container || typeof Prism === 'undefined') return;
-
-    const pres = container.querySelectorAll('pre');
-    pres.forEach(pre => {
-      let code = pre.querySelector('code');
-      if (!code) {
-        code = document.createElement('code');
-        while (pre.firstChild) {
-          code.appendChild(pre.firstChild);
-        }
-        pre.appendChild(code);
-      }
-
-      if (!Array.from(code.classList).some(cls => cls.startsWith('language-'))) {
-          code.classList.add('language-text');
-      }
-
-      if (code.classList.contains('language-text')) {
-          pre.classList.remove('line-numbers');
-      } else {
-          if (!pre.classList.contains('line-numbers')) {
-              pre.classList.add('line-numbers');
-          }
-      }
-      
-      Prism.highlightElement(code);
-    });
-    addHoverListeners(container);
-  }, [addHoverListeners]);
-
   const highlightBlock = useCallback((preElement: HTMLElement) => {
-    const code = preElement.querySelector('code');
-    if (!code || typeof Prism === 'undefined') return;
+    if (typeof Prism === 'undefined') return;
+
+    let code = preElement.querySelector('code');
+    // If no <code> element, create one and wrap the content.
+    if (!code) {
+        code = document.createElement('code');
+        while (preElement.firstChild) {
+            code.appendChild(preElement.firstChild);
+        }
+        preElement.appendChild(code);
+    }
+    
+    // Ensure a language class exists, default to 'text'.
+    if (!Array.from(code.classList).some(cls => cls.startsWith('language-'))) {
+        code.classList.add('language-text');
+    }
 
     // 1. Save Caret Position using character offset.
     const sel = window.getSelection();
@@ -107,25 +90,33 @@ export const useCodeHighlight = () => {
     
     // Merge any adjacent text nodes that might have been split by highlighting.
     code.normalize();
-  }, []);
+
+    // After highlighting, (re-)attach hover listeners to this block.
+    addHoverListeners(preElement);
+  }, [addHoverListeners]);
   
+  const highlightAll = useCallback((container: HTMLElement | null) => {
+    if (!container || typeof Prism === 'undefined') return;
+
+    const pres = container.querySelectorAll('pre');
+    pres.forEach(pre => {
+      highlightBlock(pre);
+    });
+    addHoverListeners(container);
+  }, [addHoverListeners, highlightBlock]);
+
   const handleLanguageChange = useCallback((preElement: HTMLElement, lang: string) => {
       const code = preElement.querySelector('code');
       if (!code) return;
 
       const textContent = code.textContent || '';
-      code.className = '';
-      preElement.classList.remove('line-numbers');
+      code.className = ''; // Remove all classes, including language-*.
       code.textContent = textContent;
 
-      const newLangClass = lang === 'text' ? 'language-text' : `language-${lang}`;
+      const newLangClass = `language-${lang}`;
       code.classList.add(newLangClass);
-
-      if (lang !== 'text') {
-        preElement.classList.add('line-numbers');
-      }
       
-      // Use the new, robust highlight function to preserve the caret.
+      // Use the new, robust highlight function to preserve the caret and add listeners.
       highlightBlock(preElement);
 
       editorRef.current?.focus();

@@ -6,7 +6,7 @@ import { TRANSPARENT } from '../utils/constants';
 import { useCodeHighlight } from './useCodeHighlight';
 
 export const useFormatState = () => {
-    const { editorRef, setFormatState } = useEditorContext();
+    const { editorRef, setFormatState, addHoverListeners } = useEditorContext();
     const { theme } = useTheme();
     const { highlightAll, highlightBlock } = useCodeHighlight();
 
@@ -23,6 +23,7 @@ export const useFormatState = () => {
 		let color = DEFAULT_COLOR;
 		let highlightColor = TRANSPARENT;
 		let blockBackgroundColor = TRANSPARENT;
+		let emoji = '';
 		let isCode = false;
 
 		if (sel?.anchorNode) {
@@ -42,8 +43,13 @@ export const useFormatState = () => {
 			}
 			
 			const blockEl = el?.closest('p, h1, h2, h3, h4, h5, h6, li');
-			if (blockEl instanceof HTMLElement && blockEl.style.backgroundColor) {
-				blockBackgroundColor = rgbToHex(blockEl.style.backgroundColor).toUpperCase();
+			if (blockEl instanceof HTMLElement) {
+				if (blockEl.style.backgroundColor) {
+					blockBackgroundColor = rgbToHex(blockEl.style.backgroundColor).toUpperCase();
+				}
+				if (blockEl.dataset.emoji) {
+					emoji = blockEl.dataset.emoji;
+				}
 			}
 		}
 
@@ -61,6 +67,7 @@ export const useFormatState = () => {
 			color,
 			highlightColor,
 			blockBackgroundColor,
+			emoji,
 			isJustifyLeft: qs('justifyLeft'),
 			isJustifyCenter: qs('justifyCenter'),
 			isJustifyRight: qs('justifyRight'),
@@ -69,143 +76,175 @@ export const useFormatState = () => {
 	}, [editorRef, setFormatState, theme]);
 
     const handleCommand = useCallback((cmd: string, value?: string) => {
-		const inlineCommands = ['bold', 'italic', 'underline', 'strikethrough', 'foreColor', 'toggleCode', 'toggleHighlight'];
-		
-		const sel = window.getSelection();
-		if (!sel || !sel.rangeCount) return;
+        const inlineFormattingCommands = [
+            'bold',
+            'italic',
+            'underline',
+            'strikethrough',
+            'toggleCode',
+            'toggleHighlight',
+            'foreColor'
+        ];
 
-		let range = sel.getRangeAt(0);
-		const isCollapsed = range.collapsed;
-		let marker: HTMLElement | null = null;
+        const sel = window.getSelection();
+        if (!sel || !sel.rangeCount) return;
 
-		if (isCollapsed && inlineCommands.includes(cmd)) {
-			if (range.startContainer.nodeType === Node.TEXT_NODE) {
-				const textNode = range.startContainer as Text;
-				const text = textNode.textContent || '';
-				const offset = range.startOffset;
+        const range = sel.getRangeAt(0);
 
-				let start = offset, end = offset;
-				while (start > 0 && /\S/.test(text[start - 1])) start--;
-				while (end < text.length && /\S/.test(text[end])) end++;
-				
-				if (start !== end) {
-					marker = document.createElement('span');
-					marker.id = 'caret-marker';
-					range.insertNode(marker);
+        // For inline commands, do nothing if there's no selection.
+        if (inlineFormattingCommands.includes(cmd) && range.collapsed) {
+            return;
+        }
 
-					const wordRange = document.createRange();
-					if (marker.previousSibling && marker.previousSibling.nodeType === Node.TEXT_NODE) {
-						wordRange.setStart(marker.previousSibling, start);
-					} else {
-						wordRange.setStart(textNode, start);
-					}
-					if(marker.nextSibling && marker.nextSibling.nodeType === Node.TEXT_NODE) {
-						wordRange.setEnd(marker.nextSibling, end - offset);
-					} else {
-						wordRange.setEnd(textNode, end);
-					}
-					
-					sel.removeAllRanges();
-					sel.addRange(wordRange);
-					range = wordRange;
-				}
-			}
-		}
+        // --- Command Execution ---
 
-		if (cmd === 'toggleCode' || cmd === 'toggleHighlight') {
-			const tag = cmd === 'toggleCode' ? 'code' : 'span';
-			const dataset = cmd === 'toggleHighlight' ? { key: 'highlight', value: 'true' } : null;
+        if (cmd === 'toggleHighlight') {
+            const isRemoving = !value || value === TRANSPARENT;
 
-			const elementToCheck = marker || range.commonAncestorContainer;
-			const container = elementToCheck.nodeType === Node.TEXT_NODE ? elementToCheck.parentElement : (elementToCheck as HTMLElement);
-			
-			let selector = tag;
-			if (dataset) selector += `[data-${dataset.key}="${dataset.value}"]`;
-			const existingEl = container?.closest<HTMLElement>(selector);
+            if (!isRemoving) {
+                // APPLYING: Use "extract, clean, and wrap" to prevent nested spans.
+                const fragment = range.extractContents();
+                const existingSpans = fragment.querySelectorAll('span[data-highlight="true"]');
+                existingSpans.forEach(span => span.replaceWith(...span.childNodes));
+                fragment.normalize();
 
-			const isRemoving = (cmd === 'toggleHighlight' && (!value || value === TRANSPARENT));
+                const newWrapper = document.createElement('span');
+                newWrapper.dataset.highlight = 'true';
+                newWrapper.style.backgroundColor = value;
+                newWrapper.appendChild(fragment);
+                range.insertNode(newWrapper);
+                
+                // Restore selection
+                const newRange = document.createRange();
+                newRange.selectNodeContents(newWrapper);
+                sel.removeAllRanges();
+                sel.addRange(newRange);
+            } else {
+                // REMOVING: Must handle selections *inside* a highlight.
+                const { commonAncestorContainer } = range;
+                const parentElement = commonAncestorContainer.nodeType === Node.TEXT_NODE
+                    ? commonAncestorContainer.parentElement
+                    : (commonAncestorContainer as HTMLElement);
+                const existingHighlight = parentElement?.closest<HTMLElement>('span[data-highlight="true"]');
+                
+                if (existingHighlight) {
+                    // The selection is inside a highlight span. Unwrap the whole span.
+                    const parent = existingHighlight.parentNode!;
+                    while (existingHighlight.firstChild) {
+                        parent.insertBefore(existingHighlight.firstChild, existingHighlight);
+                    }
+                    parent.removeChild(existingHighlight);
+                    parent.normalize();
+                    // Restore original range
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+                } else {
+                    // The selection is not inside a highlight, but may contain one.
+                    const fragment = range.extractContents();
+                    const spansInFragment = fragment.querySelectorAll('span[data-highlight="true"]');
+                    spansInFragment.forEach(span => span.replaceWith(...span.childNodes));
+                    
+                    const nodes = Array.from(fragment.childNodes);
+                    range.insertNode(fragment);
+                    
+                    if (nodes.length > 0) {
+                         const newRange = document.createRange();
+                         newRange.setStartBefore(nodes[0]);
+                         newRange.setEndAfter(nodes[nodes.length - 1]);
+                         sel.removeAllRanges();
+                         sel.addRange(newRange);
+                    }
+                }
+            }
+        } else if (cmd === 'toggleCode') {
+            const elementToCheck = range.commonAncestorContainer;
+            const container = elementToCheck.nodeType === Node.TEXT_NODE ? elementToCheck.parentElement : (elementToCheck as HTMLElement);
+            const existingEl = container?.closest<HTMLElement>('code:not(pre code)');
 
-			if (existingEl && (isRemoving || existingEl.tagName.toLowerCase() === 'code' || rgbToHex(existingEl.style.backgroundColor).toLowerCase() === value?.toLowerCase())) {
-				const parent = existingEl.parentNode!;
-				while (existingEl.firstChild) parent.insertBefore(existingEl.firstChild, existingEl);
-				parent.removeChild(existingEl);
-				parent.normalize();
-			} else if (existingEl && cmd === 'toggleHighlight') {
-				existingEl.style.backgroundColor = value || TRANSPARENT;
-			} else if (!isRemoving) {
-				const newEl = document.createElement(tag);
-				if (dataset) newEl.dataset[dataset.key] = dataset.value;
-				if (cmd === 'toggleHighlight') newEl.style.backgroundColor = value || TRANSPARENT;
-				
-				try {
-					range.surroundContents(newEl);
-				} catch (e) {
-					document.execCommand('insertHTML', false, `${newEl.outerHTML.replace('</'+tag+'>', '')}${range.toString()}</${tag}>`);
-				}
-			}
-		} else if (cmd === 'setBlockBackgroundColor') {
+            if (existingEl) {
+                const parent = existingEl.parentNode!;
+                while (existingEl.firstChild) parent.insertBefore(existingEl.firstChild, existingEl);
+                parent.removeChild(existingEl);
+                parent.normalize();
+                
+                // Restore original range
+                sel.removeAllRanges();
+                sel.addRange(range);
+            } else {
+                const newEl = document.createElement('code');
+                try {
+                    range.surroundContents(newEl);
+                    const newRange = document.createRange();
+                    newRange.selectNodeContents(newEl);
+                    sel.removeAllRanges();
+                    sel.addRange(newRange);
+                } catch (e) {
+                    document.execCommand('insertHTML', false, `<code>${range.toString()}</code>`);
+                }
+            }
+        } else if (cmd === 'setBlockBackgroundColor') {
+            let node = range.commonAncestorContainer;
+            if (node.nodeType === Node.TEXT_NODE) node = node.parentNode!;
+            
+            const block = (node as HTMLElement).closest('p, h1, h2, h3, h4, h5, h6, li');
+            if (block) {
+                const isRemoving = !value || value === TRANSPARENT;
+                if (!isRemoving) {
+                    block.classList.add('custom-bg-block');
+                    (block as HTMLElement).style.backgroundColor = value;
+                } else {
+                    block.classList.remove('custom-bg-block');
+                    (block as HTMLElement).style.backgroundColor = '';
+                    // Also remove emoji if bg is removed
+                    block.removeAttribute('data-emoji');
+                    block.classList.remove('has-emoji');
+                }
+                // Re-apply hover listeners to catch the newly added/removed class
+                if (editorRef.current) {
+                    addHoverListeners(editorRef.current);
+                }
+            }
+        } else if (cmd === 'setBlockEmoji') {
 			let node = range.commonAncestorContainer;
 			if (node.nodeType === Node.TEXT_NODE) node = node.parentNode!;
 			
-			const block = (node as HTMLElement).closest('p, h1, h2, h3, h4, h5, h6, li');
+			const block = (node as HTMLElement).closest('.custom-bg-block');
 			if (block) {
-				const isRemoving = !value || value === TRANSPARENT;
-				if (!isRemoving) {
-					block.classList.add('custom-bg-block');
-					(block as HTMLElement).style.backgroundColor = value;
+				const isRemoving = !value;
+				if (isRemoving) {
+					block.removeAttribute('data-emoji');
+					block.classList.remove('has-emoji');
 				} else {
-					block.classList.remove('custom-bg-block');
-					(block as HTMLElement).style.backgroundColor = '';
+					block.setAttribute('data-emoji', value);
+					block.classList.add('has-emoji');
 				}
 			}
-		} else if (cmd === 'foreColor' && value) {
-            if (range.collapsed) {
-                document.execCommand(cmd, false, value);
-            } else {
-                const contents = range.cloneContents();
-                const tempDiv = document.createElement('div');
-                tempDiv.appendChild(contents);
-                const selectedHTML = tempDiv.innerHTML;
-
-                document.execCommand('insertHTML', false, `<span style="color: ${value}">${selectedHTML}</span>`);
-            }
-        } else {
-			document.execCommand(cmd, false, value);
-		}
-
-		if (marker && marker.parentNode) {
-			const finalRange = document.createRange();
-			finalRange.selectNode(marker);
-			finalRange.collapse(true);
-			sel.removeAllRanges();
-			sel.addRange(finalRange);
-
-			const parent = marker.parentNode;
-			parent.removeChild(marker);
-			parent.normalize();
-		}
-
-		editorRef.current?.focus();
-		updateFormatState();
+		} else {
+            // This handles bold, italic, underline, strikethrough, formatBlock, lists, justification, foreColor etc.
+            document.execCommand(cmd, false, value);
+        }
+    
+        // --- Post-command cleanup ---
+    
+        editorRef.current?.focus();
+        updateFormatState();
         
         // Smarter highlighting: only highlight what's necessary to prevent caret jumps.
         setTimeout(() => {
             const currentSel = window.getSelection();
             if (!currentSel || !currentSel.rangeCount || !editorRef.current) return;
-
+    
             const node = currentSel.anchorNode;
             const container = node?.nodeType === Node.ELEMENT_NODE ? (node as HTMLElement) : node?.parentElement;
             const pre = container?.closest('pre');
-
+    
             if (pre) {
-                // If we're inside a code block, only highlight that specific block.
                 highlightBlock(pre);
             } else if (cmd === 'formatBlock' && value === 'pre') {
-                // If we just created a new code block, highlight everything to catch it.
                 highlightAll(editorRef.current);
             }
         }, 0);
-	}, [updateFormatState, editorRef, highlightAll, highlightBlock]);
+    }, [updateFormatState, editorRef, highlightAll, highlightBlock, addHoverListeners]);
 
     const ensureParagraph = useCallback(() => {
 		if (editorRef.current && editorRef.current.innerHTML.trim() === '') {

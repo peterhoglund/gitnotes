@@ -16,7 +16,6 @@
     <!-- Prism JS themes for syntax highlighting -->
     <link id="prism-light-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" />
     <link id="prism-dark-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" disabled />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.css" />
 
     <style>
       html {
@@ -114,10 +113,26 @@
         border-radius: 4px;
       }
       .prose span[data-highlight="true"] {
-        padding: 0.2em 0.4em;
+        padding: 0.1em 0;
         border-radius: 4px;
         box-decoration-break: clone;
         -webkit-box-decoration-break: clone;
+      }
+
+      .prose .has-emoji {
+        position: relative;
+        /* Use important to override tailwind typography defaults that have high specificity */
+        padding-left: 2.5em !important;
+      }
+      .prose .has-emoji::before {
+        content: attr(data-emoji);
+        position: absolute;
+        left: 0;
+        top: 0.6em;
+        font-size: 1.25em;
+        line-height: 1; /* Tighter line height for the emoji itself */
+        width: 2.2em;
+        text-align: center;
       }
       
       /******************************************/
@@ -207,12 +222,12 @@
         cursor: col-resize !important;
       }
       
-      /* -- Code Block Language Menu -- */
-      .code-block-menu {
+      /* -- Floating Menus (Code Block & Emoji) -- */
+      .code-block-menu, .block-emoji-menu {
         position: absolute;
-        z-index: 15; /* Above resize handles but below main toolbar */
+        z-index: 15;
       }
-      .code-block-menu-button {
+      .code-block-menu-button, .block-emoji-menu-button {
         background-color: #e5e7eb; /* gray-200 */
         color: #4b5563; /* gray-600 */
         padding: 2px 8px;
@@ -225,11 +240,17 @@
         gap: 6px;
         border: 1px solid #d1d5db; /* gray-300 */
       }
-      .code-block-menu-button:hover {
+      .block-emoji-menu-button {
+        padding: 4px;
+        gap: 0;
+        min-width: 32px;
+        justify-content: center;
+        font-size: 18px;
+      }
+      .code-block-menu-button:hover, .block-emoji-menu-button:hover {
         background-color: #d1d5db; /* gray-300 */
       }
-      /* Position the dropdown panel relative to the menu */
-      .code-block-menu .dropdown-panel {
+      .code-block-menu .dropdown-panel, .block-emoji-menu .dropdown-panel {
         right: 0;
         top: calc(100% + 4px);
       }
@@ -355,13 +376,15 @@
           background-color: #3b82f6; /* blue-500 */
       }
 
-      /* -- Dark Mode Code Block Menu -- */
-      html.dark .code-block-menu-button {
+      /* -- Dark Mode Floating Menus -- */
+      html.dark .code-block-menu-button,
+      html.dark .block-emoji-menu-button {
         background-color: #3f3f46; /* zinc-700 */
         color: #d1d5db; /* gray-300 */
         border-color: #52525b; /* zinc-600 */
       }
-      html.dark .code-block-menu-button:hover {
+      html.dark .code-block-menu-button:hover,
+      html.dark .block-emoji-menu-button:hover {
         background-color: #52525b; /* zinc-600 */
       }
     </style>
@@ -381,7 +404,6 @@
     <script type="module" src="/index.tsx"></script>
     <!-- Prism JS for syntax highlighting -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
     <script>Prism.plugins.autoloader.languages_path = 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/';</script>
     
