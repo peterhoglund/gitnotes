@@ -82,8 +82,8 @@ const RepoSelector: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
                         title={repo.full_name}
                     >
                         <BookIcon />
-                        <span className={`truncate flex-1 whitespace-nowrap transition-opacity duration-100 ${isOpen ? 'opacity-100' : 'opacity-0'}`}>{repo.name}</span>
-                        <div className={`transition-opacity duration-100 ${isOpen ? 'opacity-100' : 'opacity-0'}`}>
+                        <span className={`truncate flex-1 whitespace-nowrap transition-all duration-200 ${isOpen ? 'opacity-100' : 'opacity-0 w-0'}`}>{repo.name}</span>
+                        <div className={`transition-all duration-200 ${isOpen ? 'opacity-100' : 'opacity-0 w-0'}`}>
                             {repo.private && <LockIcon />}
                         </div>
                     </div>

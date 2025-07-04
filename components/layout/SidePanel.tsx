@@ -25,7 +25,7 @@ const SidePanel = () => {
 
     return (
         <aside className={`side-panel flex-shrink-0 flex flex-col transition-all duration-300 ${isOpen ? 'w-64' : 'w-20'}`}>
-            <header className="side-panel-header h-16 flex items-center px-4 flex-shrink-0 overflow-hidden">
+            <header className="side-panel-header h-16 flex items-center px-4 flex-shrink-0">
                 <span className={`text-lg font-bold text-gray-700 dark:text-gray-300 whitespace-nowrap transition-all duration-200 ${isOpen ? 'opacity-100' : 'opacity-0 w-0'}`}>Zen Editor</span>
                 <button 
                   onClick={() => setIsOpen(!isOpen)} 

@@ -140,13 +140,15 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
                 <div className="relative group">
                     <div 
                         className={`file-tree-item flex items-center text-sm py-1 my-0.5 rounded-md cursor-pointer text-gray-600 dark:text-gray-400 transition-all duration-200 ${isActive ? 'active' : ''} ${!isOpen ? 'justify-center' : ''}`}
-                        style={{ paddingLeft: isOpen ? `${level * 16 + 8}px` : '8px' }}
+                        style={{ paddingLeft: isOpen ? `${level * 16 + 8}px` : undefined }}
                         onClick={() => isFolder ? toggleFolder(node.path) : handleFileClick(node.path)}
                         title={node.name}
                     >
-                        <div className="flex-shrink-0 w-5 h-5 flex items-center justify-center">
-                            {isFolder && (isExpanded ? <ChevronDownIcon /> : <ChevronRightIcon />)}
-                        </div>
+                        {isOpen && (
+                            <div className="flex-shrink-0 w-5 h-5 flex items-center justify-center">
+                                {isFolder && (isExpanded ? <ChevronDownIcon /> : <ChevronRightIcon />)}
+                            </div>
+                        )}
                         
                         <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center text-gray-500 dark:text-gray-400">
                             {isFolder ? (isExpanded ? <FolderOpenIcon /> : <FolderIcon />) : (<FileIcon />)}
