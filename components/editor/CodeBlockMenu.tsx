@@ -1,110 +1,77 @@
-import React, { useEffect, useState } from 'react';
-import { ChevronDownIcon } from '../icons';
+import React, { useState, useRef, useEffect } from 'react';
+import { Editor, BubbleMenu } from '@tiptap/react';
 import { LANGUAGES } from '../../utils/constants';
-import { useCodeHighlight } from '../../hooks/useCodeHighlight';
-import { useEditorContext } from '../../hooks/useEditorContext';
+import { ChevronDownIcon } from '../icons';
 
-const CodeBlockMenu: React.FC = () => {
-	// ───── context hooks ─────────────────────────────
-	const { hoveredCodeBlock, cancelHideMenu, hideMenu, menuRef } = useEditorContext();
-	const { handleLanguageChange } = useCodeHighlight();
+interface CodeBlockMenuProps {
+  editor: Editor;
+}
 
-	// ───── local state ───────────────────────────────
-	const [isOpen, setIsOpen] = useState(false);
-	const [pos, setPos] = useState({ top: -9999, left: -9999 });
+const CodeBlockMenu: React.FC<CodeBlockMenuProps> = ({ editor }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  
+  const currentLang = editor.getAttributes('codeBlock').language || 'text';
+  const currentLabel = LANGUAGES.find(l => l.value === currentLang)?.label ?? 'Text';
 
-	// ───── position the menu next to the hovered <pre> ─
-	useEffect(() => {
-		if (!hoveredCodeBlock || !menuRef.current) {
-			setPos({ top: -9999, left: -9999 }); // Hide if no block or ref
-			return;
-		}
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
-		// The menu's `offsetParent` is the nearest positioned ancestor, which is `<main>`.
-		const offsetParent = menuRef.current.offsetParent as HTMLElement | null;
-		if (!offsetParent) return;
+  const selectLanguage = (lang: string) => {
+    editor.chain().focus().updateAttributes('codeBlock', { language: lang }).run();
+    setIsOpen(false);
+  };
 
-		const preRect = hoveredCodeBlock.getBoundingClientRect();
-		const parentRect = offsetParent.getBoundingClientRect();
+  return (
+    <BubbleMenu
+      editor={editor}
+      tippyOptions={{
+        duration: 100,
+        placement: 'top-end',
+        offset: [0, 8],
+      }}
+      shouldShow={({ editor }) => editor.isActive('codeBlock')}
+      className="relative"
+    >
+      <div ref={menuRef}>
+        <button
+          type="button"
+          className="flex items-center gap-2 px-2 py-1 rounded-md bg-gray-200 text-gray-700 dark:bg-zinc-700 dark:text-gray-200 text-sm hover:bg-gray-300 dark:hover:bg-zinc-600"
+          onClick={() => setIsOpen(o => !o)}
+        >
+          <span>{currentLabel}</span>
+          <ChevronDownIcon />
+        </button>
 
-		// We need to convert the <pre> block's viewport-relative coordinates
-		// into coordinates relative to the offsetParent (`<main>`).
-		const top = preRect.top - parentRect.top;
-		const left = preRect.right - parentRect.left;
-
-		setPos({
-			top: top + 8, // 8px vertical offset from the top of the block
-			left: left - 8, // 8px horizontal offset from the right of the block
-		});
-	}, [hoveredCodeBlock, menuRef]);
-
-	// ───── close dropdown on outside click ────────────
-	useEffect(() => {
-		const outside = (e: MouseEvent) => {
-			if (menuRef.current && !menuRef.current.contains(e.target as Node)) setIsOpen(false);
-		};
-		document.addEventListener('mousedown', outside);
-		return () => document.removeEventListener('mousedown', outside);
-	}, [menuRef]);
-
-	// ───── language helpers ───────────────────────────
-	const codeEl = hoveredCodeBlock?.querySelector('code');
-	const langClass = codeEl ? [...codeEl.classList].find(c => c.startsWith('language-')) : '';
-	const currentLang = langClass ? langClass.replace('language-', '') : 'text';
-	const currentLabel = LANGUAGES.find(l => l.value === currentLang)?.label ?? 'Text';
-
-	const select = (value: string) => {
-		if (hoveredCodeBlock) handleLanguageChange(hoveredCodeBlock, value);
-		setIsOpen(false);
-	};
-
-	// ───── render ─────────────────────────────────────
-	return (
-		<div
-			ref={menuRef}
-			className={`code-block-menu absolute transition-opacity ${
-				hoveredCodeBlock ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-			}`}
-			style={{ top: pos.top, left: pos.left, transform: 'translateX(-100%)', zIndex: 40 }}
-			onMouseEnter={cancelHideMenu}
-			onMouseLeave={hideMenu}
-		>
-			<button
-				type="button"
-				className="code-block-menu-button flex items-center gap-1"
-				onMouseDown={e => {
-					e.preventDefault();		// keep focus inside editor
-					setIsOpen(o => !o);
-				}}
-			>
-				<span>{currentLabel}</span>
-				<ChevronDownIcon />
-			</button>
-
-			{isOpen && (
-				<div className="dropdown-panel absolute z-10 mt-1 w-48 rounded-md border border-gray-200 bg-white shadow-lg">
-					<ul className="max-h-60 overflow-y-auto py-1">
-						{LANGUAGES.map(lang => (
-							<li key={lang.value}>
-								<button
-									type="button"
-									onMouseDown={e => {
-										e.preventDefault();
-										select(lang.value);
-									}}
-									className={`dropdown-item block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 ${
-										lang.value === currentLang ? 'active' : ''
-									}`}
-								>
-									{lang.label}
-								</button>
-							</li>
-						))}
-					</ul>
-				</div>
-			)}
-		</div>
-	);
+        {isOpen && (
+          <div className="dropdown-panel absolute z-10 mt-1 w-48 rounded-md border border-gray-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-800 right-0">
+            <ul className="max-h-60 overflow-y-auto py-1">
+              {LANGUAGES.map(lang => (
+                <li key={lang.value}>
+                  <button
+                    type="button"
+                    onClick={() => selectLanguage(lang.value)}
+                    className={`dropdown-item block w-full px-4 py-2 text-left text-sm ${
+                      lang.value === currentLang ? 'active' : ''
+                    }`}
+                  >
+                    {lang.label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    </BubbleMenu>
+  );
 };
 
 export default CodeBlockMenu;

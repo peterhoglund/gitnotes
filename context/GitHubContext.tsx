@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { Repository, GitHubUser, RepoContentNode, FileContent } from '../types/github';
 import * as api from '../services/github';
@@ -298,6 +297,11 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
     const loadFile = useCallback(async (path: string) => {
         if (!token || !selectedRepo) return;
+        if (isDirty) {
+            if (!window.confirm("You have unsaved changes. Are you sure you want to discard them?")) {
+                return;
+            }
+        }
         setIsLoading(true);
         setError(null);
         try {
@@ -310,7 +314,7 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         } finally {
             setIsLoading(false);
         }
-    }, [token, selectedRepo]);
+    }, [token, selectedRepo, isDirty]);
 
     const saveFile = useCallback(async (content: string) => {
         if (!token || !selectedRepo || !activeFile) return;

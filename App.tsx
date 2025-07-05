@@ -1,106 +1,78 @@
-
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
+import { Editor } from '@tiptap/core';
 import { ThemeProvider } from './context/ThemeContext';
-import { EditorProvider } from './context/EditorContext';
 import { GitHubProvider } from './context/GitHubContext';
 import { useGitHub } from './hooks/useGitHub';
 import AppShell from './components/layout/AppShell';
 import EditorToolbar from './components/editor/EditorToolbar';
 import EditorCanvas from './components/editor/EditorCanvas';
+import { useTiptapEditor } from './components/editor/useTiptapEditor';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import CodeBlockMenu from './components/editor/CodeBlockMenu';
 import BlockEmojiMenu from './components/editor/BlockEmojiMenu';
-import { useEditorContext } from './hooks/useEditorContext';
-import { useTheme } from './hooks/useTheme';
-import { useCodeHighlight } from './hooks/useCodeHighlight';
-import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
-import { useFormatState } from './hooks/useFormatState';
 
 const ZenEditor: React.FC = () => {
-    const { editorRef, editorWidth, setEditorWidth } = useEditorContext();
-    const { theme } = useTheme();
-    const { highlightAll } = useCodeHighlight();
-    const { handleKeyDown, handleKeyUp, handlePaste } = useKeyboardShortcuts();
-    const { updateFormatState } = useFormatState();
-    const { activeFile, initialContent, isDirty, setIsDirty } = useGitHub();
+    const { activeFile, initialContent, isDirty, setIsDirty, saveFile } = useGitHub();
+    const editor = useTiptapEditor(initialContent);
 
-    useEffect(() => {
-        document.execCommand('styleWithCSS', false, 'true');
-    }, []);
-    
-    useEffect(() => {
-        updateFormatState();
-        highlightAll(editorRef.current);
-    }, [theme, updateFormatState, highlightAll, editorRef]);
+    const { handleKeyDown } = useKeyboardShortcuts(editor);
 
+    // Effect to load content into the editor when the active file changes
     useEffect(() => {
-        if (editorRef.current) {
+        if (!editor) return;
+
+        // isReady is not an official flag, we use a small timeout to ensure commands are available
+        const timeoutId = setTimeout(() => {
             const newContent = activeFile ? activeFile.content : initialContent;
-            // Only update if content is actually different to avoid resetting cursor
-            if (editorRef.current.innerHTML !== newContent) {
-                editorRef.current.innerHTML = newContent;
+            
+            if (editor.isDestroyed || editor.getHTML() === newContent) {
+                return;
             }
-            // A short delay ensures the editor is fully rendered before highlighting.
-            setTimeout(() => {
-                if(editorRef.current) {
-                    highlightAll(editorRef.current);
-                    updateFormatState();
-                }
-            }, 50);
-        }
-    }, [activeFile, initialContent, editorRef, highlightAll, updateFormatState]);
+
+            // `setContent` resets the history and dirty state
+            editor.commands.setContent(newContent, false);
+            // After setting content, it's no longer dirty
+            setIsDirty(false); 
+        }, 10);
+        
+        return () => clearTimeout(timeoutId);
+
+    }, [activeFile, initialContent, editor, setIsDirty]);
 
     // Effect to track if the editor content is "dirty" (changed from saved state)
     useEffect(() => {
-        const editor = editorRef.current;
         if (!editor) return;
 
-        const handleContentChange = () => {
-            if (activeFile) {
-                const isNowDirty = editor.innerHTML !== activeFile.content;
-                if (isNowDirty !== isDirty) {
-                    setIsDirty(isNowDirty);
-                }
-            } else if (isDirty) {
-                // No active file, so it can't be dirty
-                setIsDirty(false);
+        const handleUpdate = ({ editor }: { editor: Editor }) => {
+            const savedContent = activeFile ? activeFile.content : initialContent;
+            const isNowDirty = editor.getHTML() !== savedContent;
+            if (isNowDirty !== isDirty) {
+                setIsDirty(isNowDirty);
             }
         };
 
-        const mutationObserver = new MutationObserver(handleContentChange);
-        mutationObserver.observe(editor, {
-            attributes: true,
-            childList: true,
-            subtree: true,
-            characterData: true,
-        });
+        editor.on('update', handleUpdate);
 
-        // Initial check
-        handleContentChange();
+        return () => {
+            editor.off('update', handleUpdate);
+        };
+    }, [editor, activeFile, initialContent, isDirty, setIsDirty]);
 
-        return () => mutationObserver.disconnect();
-    }, [activeFile, editorRef, isDirty, setIsDirty]);
-
+    if (!editor) {
+        return null; // or a loading spinner
+    }
 
     return (
         <AppShell>
             <main className="relative flex-grow flex flex-col overflow-hidden">
                 <div className="relative z-20 flex justify-center py-4">
-                    <EditorToolbar />
+                    <EditorToolbar editor={editor} />
                 </div>
-                <CodeBlockMenu />
-                <BlockEmojiMenu />
+                <CodeBlockMenu editor={editor} />
+                <BlockEmojiMenu editor={editor} />
                 <EditorCanvas
-                    // Use a key to force re-mount when switching files.
-                    // This is crucial for correctly setting initial content in an uncontrolled component.
-                    key={activeFile?.path || 'initial'}
-                    ref={editorRef}
-                    initialContent={activeFile ? activeFile.content : initialContent}
-                    onSelectionChange={updateFormatState}
+                    editor={editor}
                     onKeyDown={handleKeyDown}
-                    onKeyUp={handleKeyUp}
-                    onPaste={handlePaste}
-                    editorWidth={editorWidth}
-                    onEditorWidthChange={setEditorWidth}
                 />
             </main>
         </AppShell>
@@ -111,9 +83,7 @@ const App: React.FC = () => {
 	return (
 		<GitHubProvider>
 			<ThemeProvider>
-				<EditorProvider>
-					<ZenEditor />
-				</EditorProvider>
+                <ZenEditor />
 			</ThemeProvider>
 		</GitHubProvider>
 	);
