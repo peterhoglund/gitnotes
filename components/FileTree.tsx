@@ -99,7 +99,7 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
 
     const handleCreate = async (type: 'file' | 'folder', basePath: string) => {
         setNewItemMenuPath(null); // Close menu on click
-        const defaultName = type === 'file' ? 'new-page.md' : 'new-folder';
+        const defaultName = type === 'file' ? 'new-page' : 'new-folder';
         const promptMessage = `Enter name for new ${type}${basePath ? ` in '${basePath}'` : ''}:`;
         const name = window.prompt(promptMessage, defaultName);
         if (!name || name.trim() === '') return;
@@ -241,7 +241,7 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
     }
 
     return (
-        <div className="py-2 px-2 flex flex-col h-full">
+        <div className="py-2 px-1 flex flex-col h-full">
             {selectedRepo && (
                  <div className={`px-1 pb-2 ${!isOpen ? 'flex flex-col items-center gap-y-1' : ''}`}>
                     <button
@@ -283,7 +283,7 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
                     <>
                         {!searchTerm && selectedRepo && (
                             <div 
-                                className={`px-2 text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 flex items-center gap-2 transition-all duration-200 ${isOpen ? 'overflow-visible max-h-12 opacity-100' : 'overflow-hidden max-h-0 opacity-0'}`} 
+                                className={`px-4 text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 flex items-center gap-2 transition-all duration-200 ${isOpen ? 'overflow-visible max-h-12 opacity-100' : 'overflow-hidden max-h-0 opacity-0'}`} 
                                 title={`Connected to ${selectedRepo.full_name}`}
                             >
                                 <BookIcon />
