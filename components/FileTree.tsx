@@ -1,4 +1,5 @@
 
+
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useGitHub } from '../hooks/useGitHub';
 import { 
@@ -282,7 +283,7 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
                     <>
                         {!searchTerm && selectedRepo && (
                             <div 
-                                className={`px-2 text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 flex items-center gap-2 overflow-hidden transition-all duration-200 ${isOpen ? 'max-h-12 opacity-100' : 'max-h-0 opacity-0'}`} 
+                                className={`px-2 text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 flex items-center gap-2 transition-all duration-200 ${isOpen ? 'overflow-visible max-h-12 opacity-100' : 'overflow-hidden max-h-0 opacity-0'}`} 
                                 title={`Connected to ${selectedRepo.full_name}`}
                             >
                                 <BookIcon />
