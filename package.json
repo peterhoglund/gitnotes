@@ -2,6 +2,9 @@
   "name": "zen-editor",
   "version": "0.1.0",
   "private": true,
+  "scripts": {
+    "build": "mkdir -p dist && cp -r index.html index.tsx App.tsx metadata.json components context hooks services types utils dist"
+  },
   "dependencies": {
     "react": "18.2.0",
     "react-dom": "18.2.0",
