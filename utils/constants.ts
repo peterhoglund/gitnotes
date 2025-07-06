@@ -10,7 +10,7 @@ export const INITIAL_CONTENT = `
 // This is a code block.
 // Select text or place your cursor here to see the language selector!
 function helloWorld() {
-  console.log("Hello, from the Zen Editor!");
+  console.log("Hello, from Plita!");
 }
 
 helloWorld();

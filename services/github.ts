@@ -72,7 +72,7 @@ export const createRepo = (token: string, name: string): Promise<Repository> => 
 		body: JSON.stringify({
 			name,
 			private: true,
-			description: 'Documents created and managed by Zen Editor.',
+			description: 'Documents created and managed by Plita.',
 			auto_init: true,
 		}),
 	});

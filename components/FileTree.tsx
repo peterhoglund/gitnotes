@@ -1,10 +1,9 @@
 
-
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useGitHub } from '../hooks/useGitHub';
 import { 
     FolderIcon, FolderOpenIcon, FileIcon, ChevronDownIcon, ChevronRightIcon, BookIcon, RefreshCwIcon,
-    PenToSquareIcon, FolderPlusIcon, TrashIcon, EllipsisVerticalIcon, PlusIcon, SearchIcon
+    PenToSquareIcon, NewFileIcon, FolderPlusIcon, TrashIcon, EllipsisVerticalIcon, PlusIcon, SearchIcon
 } from './icons';
 import { RepoContentNode } from '../types/github';
 
@@ -141,19 +140,20 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
             <React.Fragment key={node.path}>
                 <div className="relative group">
                     <div 
-                        className={`file-tree-item flex items-center text-sm py-1 my-0.5 rounded-md cursor-pointer text-gray-600 dark:text-gray-400 transition-all duration-200 ${isActive ? 'active' : ''} ${!isOpen ? 'justify-center' : ''}`}
-                        style={{ paddingLeft: isOpen ? `${level * 16}px` : undefined }}
+                        className={`file-tree-item flex items-center text-sm py-0.5 rounded-md cursor-pointer text-gray-600 dark:text-gray-400 transition-all duration-200 ${isActive ? 'active' : ''} ${!isOpen ? 'justify-center' : ''}`}
+                        style={{ paddingLeft: isOpen ? `${level * 16 + 4}px` : undefined, paddingRight: isOpen ? `4px` : undefined }}
                         onClick={() => isFolder ? toggleFolder(node.path) : handleFileClick(node.path)}
                         title={node.name}
                     >
-                        {isOpen && (
-                            <div className="flex-shrink-0 w-5 h-5 flex items-center justify-center">
-                                {isFolder && (isExpanded ? <ChevronDownIcon /> : <ChevronRightIcon />)}
-                            </div>
-                        )}
-                        
                         <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center text-gray-500 dark:text-gray-400">
-                            {isFolder ? (isExpanded ? <FolderOpenIcon /> : <FolderIcon />) : (<FileIcon />)}
+                             {isFolder ? (
+                                <>
+                                    <span className="group-hover:hidden">{isExpanded ? <FolderOpenIcon /> : <FolderIcon />}</span>
+                                    <span className="hidden group-hover:inline-block">{isExpanded ? <ChevronDownIcon /> : <ChevronRightIcon />}</span>
+                                </>
+                            ) : (
+                                <FileIcon />
+                            )}
                         </div>
 
                         <span className={`truncate whitespace-nowrap transition-all duration-100 ${isOpen ? 'ml-1 opacity-100 flex-1' : 'opacity-0 w-0'}`}>{node.name}</span>
@@ -193,7 +193,7 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
                             style={{ top: '100%'}}
                         >
                             <button onClick={() => handleCreate('file', node.path)} className="dropdown-item w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-zinc-700 rounded-md flex items-center gap-3">
-                                <PenToSquareIcon /> New Page
+                                <NewFileIcon /> New Page
                             </button>
                             <button onClick={() => handleCreate('folder', node.path)} className="dropdown-item w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-zinc-700 rounded-md flex items-center gap-3">
                                 <FolderPlusIcon /> New Folder
@@ -225,7 +225,7 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
                         ) : (
                            !node.isLoading && <div 
                                 className="text-xs text-gray-400 dark:text-gray-500 italic"
-                                style={{ paddingLeft: `${(level + 1) * 16 + 20 + 4}px` }}
+                                style={{ paddingLeft: `${(level + 1) * 16 + 4 + 24 + 4}px` }}
                             >
                                 Empty
                             </div>
@@ -241,22 +241,22 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
     }
 
     return (
-        <div className="py-2 px-1 flex flex-col h-full">
+        <div className="py-2 px-4 flex flex-col h-full">
             {selectedRepo && (
-                 <div className={`px-1 pb-2 ${!isOpen ? 'flex flex-col items-center gap-y-1' : ''}`}>
+                 <div className={`pb-2 ${!isOpen ? 'flex flex-col items-center gap-y-1' : ''}`}>
                     <button
                         onClick={() => handleCreate('file', '')}
                         disabled={isSaving}
-                        className={`flex items-center rounded-md text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 ${isOpen ? 'w-full px-2 py-1.5 gap-2 justify-start mb-1' : 'w-12 h-12 justify-center'}`}
+                        className={`flex items-center rounded-md text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 ${isOpen ? 'w-full px-1 py-1.5 gap-2 justify-start mb-1' : 'w-12 h-12 justify-center'}`}
                         title="New Page"
                     >
-                        <PenToSquareIcon />
+                        <NewFileIcon />
                         <span className={`whitespace-nowrap transition-all duration-100 ${isOpen ? 'opacity-100' : 'opacity-0 w-0'}`}>New Page</span>
                     </button>
                     <button
                         onClick={() => setIsSearching(s => !s)}
                         disabled={isSaving}
-                        className={`flex items-center rounded-md text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 ${isSearching ? 'bg-gray-200 dark:bg-zinc-700' : ''} ${isOpen ? 'w-full px-2 py-1.5 gap-2 justify-start' : 'w-12 h-12 justify-center'}`}
+                        className={`flex items-center rounded-md text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 ${isSearching ? 'bg-gray-200 dark:bg-zinc-700' : ''} ${isOpen ? 'w-full px-1 py-1.5 gap-2 justify-start' : 'w-12 h-12 justify-center'}`}
                         title="Search"
                     >
                         <SearchIcon />
@@ -266,14 +266,14 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
             )}
             
             {isOpen && isSearching && (
-                 <div className="px-1 py-2">
+                 <div className="py-2">
                     <input
                         ref={searchInputRef}
                         type="text"
                         placeholder="Type to filter tree..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full px-2 py-1.5 text-sm bg-gray-100 dark:bg-zinc-700 border border-gray-300 dark:border-zinc-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-1 py-1.5 text-sm bg-gray-100 dark:bg-zinc-700 border border-gray-300 dark:border-zinc-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                 </div>
             )}
@@ -283,12 +283,10 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
                     <>
                         {!searchTerm && selectedRepo && (
                             <div 
-                                className={`px-4 text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 flex items-center gap-2 transition-all duration-200 ${isOpen ? 'overflow-visible max-h-12 opacity-100' : 'overflow-hidden max-h-0 opacity-0'}`} 
-                                title={`Connected to ${selectedRepo.full_name}`}
+                                className={`px-1 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1 flex items-center justify-between transition-all duration-200 ${isOpen ? 'overflow-visible max-h-12 opacity-100' : 'overflow-hidden max-h-0 opacity-0'}`} 
                             >
-                                <BookIcon />
-                                <span className="truncate flex-1">{selectedRepo.name}</span>
-                                <div className="relative">
+                                <span>Pages</span>
+                                <div className="relative mr-1">
                                     <button
                                         onClick={(e) => {
                                             e.stopPropagation();
@@ -307,7 +305,7 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
                                             className="dropdown-panel absolute z-20 right-0 mt-2 w-48 bg-white dark:bg-zinc-800 rounded-lg shadow-xl border border-gray-200 dark:border-zinc-700 p-1"
                                         >
                                             <button onClick={() => handleCreate('file', '')} className="dropdown-item w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-zinc-700 rounded-md flex items-center gap-3">
-                                                <PenToSquareIcon /> New Page
+                                                <NewFileIcon /> New Page
                                             </button>
                                             <button onClick={() => handleCreate('folder', '')} className="dropdown-item w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-zinc-700 rounded-md flex items-center gap-3">
                                                 <FolderPlusIcon /> New Folder

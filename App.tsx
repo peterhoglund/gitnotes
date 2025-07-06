@@ -11,7 +11,7 @@ import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import CodeBlockMenu from './components/editor/CodeBlockMenu';
 import BlockEmojiMenu from './components/editor/BlockEmojiMenu';
 
-const ZenEditor: React.FC = () => {
+const PlitaEditor: React.FC = () => {
     const { activeFile, initialContent, isDirty, setIsDirty, saveFile } = useGitHub();
     const editor = useTiptapEditor(initialContent);
 
@@ -83,7 +83,7 @@ const App: React.FC = () => {
 	return (
 		<GitHubProvider>
 			<ThemeProvider>
-                <ZenEditor />
+                <PlitaEditor />
 			</ThemeProvider>
 		</GitHubProvider>
 	);

@@ -3,7 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { useGitHub } from '../hooks/useGitHub';
 import { BookIcon, LockIcon, PlusIcon, RefreshCwIcon } from './icons';
 
-const DEFAULT_REPO_NAME = 'zen-editor-docs';
+const DEFAULT_REPO_NAME = 'plita-docs';
 
 const RepoSelector: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
     const { repositories, selectRepo, createAndSelectRepo, isLoading, error: contextError } = useGitHub();
