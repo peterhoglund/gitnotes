@@ -3,13 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "mkdir -p dist && cp -r index.html index.tsx App.tsx metadata.json components context hooks services types utils dist"
+    "build": "mkdir -p dist && esbuild index.tsx --bundle --outfile=dist/index.js --format=esm --jsx=automatic --external:react --external:react-dom/client --external:@google/genai --external:lowlight --external:'highlight.js/*' --external:@tiptap/core --external:@tiptap/react --external:'@tiptap/pm/*' --external:@tiptap/extension-character-count --external:@tiptap/extension-code --external:@tiptap/extension-code-block --external:@tiptap/extension-code-block-lowlight --external:@tiptap/extension-color --external:@tiptap/extension-highlight --external:@tiptap/extension-placeholder --external:@tiptap/extension-strike --external:@tiptap/extension-text-align --external:@tiptap/extension-text-style --external:@tiptap/extension-underline --external:@tiptap/starter-kit && cp index.html metadata.json dist/"
   },
   "dependencies": {
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "@google/genai": "0.14.0",
     "lowlight": "3.1.0",
+    "esbuild": "0.23.0",
     "@tiptap/core": "2.5.7",
     "@tiptap/react": "2.5.7",
     "@tiptap/starter-kit": "2.5.7",
