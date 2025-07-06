@@ -141,7 +141,7 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
                 <div className="relative group">
                     <div 
                         className={`file-tree-item flex items-center text-sm py-1 my-0.5 rounded-md cursor-pointer text-gray-600 dark:text-gray-400 transition-all duration-200 ${isActive ? 'active' : ''} ${!isOpen ? 'justify-center' : ''}`}
-                        style={{ paddingLeft: isOpen ? `${level * 16 + 8}px` : undefined }}
+                        style={{ paddingLeft: isOpen ? `${level * 16}px` : undefined }}
                         onClick={() => isFolder ? toggleFolder(node.path) : handleFileClick(node.path)}
                         title={node.name}
                     >
@@ -224,7 +224,7 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
                         ) : (
                            !node.isLoading && <div 
                                 className="text-xs text-gray-400 dark:text-gray-500 italic"
-                                style={{ paddingLeft: `${(level + 1) * 16 + 8 + 20 + 4}px` }}
+                                style={{ paddingLeft: `${(level + 1) * 16 + 20 + 4}px` }}
                             >
                                 Empty
                             </div>
@@ -263,11 +263,9 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
                     </button>
                 </div>
             )}
-
-            {isOpen && selectedRepo && <div className="border-b border-gray-200 dark:border-zinc-700 mx-1 mb-2"></div>}
             
             {isOpen && isSearching && (
-                 <div className="px-1 pb-2">
+                 <div className="px-1 py-2">
                     <input
                         ref={searchInputRef}
                         type="text"
@@ -293,6 +291,7 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
                                     <button
                                         onClick={(e) => {
                                             e.stopPropagation();
+                                            setContextMenuPath(null);
                                             setNewItemMenuPath(newItemMenuPath === '__root__' ? null : '__root__');
                                         }}
                                         disabled={isSaving}

@@ -1,10 +1,7 @@
 
-
 import { useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
-import Strike from '@tiptap/extension-strike';
-import Code from '@tiptap/extension-code';
 import TextAlign from '@tiptap/extension-text-align';
 import TextStyle from '@tiptap/extension-text-style';
 import { Color } from '@tiptap/extension-color';
@@ -50,17 +47,13 @@ export const useTiptapEditor = (content: string) => {
                 heading: {
                     levels: [1, 2, 3, 6],
                 },
-                // Disable extensions that will be configured manually
+                // Disable the default CodeBlock to use CodeBlockLowlight instead.
                 codeBlock: false,
-                strike: false,
-                code: false,
             }),
             CodeBlockLowlight.configure({
                 lowlight,
             }),
             Underline,
-            Strike,
-            Code,
             TextAlign.configure({
                 types: ['heading', 'paragraph', 'listItem'],
             }),
@@ -68,7 +61,7 @@ export const useTiptapEditor = (content: string) => {
             Color,
             Highlight.configure({ multicolor: true }),
             Placeholder.configure({
-                placeholder: 'Start writing your masterpiece...',
+                placeholder: 'Write something',
             }),
             BlockStyles,
         ],

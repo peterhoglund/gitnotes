@@ -1,7 +1,15 @@
 
-
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Editor } from '@tiptap/react';
+
+// Import extensions to augment editor commands for proper type checking
+import '@tiptap/starter-kit';
+import '@tiptap/extension-underline';
+import '@tiptap/extension-text-align';
+import '@tiptap/extension-color';
+import '@tiptap/extension-highlight';
+import '@tiptap/extension-code-block-lowlight';
+
 import ToolbarButton from '../ToolbarButton';
 import Dropdown from '../Dropdown';
 import ColorPicker from '../ColorPicker';
@@ -66,14 +74,13 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
   const handleBlockTypeChange = useCallback((value: string) => {
     const chain = editor.chain().focus();
     switch (value) {
-        case 'h1': chain.setHeading({ level: 1 }); break;
-        case 'h2': chain.setHeading({ level: 2 }); break;
-        case 'h3': chain.setHeading({ level: 3 }); break;
-        case 'h6': chain.setHeading({ level: 6 }); break;
-        case 'pre': chain.setCodeBlock(); break;
-        default: chain.setParagraph();
+        case 'h1': chain.setHeading({ level: 1 }).run(); break;
+        case 'h2': chain.setHeading({ level: 2 }).run(); break;
+        case 'h3': chain.setHeading({ level: 3 }).run(); break;
+        case 'h6': chain.setHeading({ level: 6 }).run(); break;
+        case 'pre': chain.setCodeBlock().run(); break;
+        default: chain.setParagraph().run();
     }
-    chain.run();
   }, [editor]);
   
   const handleColor = useCallback((color: string) => editor.chain().focus().setColor(color).run(), [editor]);
@@ -217,6 +224,9 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
                   ></div>
                 </div>
               </ColorPicker>
+
+              <div className="toolbar-divider h-6 border-l border-gray-300 mx-2"></div>
+              
               <ColorPicker
                 onSelect={handleBlockBg}
                 currentColor={getBlockBgColor()}

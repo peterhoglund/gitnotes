@@ -57,7 +57,7 @@ export const SearchIcon = () => <i className="fa-solid fa-magnifying-glass fa-fw
 
 export const BlockBackgroundColorIcon = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect x="2" y="2" width="20" height="20" rx="4" fill="currentColor" fillOpacity="0.5" />
+    <rect x="3" y="3" width="18" height="18" rx="4" fill="currentColor" fillOpacity="0.5" />
     <text x="12" y="17" fontFamily="sans-serif" fontSize="12" fontWeight="bold" fill="currentColor" textAnchor="middle">
       Ab
     </text>
