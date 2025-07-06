@@ -291,8 +291,8 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
                                     <button
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            setContextMenuPath(null);
                                             setNewItemMenuPath(newItemMenuPath === '__root__' ? null : '__root__');
+                                            setContextMenuPath(null);
                                         }}
                                         disabled={isSaving}
                                         className="p-1 rounded-md hover:bg-gray-200 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed"
