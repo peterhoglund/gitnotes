@@ -6,6 +6,7 @@ import {
     PenToSquareIcon, NewFileIcon, FolderPlusIcon, TrashIcon, EllipsisVerticalIcon, PlusIcon, SearchIcon
 } from './icons';
 import { RepoContentNode } from '../types/github';
+import { useModal } from '../hooks/useModal';
 
 /**
  * Recursively filters a file tree based on a search term.
@@ -55,6 +56,7 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
         createFolder,
         deleteNode,
     } = useGitHub();
+    const { showPrompt, showConfirm, showAlert } = useModal();
     const [contextMenuPath, setContextMenuPath] = useState<string | null>(null);
     const [newItemMenuPath, setNewItemMenuPath] = useState<string | null>(null);
     const menuRef = useRef<HTMLDivElement>(null);
@@ -97,13 +99,24 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
     };
 
     const handleCreate = async (type: 'file' | 'folder', basePath: string) => {
-        setNewItemMenuPath(null); // Close menu on click
+        setNewItemMenuPath(null);
         const defaultName = type === 'file' ? 'new-page' : 'new-folder';
-        const promptMessage = `Enter name for new ${type}${basePath ? ` in '${basePath}'` : ''}:`;
-        const name = window.prompt(promptMessage, defaultName);
+        
+        const name = await showPrompt({
+            title: `Create New ${type === 'file' ? 'Page' : 'Folder'}`,
+            message: `Enter the name for the new ${type}${basePath ? ` in '${basePath}'` : ''}:`,
+            defaultValue: defaultName,
+            confirmButtonText: 'Create'
+        });
+
         if (!name || name.trim() === '') return;
+
         if (name.includes('/')) {
-            alert('Name cannot contain slashes.');
+            await showAlert({
+                title: 'Invalid Name',
+                message: 'Name cannot contain slashes.',
+                confirmButtonText: 'OK'
+            });
             return;
         }
 
@@ -121,9 +134,15 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
         }
     };
 
-    const handleRemove = (node: RepoContentNode) => {
+    const handleRemove = async (node: RepoContentNode) => {
         setContextMenuPath(null);
-        const confirmDelete = window.confirm(`Are you sure you want to delete "${node.name}"? This action cannot be undone.`);
+        const confirmDelete = await showConfirm({
+            title: `Delete "${node.name}"`,
+            message: `Are you sure you want to delete this ${node.type}? This action cannot be undone.`,
+            confirmButtonText: 'Delete',
+            variant: 'danger',
+        });
+
         if (confirmDelete) {
             deleteNode(node);
         }

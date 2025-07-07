@@ -10,6 +10,7 @@ import { useTiptapEditor } from './components/editor/useTiptapEditor';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import CodeBlockMenu from './components/editor/CodeBlockMenu';
 import BlockEmojiMenu from './components/editor/BlockEmojiMenu';
+import { ModalProvider } from './context/ModalContext';
 
 const PlitaEditor: React.FC = () => {
     const { activeFile, initialContent, isDirty, setIsDirty, saveFile } = useGitHub();
@@ -83,7 +84,9 @@ const App: React.FC = () => {
 	return (
 		<GitHubProvider>
 			<ThemeProvider>
-                <PlitaEditor />
+                <ModalProvider>
+                    <PlitaEditor />
+                </ModalProvider>
 			</ThemeProvider>
 		</GitHubProvider>
 	);

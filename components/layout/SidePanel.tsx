@@ -1,6 +1,4 @@
 
-
-
 import React, { useState } from 'react';
 import ProfileMenu from '../ProfileMenu';
 import { FileTree } from '../FileTree';
@@ -29,8 +27,8 @@ const SidePanel = () => {
     return (
         <aside className={`side-panel flex-shrink-0 flex flex-col transition-all duration-300 ${isOpen ? 'w-64' : 'w-20'}`}>
             <header className="side-panel-header h-16 flex items-center px-4 flex-shrink-0">
-                <div className={`transition-all duration-200 ${isOpen ? 'opacity-100' : 'opacity-0 w-0'}`}>
-                    <Logo className="w-20 h-auto text-gray-700 dark:text-gray-300"/>
+                <div className={`transition-all duration-200 overflow-hidden ${isOpen ? 'opacity-100' : 'opacity-0 w-0'}`}>
+                    <Logo className="w-[4.5rem] h-auto text-gray-700 dark:text-gray-300"/>
                 </div>
                 <button 
                   onClick={() => setIsOpen(!isOpen)} 
