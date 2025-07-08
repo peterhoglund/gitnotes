@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "mkdir -p dist && esbuild index.tsx --bundle --outfile=dist/index.js --format=esm --jsx=automatic --external:react --external:react-dom/client --external:@google/genai --external:lowlight --external:'highlight.js/*' --external:@tiptap/core --external:@tiptap/react --external:'@tiptap/pm/*' --external:@tiptap/extension-character-count --external:@tiptap/extension-code --external:@tiptap/extension-code-block --external:@tiptap/extension-code-block-lowlight --external:@tiptap/extension-color --external:@tiptap/extension-highlight --external:@tiptap/extension-placeholder --external:@tiptap/extension-strike --external:@tiptap/extension-text-align --external:@tiptap/extension-text-style --external:@tiptap/extension-underline --external:@tiptap/starter-kit --external:@tiptap/extension-link && cp index.html metadata.json dist/"
+    "build": "rm -rf dist && mkdir -p dist && npx tailwindcss -i styles.css -o dist/index.css --minify && esbuild index.tsx --bundle --outfile=dist/index.js --format=esm --jsx=automatic --minify && cp public/index.html dist/"
   },
   "dependencies": {
     "react": "18.2.0",
