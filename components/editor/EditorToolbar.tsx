@@ -1,19 +1,16 @@
-
-
-
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { Editor } from '@tiptap/react';
 import ToolbarButton from '../ToolbarButton';
 import Dropdown from '../Dropdown';
 import ColorPicker from '../ColorPicker';
 import {
-  BoldIcon, ItalicIcon, UnderlineIcon, StrikethroughIcon, CodeIcon,
+  BoldIcon, ItalicIcon, UnderlineIcon, StrikethroughIcon, CodeIcon, LinkIcon,
   ListIcon, ListOrderedIcon, AlignLeftIcon, AlignCenterIcon, AlignRightIcon,
   AlignJustifyIcon, EllipsisVerticalIcon, TextColorIcon, HighlighterIcon, BlockBackgroundColorIcon,
   SaveIcon, RefreshCwIcon,
 } from '../icons';
 import { useGitHub } from '../../hooks/useGitHub';
 import { useTheme } from '../../hooks/useTheme';
+import { useModal } from '../../hooks/useModal';
 import { TRANSPARENT } from '../../utils/constants';
 
 const BLOCK_TYPES = [
@@ -26,12 +23,13 @@ const BLOCK_TYPES = [
 ];
 
 interface EditorToolbarProps {
-    editor: Editor;
+    editor: any;
 }
 
 const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
   const { activeFile, isSaving, isDirty, saveFile } = useGitHub();
   const { theme } = useTheme();
+  const { showPrompt } = useModal();
 
   const [isOverflowOpen, setIsOverflowOpen] = useState(false);
   const overflowRef = useRef<HTMLDivElement>(null);
@@ -67,11 +65,11 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
   const handleBlockTypeChange = useCallback((value: string) => {
     const chain = editor.chain().focus();
     switch (value) {
-        case 'h1': chain.setHeading({ level: 1 }); break;
-        case 'h2': chain.setHeading({ level: 2 }); break;
-        case 'h3': chain.setHeading({ level: 3 }); break;
-        case 'h6': chain.setHeading({ level: 6 }); break;
-        case 'pre': chain.setCodeBlock(); break;
+        case 'h1': chain.toggleHeading({ level: 1 }); break;
+        case 'h2': chain.toggleHeading({ level: 2 }); break;
+        case 'h3': chain.toggleHeading({ level: 3 }); break;
+        case 'h6': chain.toggleHeading({ level: 6 }); break;
+        case 'pre': chain.toggleCodeBlock(); break;
         default: chain.setParagraph();
     }
     chain.run();
@@ -96,6 +94,25 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
     chain.run();
   }, [editor]);
   
+  const handleLink = useCallback(async () => {
+    if (editor.isActive('link')) {
+        editor.chain().focus().unsetLink().run();
+        return;
+    }
+
+    const url = await showPrompt({
+        title: 'Enter URL',
+        message: 'Please provide the web address:',
+        defaultValue: 'https://',
+        placeholder: 'https://example.com',
+        confirmButtonText: 'Set Link'
+    });
+
+    if (url && url.trim() !== '') {
+        editor.chain().focus().extendMarkRange('link').setLink({ href: url, target: '_blank' }).run();
+    }
+}, [editor, showPrompt]);
+
   const textColor = editor.getAttributes('textStyle').color || (theme === 'dark' ? '#d5d5d5' : '#0a0a0a');
   const highlightColor = editor.getAttributes('highlight').color || TRANSPARENT;
 
@@ -178,6 +195,9 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
               </ToolbarButton>
               <ToolbarButton onClick={() => editor.chain().focus().toggleCode().run()} isActive={editor.isActive('code')} title="Code">
                 <CodeIcon />
+              </ToolbarButton>
+              <ToolbarButton onClick={handleLink} isActive={editor.isActive('link')} title="Link">
+                <LinkIcon />
               </ToolbarButton>
 
               <div className="toolbar-divider h-6 border-l border-gray-300 mx-2"></div>

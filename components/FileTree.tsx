@@ -43,7 +43,13 @@ const filterFileTree = (nodes: RepoContentNode[], searchTerm: string): RepoConte
 };
 
 
-export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
+interface FileTreeProps {
+    isOpen: boolean;
+    onMouseEnterButton: (e: React.MouseEvent, text: string) => void;
+    onMouseLeaveButton: () => void;
+}
+
+export const FileTree: React.FC<FileTreeProps> = ({ isOpen, onMouseEnterButton, onMouseLeaveButton }) => {
     const { 
         selectedRepo, 
         fileTree, 
@@ -159,12 +165,14 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
             <React.Fragment key={node.path}>
                 <div className="relative group">
                     <div 
-                        className={`file-tree-item flex items-center text-sm py-0.5 rounded-md cursor-pointer text-gray-600 dark:text-gray-400 transition-all duration-200 ${isActive ? 'active' : ''} ${!isOpen ? 'justify-center' : ''}`}
-                        style={{ paddingLeft: isOpen ? `${level * 16 + 4}px` : undefined, paddingRight: isOpen ? `4px` : undefined }}
+                        className={`file-tree-item flex items-center text-sm py-1 px-2 rounded-md cursor-pointer text-gray-600 dark:text-gray-400 transition-colors duration-200 ${isActive ? 'active' : ''}`}
                         onClick={() => isFolder ? toggleFolder(node.path) : handleFileClick(node.path)}
                         title={node.name}
                     >
-                        <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center text-gray-500 dark:text-gray-400">
+                        <div 
+                            className="flex-shrink-0 w-6 h-6 flex items-center justify-center text-gray-500 dark:text-gray-400 transition-all duration-300"
+                            style={{ marginLeft: isOpen ? `${level * 16}px` : '0px' }}
+                        >
                              {isFolder ? (
                                 <>
                                     <span className="group-hover:hidden">{isExpanded ? <FolderOpenIcon /> : <FolderIcon />}</span>
@@ -175,9 +183,9 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
                             )}
                         </div>
 
-                        <span className={`truncate whitespace-nowrap transition-all duration-100 ${isOpen ? 'ml-1 opacity-100 flex-1' : 'opacity-0 w-0'}`}>{node.name}</span>
+                        <span className={`truncate whitespace-nowrap transition-all duration-200 overflow-hidden ${isOpen ? 'ml-1 opacity-100 flex-1' : 'ml-0 w-0 opacity-0'}`}>{node.name}</span>
 
-                        <div className={`ml-auto mr-1 flex items-center transition-opacity duration-100 ${isOpen ? 'opacity-0 group-hover:opacity-100 focus-within:opacity-100' : 'opacity-0 pointer-events-none'}`}>
+                        <div className={`ml-auto flex items-center transition-opacity duration-100 ${isOpen ? 'opacity-0 group-hover:opacity-100 focus-within:opacity-100' : 'opacity-0 pointer-events-none'}`}>
                            {isFolder && (
                                 <button
                                     className="p-1 rounded hover:bg-gray-300 dark:hover:bg-zinc-700"
@@ -243,10 +251,15 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
                             node.children.map(child => renderNode(child, level + 1))
                         ) : (
                            !node.isLoading && <div 
-                                className="text-xs text-gray-400 dark:text-gray-500 italic"
-                                style={{ paddingLeft: `${(level + 1) * 16 + 4 + 24 + 4}px` }}
+                                className="text-sm text-gray-400 dark:text-gray-500 py-1 px-2 flex items-center"
                             >
-                                Empty
+                                <div
+                                    className="flex-shrink-0 w-1 h-6"
+                                    style={{ marginLeft: `${(level + 1) * 16}px` }}
+                                >
+                                    {/* Empty spacer for icon alignment */}
+                                </div>
+                                <span className="ml-1">No pages here</span>
                             </div>
                         )}
                     </div>
@@ -260,26 +273,30 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
     }
 
     return (
-        <div className="py-2 px-4 flex flex-col h-full">
+        <div className="py-2 px-2 flex flex-col h-full">
             {selectedRepo && (
-                 <div className={`pb-2 ${!isOpen ? 'flex flex-col items-center gap-y-1' : ''}`}>
+                 <div className="pb-2 flex flex-col gap-1">
                     <button
                         onClick={() => handleCreate('file', '')}
                         disabled={isSaving}
-                        className={`flex items-center rounded-md text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 ${isOpen ? 'w-full px-1 py-1.5 gap-2 justify-start mb-1' : 'w-12 h-12 justify-center'}`}
-                        title="New Page"
+                        onMouseEnter={(e) => onMouseEnterButton(e, 'New Page')}
+                        onMouseLeave={onMouseLeaveButton}
+                        className="flex items-center rounded-md text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors w-full px-2 py-1.5"
+                        title={isOpen ? "New Page" : ""}
                     >
-                        <NewFileIcon />
-                        <span className={`whitespace-nowrap transition-all duration-100 ${isOpen ? 'opacity-100' : 'opacity-0 w-0'}`}>New Page</span>
+                        <div className="w-6 h-6 flex-shrink-0 flex items-center justify-center"><NewFileIcon /></div>
+                        <span className={`whitespace-nowrap transition-all duration-200 overflow-hidden ${isOpen ? 'ml-2 opacity-100' : 'ml-0 w-0 opacity-0'}`}>New Page</span>
                     </button>
                     <button
                         onClick={() => setIsSearching(s => !s)}
                         disabled={isSaving}
-                        className={`flex items-center rounded-md text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 ${isSearching ? 'bg-gray-200 dark:bg-zinc-700' : ''} ${isOpen ? 'w-full px-1 py-1.5 gap-2 justify-start' : 'w-12 h-12 justify-center'}`}
-                        title="Search"
+                        onMouseEnter={(e) => onMouseEnterButton(e, 'Search')}
+                        onMouseLeave={onMouseLeaveButton}
+                        className={`flex items-center rounded-md text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${isSearching ? 'bg-gray-200 dark:bg-zinc-700' : ''} w-full px-2 py-1.5`}
+                        title={isOpen ? "Search" : ""}
                     >
-                        <SearchIcon />
-                        <span className={`whitespace-nowrap transition-all duration-100 ${isOpen ? 'opacity-100' : 'opacity-0 w-0'}`}>Search</span>
+                        <div className="w-6 h-6 flex-shrink-0 flex items-center justify-center"><SearchIcon /></div>
+                        <span className={`whitespace-nowrap transition-all duration-200 overflow-hidden ${isOpen ? 'ml-2 opacity-100' : 'ml-0 w-0 opacity-0'}`}>Search</span>
                     </button>
                 </div>
             )}

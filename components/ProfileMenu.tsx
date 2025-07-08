@@ -6,9 +6,11 @@ import { ProfileIcon, SunIcon, MoonIcon, GitHubIcon, LogOutIcon, BookIcon, Refre
 
 interface ProfileMenuProps {
   isSidePanelOpen: boolean;
+  onMouseEnter?: (e: React.MouseEvent) => void;
+  onMouseLeave?: () => void;
 }
 
-const ProfileMenu: React.FC<ProfileMenuProps> = ({ isSidePanelOpen }) => {
+const ProfileMenu: React.FC<ProfileMenuProps> = ({ isSidePanelOpen, onMouseEnter, onMouseLeave }) => {
   const [isOpen, setIsOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const { 
@@ -99,15 +101,21 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({ isSidePanelOpen }) => {
         </div>
       )}
 
-      <button title="Profile and settings" onClick={() => setIsOpen(!isOpen)} className={`profile-button w-full flex items-center p-2 rounded-md text-left ${isSidePanelOpen ? '' : 'justify-center'}`}>
-        <div className="flex-shrink-0">
+      <button 
+        title={isSidePanelOpen ? "Profile and settings" : ""}
+        onClick={() => setIsOpen(!isOpen)}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
+        className="profile-button w-full flex items-center p-2 rounded-md text-left"
+      >
+        <div className="flex-shrink-0 h-4 flex items-center justify-center">
           {isLoggedIn && user?.avatar_url ? (
-            <img src={user.avatar_url} alt={user.name} style={{ width: '16px', height: '16px' }} className="rounded-full" />
+            <img src={user.avatar_url} alt={user.name} style={{ width: '24px', height: '24px' }} className="rounded-full" />
           ) : (
             <ProfileIcon />
           )}
         </div>
-        <div className={`overflow-hidden whitespace-nowrap transition-all duration-200 ${isSidePanelOpen ? 'flex-1 ml-3 opacity-100' : 'opacity-0 w-0'}`}>
+        <div className={`overflow-hidden whitespace-nowrap transition-all duration-200 ${isSidePanelOpen ? 'flex-1 ml-3 opacity-100' : 'w-0 ml-0 opacity-0'}`}>
             <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 truncate">{isLoggedIn ? user?.name : 'Guest'}</p>
         </div>
       </button>

@@ -1,15 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Editor, BubbleMenu } from '@tiptap/react';
+import { BubbleMenu } from '@tiptap/react';
 import { LANGUAGES } from '../../utils/constants';
 import { ChevronDownIcon } from '../icons';
 
 interface CodeBlockMenuProps {
-  editor: Editor;
+  editor: any;
 }
 
 const CodeBlockMenu: React.FC<CodeBlockMenuProps> = ({ editor }) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
   
   const currentLang = editor.getAttributes('codeBlock').language || 'text';
   const currentLabel = LANGUAGES.find(l => l.value === currentLang)?.label ?? 'Text';
@@ -23,6 +24,20 @@ const CodeBlockMenu: React.FC<CodeBlockMenuProps> = ({ editor }) => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (isOpen && listRef.current) {
+        const activeItem = listRef.current.querySelector<HTMLButtonElement>('.dropdown-item.active');
+        if (activeItem) {
+            // Use a timeout to allow the DOM to update before scrolling
+            setTimeout(() => {
+                 activeItem.scrollIntoView({
+                    block: 'start',
+                });
+            }, 0);
+        }
+    }
+  }, [isOpen, currentLang]);
 
   const selectLanguage = (lang: string) => {
     editor.chain().focus().updateAttributes('codeBlock', { language: lang }).run();
@@ -52,7 +67,7 @@ const CodeBlockMenu: React.FC<CodeBlockMenuProps> = ({ editor }) => {
 
         {isOpen && (
           <div className="dropdown-panel absolute z-10 mt-1 w-48 rounded-md border border-gray-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-800 right-0">
-            <ul className="max-h-60 overflow-y-auto py-1">
+            <ul ref={listRef} className="max-h-60 overflow-y-auto py-1">
               {LANGUAGES.map(lang => (
                 <li key={lang.value}>
                   <button

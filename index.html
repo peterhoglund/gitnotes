@@ -114,6 +114,14 @@
         font-weight: inherit !important;
       }
       
+      /* Styles for plain text code blocks */
+      .prose pre code.language-text {
+        color: #57606a;
+      }
+      html.dark .prose pre code.language-text {
+        color: #a1a1aa; /* zinc-400, for good readability on dark bg */
+      }
+      
       html.dark .prose pre {
         background: #16181A; /* Matches github-dark.css theme */
         color: #d5d5d5;
@@ -155,6 +163,17 @@
         text-align: center;
       }
       
+      .prose a {
+        color: #2563eb; /* blue-600 */
+        text-decoration: underline;
+        text-decoration-thickness: 1px;
+        text-underline-offset: 2px;
+        transition: color 0.2s ease-in-out;
+      }
+      .prose a:hover {
+        color: #1d4ed8; /* blue-700 */
+      }
+
       /******************************************/
       /*        LIGHT MODE BASE STYLES          */
       /******************************************/
@@ -352,6 +371,19 @@
       .modal-button.confirm.danger:hover {
         background-color: #b91c1c; /* red-700 */
       }
+      .custom-tooltip {
+        position: fixed;
+        background-color: #27272a; /* zinc-800 */
+        color: #f4f4f5; /* zinc-100 */
+        font-size: 0.875rem;
+        font-weight: 500;
+        padding: 0.375rem 0.75rem;
+        border-radius: 0.375rem;
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        z-index: 100;
+        pointer-events: none;
+        white-space: nowrap;
+      }
 
       /******************************************/
       /*           DARK MODE OVERRIDES          */
@@ -398,6 +430,12 @@
       }
       html.dark .tiptap p.is-editor-empty:first-child::before {
         color: #4b5563; /* Darker gray for dark mode (gray-600) */
+      }
+       html.dark .prose a {
+        color: #60a5fa; /* blue-400 */
+      }
+      html.dark .prose a:hover {
+        color: #93c5fd; /* blue-300 */
       }
       
       /* -- Toolbar -- */
@@ -518,6 +556,7 @@
   "imports": {
     "react/": "https://esm.sh/react@18.2.0/",
     "react": "https://esm.sh/react@18.2.0",
+    "react-dom": "https://esm.sh/react-dom@18.2.0",
     "react-dom/client": "https://esm.sh/react-dom@18.2.0/client?deps=react@18.2.0",
     "@google/genai": "https://esm.sh/@google/genai@0.14.0",
     "lowlight": "https://esm.sh/lowlight@3.1.0",
@@ -537,6 +576,7 @@
     "@tiptap/extension-text-style": "https://esm.sh/@tiptap/extension-text-style@2.5.7",
     "@tiptap/extension-underline": "https://esm.sh/@tiptap/extension-underline@2.5.7",
     "@tiptap/starter-kit": "https://esm.sh/@tiptap/starter-kit@2.5.7",
+    "@tiptap/extension-link": "https://esm.sh/@tiptap/extension-link@2.5.7",
     "react-dom/": "https://esm.sh/react-dom@^19.1.0/"
   }
 }

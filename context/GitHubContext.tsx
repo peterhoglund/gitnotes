@@ -6,6 +6,108 @@ import { INITIAL_CONTENT } from '../utils/constants';
 
 declare const netlify: any;
 
+// DEV_NOTE: Set this to `false` for deployment.
+// When true, the app uses dummy data for local development without GitHub auth.
+const DUMMY_MODE = true;
+
+// --- DUMMY MODE PROVIDER ---
+const dummyFileTreeData: RepoContentNode[] = ([
+    {
+        name: 'documentation', path: 'documentation', sha: 'dir-doc-sha', type: 'dir', isOpen: true,
+        children: [
+            { name: 'getting-started.md', path: 'documentation/getting-started.md', sha: 'file-gs-sha', type: 'file' },
+            { name: 'advanced-features.mdx', path: 'documentation/advanced-features.mdx', sha: 'file-af-sha', type: 'file' },
+        ]
+    },
+    {
+        name: 'assets', path: 'assets', sha: 'dir-assets-sha', type: 'dir', isOpen: false,
+        children: [
+            { name: 'logo.svg', path: 'assets/logo.svg', sha: 'file-logo-sha', type: 'file' },
+            { name: 'user-avatar.png', path: 'assets/user-avatar.png', sha: 'file-avatar-sha', type: 'file' },
+        ]
+    },
+    {
+        name: 'empty-folder', path: 'empty-folder', sha: 'dir-empty-sha', type: 'dir', isOpen: false,
+        children: []
+    },
+    { name: 'README.md', path: 'README.md', sha: 'file-readme-sha', type: 'file' },
+    { name: 'package.json', path: 'package.json', sha: 'file-pkg-sha', type: 'file' },
+] as RepoContentNode[]).sort((a,b) => (a.type === 'dir' && b.type !== 'dir') ? -1 : (a.type !== 'dir' && b.type === 'dir') ? 1 : a.name.localeCompare(b.name));
+
+const DummyGitHubProvider = ({ children }) => {
+    const [isDirty, setIsDirty] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [fileTree, setFileTree] = useState<RepoContentNode[]>(dummyFileTreeData);
+    const [activeFile, setActiveFile] = useState<{ path: string; content: string; sha: string; } | null>({
+        path: 'documentation/getting-started.md',
+        content: '# Getting Started\n\nThis is a dummy file. You can edit the content and save your changes.',
+        sha: 'file-gs-sha',
+    });
+
+    const toggleFolder = useCallback(async (path: string) => {
+        const update = (nodes: RepoContentNode[]): RepoContentNode[] => {
+            return nodes.map(node => {
+                if (node.path === path) return { ...node, isOpen: !node.isOpen };
+                if (node.children && path.startsWith(node.path + '/')) {
+                    return { ...node, children: update(node.children) };
+                }
+                return node;
+            });
+        };
+        setFileTree(prev => update(prev));
+    }, []);
+
+    const loadFile = useCallback(async (path: string) => {
+        console.log('DUMMY: loadFile', path);
+        if (isDirty && !window.confirm("You have unsaved changes. Are you sure you want to discard them?")) return;
+        setActiveFile({ path, content: `# Dummy Content: ${path}`, sha: `dummy-sha-for-${path}`});
+        setIsDirty(false);
+    }, [isDirty]);
+
+    const saveFile = useCallback(async (content: string) => {
+        if (!activeFile) return;
+        console.log('DUMMY: saveFile', activeFile.path);
+        setIsSaving(true);
+        await new Promise(res => setTimeout(res, 500)); // Simulate network delay
+        setActiveFile(prev => prev ? { ...prev, content } : null);
+        setIsDirty(false);
+        setIsSaving(false);
+    }, [activeFile]);
+
+    const deleteNode = useCallback(async (node: RepoContentNode) => {
+        console.log('DUMMY: deleteNode', node.path);
+        setFileTree(currentTree => removeNodeFromTree(currentTree, node.path));
+        if (activeFile?.path.startsWith(node.path)) {
+            setActiveFile(null);
+        }
+    }, [activeFile]);
+    
+    const value = {
+        token: 'dummy-token',
+        user: { name: 'Dummy User', email: 'dummy@example.com', avatar_url: 'https://avatars.githubusercontent.com/u/1024025?v=4', login: 'dummy-user' },
+        repositories: [],
+        selectedRepo: { id: 1, full_name: 'dummy/plita-docs', name: 'plita-docs', private: true, owner: { login: 'dummy' }, html_url: '', description: '', updated_at: '' },
+        isLoading: false, isSaving, error: null, tokenScopes: ['repo', 'read:user'],
+        fileTree, allFilesForSearch: [], activeFile, initialContent: INITIAL_CONTENT,
+        isDirty, setIsDirty,
+        login: () => alert('Dummy Login'),
+        logout: () => alert('Dummy Logout'),
+        switchAccount: () => alert('Dummy Switch Account'),
+        connectRepoAccess: () => alert('Dummy Connect Repo Access'),
+        selectRepo: (repo) => console.log('DUMMY: selectRepo', repo),
+        clearRepoSelection: () => console.log('DUMMY: clearRepoSelection'),
+        createAndSelectRepo: async (repoName) => console.log('DUMMY: createAndSelectRepo', repoName),
+        loadFile, saveFile, toggleFolder, deleteNode,
+        createFile: async (path, content) => console.log('DUMMY: createFile', path, content),
+        createFolder: async (path) => console.log('DUMMY: createFolder', path),
+    };
+
+    return <GitHubContext.Provider value={value}>{children}</GitHubContext.Provider>;
+}
+
+
+// --- ORIGINAL PROVIDER ---
+
 // Helper to recursively find and update a node in the tree, and keep it sorted
 const updateNodeInTree = (nodes: RepoContentNode[], path: string, updates: Partial<RepoContentNode>): RepoContentNode[] => {
     return nodes.map(node => {
@@ -66,6 +168,12 @@ interface GitHubContextType {
 export const GitHubContext = createContext<GitHubContextType | undefined>(undefined);
 
 export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+    // --- START DUMMY MODE ---
+    if (DUMMY_MODE) {
+        return <DummyGitHubProvider>{children}</DummyGitHubProvider>;
+    }
+    // --- END DUMMY MODE ---
+
     const [token, setToken] = useState<string | null>(() => localStorage.getItem('gh_token'));
     const [tokenScopes, setTokenScopes] = useState<string[]>([]);
     const [user, setUser] = useState<GitHubUser | null>(null);

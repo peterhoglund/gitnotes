@@ -1,10 +1,10 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Editor, BubbleMenu } from '@tiptap/react';
+import { BubbleMenu } from '@tiptap/react';
 import { SmileyIcon } from '../icons';
 import { EMOJIS } from '../../utils/constants';
 
 interface BlockEmojiMenuProps {
-  editor: Editor;
+  editor: any;
 }
 
 const BlockEmojiMenu: React.FC<BlockEmojiMenuProps> = ({ editor }) => {

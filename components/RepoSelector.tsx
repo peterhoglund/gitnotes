@@ -59,14 +59,16 @@ const RepoSelector: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
                 />
             </div>
             <div className="p-2">
-                <button
+                 <button
                     onClick={handleCreateRepo}
                     disabled={isCreating}
-                    className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-md font-semibold bg-blue-600 text-white hover:bg-blue-700 disabled:bg-blue-500 disabled:cursor-not-allowed transition-colors"
+                    className={`w-full flex items-center ${isOpen ? '' : 'justify-center'} px-2 py-2 rounded-md font-semibold bg-blue-600 text-white hover:bg-blue-700 disabled:bg-blue-500 disabled:cursor-not-allowed transition-colors`}
                     title={defaultRepoExists ? `Select your existing '${DEFAULT_REPO_NAME}' repository.` : `Create and use a new private repository named '${DEFAULT_REPO_NAME}'.`}
                 >
-                    {isCreating ? <RefreshCwIcon className="animate-spin" /> : <PlusIcon />}
-                    <span className={`whitespace-nowrap transition-opacity duration-100 ${isOpen ? 'opacity-100' : 'opacity-0'}`}>
+                    <div className="w-5 h-5 flex-shrink-0 flex items-center justify-center">
+                        {isCreating ? <RefreshCwIcon className="animate-spin" /> : <PlusIcon />}
+                    </div>
+                    <span className={`whitespace-nowrap transition-all duration-200 overflow-hidden ${isOpen ? 'ml-2 w-auto opacity-100' : 'ml-0 w-0 opacity-0'}`}>
                         {defaultRepoExists ? 'Use Default Repo' : 'Create Default Repo'}
                     </span>
                 </button>
@@ -78,12 +80,12 @@ const RepoSelector: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
                     <div
                         key={repo.id}
                         onClick={() => selectRepo(repo)}
-                        className={`flex items-center p-2 my-0.5 rounded-md cursor-pointer hover:bg-gray-200 dark:hover:bg-zinc-700 ${isOpen ? 'gap-3' : ''} ${!isOpen && 'justify-center'}`}
+                        className="flex items-center p-2 my-0.5 rounded-md cursor-pointer hover:bg-gray-200 dark:hover:bg-zinc-700"
                         title={repo.full_name}
                     >
-                        <BookIcon />
-                        <span className={`truncate flex-1 whitespace-nowrap transition-all duration-200 ${isOpen ? 'opacity-100' : 'opacity-0 w-0'}`}>{repo.name}</span>
-                        <div className={`transition-all duration-200 ${isOpen ? 'opacity-100' : 'opacity-0 w-0'}`}>
+                        <div className="w-5 h-5 flex-shrink-0 flex items-center justify-center"><BookIcon /></div>
+                        <span className={`truncate flex-1 whitespace-nowrap transition-all duration-200 overflow-hidden ${isOpen ? 'ml-2 opacity-100' : 'ml-0 w-0 opacity-0'}`}>{repo.name}</span>
+                        <div className={`transition-all duration-200 overflow-hidden ${isOpen ? 'w-auto opacity-100' : 'w-0 opacity-0'}`}>
                             {repo.private && <LockIcon />}
                         </div>
                     </div>

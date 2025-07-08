@@ -1,5 +1,3 @@
-
-
 import React from 'react';
 
 // Using Font Awesome icons - using fa-solid (free) instead of fa-light (pro).
@@ -19,7 +17,9 @@ export const HighlighterIcon = () => <i className="fa-solid fa-highlighter fa-fw
 export const SunIcon = () => <i className="fa-solid fa-sun fa-fw" style={faStyle} aria-hidden="true"></i>;
 export const MoonIcon = () => <i className="fa-solid fa-moon fa-fw" style={faStyle} aria-hidden="true"></i>;
 export const SmileyIcon = () => <i className="fa-regular fa-face-smile fa-fw" style={{...faStyle, fontSize: '18px'}} aria-hidden="true"></i>;
-
+export const LinkIcon = () => <i className="fa-solid fa-link fa-fw" style={faStyle} aria-hidden="true"></i>;
+export const UnlinkIcon = () => <i className="fa-solid fa-link-slash fa-fw" style={{...faStyle, fontSize: '16px'}} aria-hidden="true"></i>;
+export const ExternalLinkIcon = () => <i className="fa-solid fa-arrow-up-right-from-square fa-fw" style={{...faStyle, fontSize: '16px'}} aria-hidden="true"></i>;
 
 // Profile & GitHub icons
 export const ProfileIcon = () => (
@@ -27,7 +27,7 @@ export const ProfileIcon = () => (
         xmlns="http://www.w3.org/2000/svg" 
         viewBox="0 0 24 24" 
         fill="currentColor" 
-        style={{ width: '16px', height: '16px' }} 
+        style={{ width: '22px', height: '22px' }} 
         aria-hidden="true"
     >
         <path fillRule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clipRule="evenodd" />

@@ -19,16 +19,22 @@ helloWorld();
 `;
 
 export const LANGUAGES = [
-  { value: 'text', label: 'Text' },
   { value: 'js', label: 'JavaScript' },
-  { value: 'jsx', label: 'JSX' },
   { value: 'ts', label: 'TypeScript' },
-  { value: 'tsx', label: 'TSX' },
-  { value: 'css', label: 'CSS' },
-  { value: 'json', label: 'JSON' },
-  { value: 'html', label: 'HTML/XML' },
   { value: 'py', label: 'Python' },
-  { value: 'bash', label: 'Bash' },
+  { value: 'html', label: 'HTML' },
+  { value: 'css', label: 'CSS' },
+  { value: 'sql', label: 'SQL' },
+  { value: 'php', label: 'PHP' },
+  { value: 'java', label: 'Java' },
+  { value: 'csharp', label: 'C#' },
+  { value: 'swift', label: 'Swift' },
+  { value: 'cpp', label: 'C++' },
+  { value: 'c', label: 'C' },
+  { value: 'go', label: 'Go' },
+  { value: 'rust', label: 'Rust' },
+  { value: 'bash', label: 'Bash/Shell' },
+  { value: 'text', label: 'Text' },
 ];
 
 export const EMOJIS = ['💡', 'ℹ️', '⚠️', '✅', '👍', '📌', '💬', '🔥', '🎯', '🎉', '❓', '🛑'];

@@ -10,6 +10,7 @@ import { useTiptapEditor } from './components/editor/useTiptapEditor';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import CodeBlockMenu from './components/editor/CodeBlockMenu';
 import BlockEmojiMenu from './components/editor/BlockEmojiMenu';
+import LinkMenu from './components/editor/LinkMenu';
 import { ModalProvider } from './context/ModalContext';
 
 const PlitaEditor: React.FC = () => {
@@ -71,6 +72,7 @@ const PlitaEditor: React.FC = () => {
                 </div>
                 <CodeBlockMenu editor={editor} />
                 <BlockEmojiMenu editor={editor} />
+                <LinkMenu editor={editor} />
                 <EditorCanvas
                     editor={editor}
                     onKeyDown={handleKeyDown}
