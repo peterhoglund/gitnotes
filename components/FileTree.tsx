@@ -304,7 +304,7 @@ export const FileTree: React.FC<{ isOpen: boolean; }> = ({ isOpen }) => {
                             <div 
                                 className={`px-1 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1 flex items-center justify-between transition-all duration-200 ${isOpen ? 'overflow-visible max-h-12 opacity-100' : 'overflow-hidden max-h-0 opacity-0'}`} 
                             >
-                                <span>Pages</span>
+                                <span>Project</span>
                                 <div className="relative mr-1">
                                     <button
                                         onClick={(e) => {
