@@ -10,12 +10,10 @@ interface ThemeContextType {
 export const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [theme, setTheme] = useState<Theme>('light');
-
-  useEffect(() => {
-    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    setTheme(prefersDark ? 'dark' : 'light');
-  }, []);
+  const [theme, setTheme] = useState<Theme>(() => 
+    // Initialize state from the class on the HTML element, which is set by the inline script
+    document.documentElement.classList.contains('dark') ? 'dark' : 'light'
+  );
 
   useEffect(() => {
     const lightTheme = document.getElementById('prism-light-theme') as HTMLLinkElement;
@@ -31,6 +29,16 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (darkTheme) darkTheme.disabled = true;
     }
   }, [theme]);
+
+  // Listen for system theme changes to update the app in real-time
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = (e: MediaQueryListEvent) => {
+        setTheme(e.matches ? 'dark' : 'light');
+    };
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
 
   const toggleTheme = useCallback(() => {
     setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
