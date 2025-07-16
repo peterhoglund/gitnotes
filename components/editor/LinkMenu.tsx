@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+// @ts-ignore
 import { BubbleMenu } from '@tiptap/react';
 import { PenToSquareIcon, UnlinkIcon, ExternalLinkIcon } from '../icons';
 
@@ -10,8 +11,11 @@ const LinkMenu: React.FC<LinkMenuProps> = ({ editor }) => {
   const [url, setUrl] = useState('');
 
   const handleUpdate = useCallback(() => {
-    if (url.trim()) {
-      editor.chain().focus().extendMarkRange('link').setLink({ href: url, target: '_blank' }).run();
+    const trimmedUrl = url.trim();
+    if (trimmedUrl) {
+      editor.chain().focus().extendMarkRange('link').setLink({ href: trimmedUrl, target: '_blank' }).run();
+    } else {
+      editor.chain().focus().unsetLink().run();
     }
   }, [editor, url]);
   

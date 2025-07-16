@@ -1,3 +1,4 @@
+
 import React, { useEffect, useMemo } from 'react';
 import { Editor } from '@tiptap/core';
 import { ThemeProvider } from './context/ThemeContext';
@@ -8,10 +9,8 @@ import EditorToolbar from './components/editor/EditorToolbar';
 import EditorCanvas from './components/editor/EditorCanvas';
 import { useTiptapEditor } from './components/editor/useTiptapEditor';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
-import CodeBlockMenu from './components/editor/CodeBlockMenu';
-import BlockEmojiMenu from './components/editor/BlockEmojiMenu';
-import LinkMenu from './components/editor/LinkMenu';
 import { ModalProvider } from './context/ModalContext';
+import LinkMenu from './components/editor/LinkMenu';
 
 const PlitaEditor: React.FC = () => {
     const { activeFile, initialContent, isDirty, setIsDirty, saveFile } = useGitHub();
@@ -32,7 +31,7 @@ const PlitaEditor: React.FC = () => {
             }
 
             // `setContent` resets the history and dirty state
-            editor.commands.setContent(newContent, false);
+            editor.commands.setContent(newContent, { emitUpdate: false });
             // After setting content, it's no longer dirty
             setIsDirty(false); 
         }, 10);
@@ -67,12 +66,14 @@ const PlitaEditor: React.FC = () => {
     return (
         <AppShell>
             <main className="relative flex-grow flex flex-col overflow-hidden">
-                <div className="relative z-20 flex justify-center py-4">
-                    <EditorToolbar editor={editor} />
+                <div className="absolute top-0 left-0 right-0 z-20 flex justify-center py-4 pointer-events-none">
+                    <div className="pointer-events-auto">
+                        <EditorToolbar editor={editor} />
+                    </div>
                 </div>
-                <CodeBlockMenu editor={editor} />
-                <BlockEmojiMenu editor={editor} />
+                
                 <LinkMenu editor={editor} />
+
                 <EditorCanvas
                     editor={editor}
                     onKeyDown={handleKeyDown}

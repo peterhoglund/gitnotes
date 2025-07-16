@@ -1,4 +1,5 @@
 
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useTheme } from '../hooks/useTheme';
 import { useGitHub } from '../hooks/useGitHub';
@@ -106,7 +107,7 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({ isSidePanelOpen, onMouseEnter
         onClick={() => setIsOpen(!isOpen)}
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
-        className="profile-button w-full flex items-center p-2 rounded-md text-left"
+        className="profile-button w-full flex items-center p-2 rounded-md text-left text-gray-600 dark:text-gray-300"
       >
         <div className="flex-shrink-0 h-4 flex items-center justify-center">
           {isLoggedIn && user?.avatar_url ? (

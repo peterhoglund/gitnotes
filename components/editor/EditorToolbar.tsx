@@ -4,13 +4,12 @@ import Dropdown from '../Dropdown';
 import ColorPicker from '../ColorPicker';
 import {
   BoldIcon, ItalicIcon, UnderlineIcon, StrikethroughIcon, CodeIcon, LinkIcon,
-  ListIcon, ListOrderedIcon, AlignLeftIcon, AlignCenterIcon, AlignRightIcon,
+  ListIcon, ListOrderedIcon, TaskListIcon, AlignLeftIcon, AlignCenterIcon, AlignRightIcon,
   AlignJustifyIcon, EllipsisVerticalIcon, TextColorIcon, HighlighterIcon, BlockBackgroundColorIcon,
   SaveIcon, RefreshCwIcon,
 } from '../icons';
 import { useGitHub } from '../../hooks/useGitHub';
 import { useTheme } from '../../hooks/useTheme';
-import { useModal } from '../../hooks/useModal';
 import { TRANSPARENT } from '../../utils/constants';
 
 const BLOCK_TYPES = [
@@ -29,7 +28,6 @@ interface EditorToolbarProps {
 const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
   const { activeFile, isSaving, isDirty, saveFile } = useGitHub();
   const { theme } = useTheme();
-  const { showPrompt } = useModal();
 
   const [isOverflowOpen, setIsOverflowOpen] = useState(false);
   const overflowRef = useRef<HTMLDivElement>(null);
@@ -77,53 +75,80 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
   
   const handleColor = useCallback((color: string) => editor.chain().focus().setColor(color).run(), [editor]);
   const handleHighlight = useCallback((color: string) => editor.chain().focus().toggleHighlight({ color }).run(), [editor]);
+  
   const handleBlockBg = useCallback((color: string) => {
-    const chain = editor.chain().focus();
-    const nodeTypes = ['paragraph', 'heading', 'listItem'];
-    
-    // Check which node type is active and apply the attribute
-    const activeNodeType = nodeTypes.find(type => editor.isActive(type));
+    const newBg = color === TRANSPARENT ? null : color;
+    const nodeTypesToUpdate = ['paragraph', 'heading'];
+    const { tr } = editor.state;
+    const { from, to } = editor.state.selection;
 
-    if (activeNodeType) {
-        if (color === TRANSPARENT) {
-           chain.updateAttributes(activeNodeType, { backgroundColor: null, emoji: null });
-        } else {
-           chain.updateAttributes(activeNodeType, { backgroundColor: color });
-        }
+    let wasHandled = false;
+
+    // Iterate over nodes in the selection to find list items
+    editor.state.doc.nodesBetween(from, to, (node, pos) => {
+      if (node.type.name === 'listItem') {
+        node.descendants((childNode, childPos) => {
+          if (nodeTypesToUpdate.includes(childNode.type.name)) {
+            const absolutePos = pos + 1 + childPos;
+            const currentAttrs = childNode.attrs;
+            const newAttrs = {
+              ...currentAttrs,
+              backgroundColor: newBg,
+              emoji: newBg ? currentAttrs.emoji : null,
+            };
+            tr.setNodeMarkup(absolutePos, undefined, newAttrs);
+            wasHandled = true;
+            return false; // Don't descend into paragraphs/headings
+          }
+          return true;
+        });
+      }
+    });
+
+    if (wasHandled) {
+      editor.view.dispatch(tr);
+    } else {
+      // Fallback for standalone paragraphs/headings
+      const activeNodeType = nodeTypesToUpdate.find(type => editor.isActive(type));
+      if (activeNodeType) {
+        editor.chain().focus().updateAttributes(activeNodeType, {
+            backgroundColor: newBg,
+            emoji: newBg ? editor.getAttributes(activeNodeType).emoji : null,
+        }).run();
+      }
     }
-    chain.run();
   }, [editor]);
   
-  const handleLink = useCallback(async () => {
+  const handleLink = useCallback(() => {
     if (editor.isActive('link')) {
         editor.chain().focus().unsetLink().run();
         return;
     }
-
-    const url = await showPrompt({
-        title: 'Enter URL',
-        message: 'Please provide the web address:',
-        defaultValue: 'https://',
-        placeholder: 'https://example.com',
-        confirmButtonText: 'Set Link'
-    });
-
-    if (url && url.trim() !== '') {
-        editor.chain().focus().extendMarkRange('link').setLink({ href: url, target: '_blank' }).run();
-    }
-}, [editor, showPrompt]);
+    // When creating a link, apply the mark with an empty href.
+    // The bubble menu will appear for the user to enter the URL.
+    editor.chain().focus().extendMarkRange('link').setLink({ href: '' }).run();
+  }, [editor]);
 
   const textColor = editor.getAttributes('textStyle').color || (theme === 'dark' ? '#d5d5d5' : '#0a0a0a');
   const highlightColor = editor.getAttributes('highlight').color || TRANSPARENT;
+  const canSetLink = !editor.state.selection.empty;
 
   const getBlockBgColor = () => {
-      const nodeTypes = ['paragraph', 'heading', 'listItem'];
-      for (const type of nodeTypes) {
-          if (editor.isActive(type)) {
-              return editor.getAttributes(type).backgroundColor || TRANSPARENT;
-          }
-      }
-      return TRANSPARENT;
+    const nodeTypes = ['paragraph', 'heading'];
+    for (const type of nodeTypes) {
+        if (editor.isActive(type)) {
+            return editor.getAttributes(type).backgroundColor || TRANSPARENT;
+        }
+    }
+    if (editor.isActive('listItem')) {
+        // Attempt to get color from the first child paragraph/heading inside the list item
+        const { $from } = editor.state.selection;
+        const listItem = $from.node(-1); // li
+        if (listItem && listItem.firstChild) {
+            return listItem.firstChild.attrs.backgroundColor || TRANSPARENT;
+        }
+    }
+    return TRANSPARENT;
   };
 
   return (
@@ -177,6 +202,9 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
         <ToolbarButton onClick={() => editor.chain().focus().toggleOrderedList().run()} isActive={editor.isActive('orderedList')} title="Numbered List">
           <ListOrderedIcon />
         </ToolbarButton>
+        <ToolbarButton onClick={() => editor.chain().focus().toggleTaskList().run()} isActive={editor.isActive('taskList')} title="Task List">
+          <TaskListIcon />
+        </ToolbarButton>
       </div>
 
       <div className="toolbar-divider h-6 border-l border-gray-300 mx-2"></div>
@@ -196,7 +224,12 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
               <ToolbarButton onClick={() => editor.chain().focus().toggleCode().run()} isActive={editor.isActive('code')} title="Code">
                 <CodeIcon />
               </ToolbarButton>
-              <ToolbarButton onClick={handleLink} isActive={editor.isActive('link')} title="Link">
+              <ToolbarButton
+                onClick={handleLink}
+                isActive={editor.isActive('link')}
+                title={editor.isActive('link') ? 'Remove link' : 'Create link'}
+                disabled={!editor.isActive('link') && !canSetLink}
+              >
                 <LinkIcon />
               </ToolbarButton>
 

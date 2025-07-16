@@ -1,13 +1,19 @@
-import { useEditor } from '@tiptap/react';
+
+import { useEditor, ReactNodeViewRenderer } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import Underline from '@tiptap/extension-underline';
-import TextAlign from '@tiptap/extension-text-align';
-import TextStyle from '@tiptap/extension-text-style';
+import Paragraph from '@tiptap/extension-paragraph';
+import Heading from '@tiptap/extension-heading';
+import { Underline } from '@tiptap/extension-underline';
+import { TextAlign } from '@tiptap/extension-text-align';
+import { TextStyle } from '@tiptap/extension-text-style';
 import { Color } from '@tiptap/extension-color';
-import Highlight from '@tiptap/extension-highlight';
-import Placeholder from '@tiptap/extension-placeholder';
+import { Highlight } from '@tiptap/extension-highlight';
+import { Placeholder } from '@tiptap/extension-placeholder';
 import { CodeBlockLowlight } from '@tiptap/extension-code-block-lowlight';
-import Link from '@tiptap/extension-link';
+import { Link } from '@tiptap/extension-link';
+import { TaskList } from '@tiptap/extension-task-list';
+import { TaskItem } from '@tiptap/extension-task-item';
+import BubbleMenuExtension from '@tiptap/extension-bubble-menu';
 
 import { createLowlight } from 'lowlight';
 import css from 'highlight.js/lib/languages/css';
@@ -28,6 +34,8 @@ import bash from 'highlight.js/lib/languages/bash';
 import text from 'highlight.js/lib/languages/plaintext';
 
 import { BlockStyles } from './extensions';
+import CodeBlockComponent from './CodeBlockComponent';
+import BlockNodeView from './BlockNodeView';
 
 const lowlight = createLowlight();
 
@@ -60,23 +68,44 @@ lowlight.registerAlias({
     cpp: ['c++'],
 });
 
+const CustomCodeBlock = CodeBlockLowlight.extend({
+    addNodeView() {
+        return ReactNodeViewRenderer(CodeBlockComponent);
+    },
+});
+
+const CustomParagraph = Paragraph.extend({
+  addNodeView() {
+    return ReactNodeViewRenderer(BlockNodeView);
+  },
+});
+
+const CustomHeading = Heading.extend({
+  addNodeView() {
+    return ReactNodeViewRenderer(BlockNodeView);
+  },
+});
+
 
 export const useTiptapEditor = (content: string) => {
     const editor = useEditor({
         extensions: [
             StarterKit.configure({
-                heading: {
-                    levels: [1, 2, 3, 6],
-                },
-                // Disable the default CodeBlock and Link to use our custom configs.
+                // Disable the default nodes that we are customizing
+                heading: false,
+                paragraph: false,
                 codeBlock: false,
                 link: false,
             }),
-            CodeBlockLowlight.configure({
+            CustomParagraph,
+            CustomHeading.configure({
+                levels: [1, 2, 3, 6],
+            }),
+            CustomCodeBlock.configure({
                 lowlight,
             }),
             Link.configure({
-                openOnClick: false, // Don't open link on click, show bubble menu instead
+                openOnClick: false, // Set to false to allow editing via bubble menu
                 autolink: true,     // Automatically detect and create links
                 HTMLAttributes: {
                     rel: 'noopener noreferrer nofollow',
@@ -93,6 +122,11 @@ export const useTiptapEditor = (content: string) => {
             Placeholder.configure({
                 placeholder: 'Write something',
             }),
+            TaskList,
+            TaskItem.configure({
+              nested: true,
+            }),
+            BubbleMenuExtension,
             BlockStyles,
         ],
         content: content,

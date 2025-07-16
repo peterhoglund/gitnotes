@@ -144,6 +144,37 @@
         margin-top: 0;
         margin-bottom: 0;
       }
+
+      /* -- Tiptap Task List -- */
+      .prose ul[data-type="taskList"] {
+        list-style: none;
+        padding-left: 0;
+      }
+      .prose ul[data-type="taskList"] p {
+        margin: 0;
+      }
+      .prose ul[data-type="taskList"] li {
+        display: flex;
+        align-items: flex-start;
+      }
+      .prose ul[data-type="taskList"] li > label {
+        flex-shrink: 0;
+        margin-right: 0.5rem;
+        padding-top: 0.3em;
+        cursor: pointer;
+        user-select: none;
+      }
+      .prose ul[data-type="taskList"] li > div {
+        flex: 1 1 0;
+      }
+      .prose ul[data-type="taskList"] li[data-checked="true"] > div > p {
+        text-decoration: line-through;
+        color: #6b7280; /* gray-500 */
+      }
+      html.dark .prose ul[data-type="taskList"] li[data-checked="true"] > div > p {
+        color: #71717a; /* zinc-500 */
+      }
+
       .prose .custom-bg-block {
         padding: 0.5em 1em;
         border-radius: 4px;
@@ -232,64 +263,6 @@
       }
       .color-picker-divider {
         border-color: #e5e7eb; /* gray-200 */
-      }
-
-      /* -- Resizable Editor Handles -- */
-      .resize-handle {
-        position: absolute; /* Changed from fixed */
-        top: 0;
-        bottom: 0;
-        width: 12px; /* A decent clickable area */
-        cursor: col-resize;
-        opacity: 0;
-        transition: opacity 0.2s ease-in-out;
-        z-index: 10;
-      }
-      /* The visible line inside the handle */
-      .resize-handle::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        width: 2px;
-        background-color: #93c5fd; /* blue-300 */
-        border-radius: 1px;
-        opacity: 0.5;
-        left: 5px; /* Center the 2px line inside the 12px handle */
-      }
-      /* Show handle on hover of the handle itself */
-      .resize-handle:hover {
-        opacity: 1;
-      }
-      /* Keep handles visible during resize, even if cursor moves away */
-      .resizable-editor-container.is-resizing .resize-handle {
-        opacity: 1;
-      }
-      /* Force resize cursor globally during drag */
-      body.resizing, body.resizing * {
-        cursor: col-resize !important;
-      }
-      
-      /* -- Floating Bubble Menus -- */
-       .bubble-menu {
-        display: flex;
-        background-color: #27272a; /* zinc-800 */
-        padding: 0.2rem;
-        border-radius: 0.5rem;
-        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-      }
-      .bubble-menu-button {
-        border: none;
-        background: none;
-        color: #e5e7eb; /* gray-200 */
-        font-size: 0.85rem;
-        font-weight: 500;
-        padding: 0.2rem 0.5rem;
-        border-radius: 0.4rem;
-        background-color: transparent;
-      }
-      .bubble-menu-button:hover, .bubble-menu-button.is-active {
-        background-color: #52525b; /* zinc-600 */
       }
 
       /* -- Active Dropdown Item -- */
@@ -513,23 +486,6 @@
       html.dark .color-picker-trigger:hover {
         background-color: #52525b; /* zinc-600 */
       }
-      
-      /* -- Dark Mode Resizable Editor Handles -- */
-      html.dark .resize-handle::after {
-          background-color: #3b82f6; /* blue-500 */
-      }
-
-      /* -- Dark Mode Floating Menus -- */
-      html.dark .bubble-menu {
-        background-color: #f9fafb; /* gray-50 */
-      }
-      html.dark .bubble-menu-button {
-        color: #1f2937; /* gray-800 */
-      }
-      html.dark .bubble-menu-button:hover,
-      html.dark .bubble-menu-button.is-active {
-        background-color: #e5e7eb; /* gray-200 */
-      }
 
       /* -- Dark Mode Modal -- */
       html.dark .modal-container {
@@ -570,23 +526,27 @@
     "@google/genai": "https://esm.sh/@google/genai@0.14.0",
     "lowlight": "https://esm.sh/lowlight@3.1.0",
     "highlight.js/": "https://esm.sh/highlight.js@11.9.0/",
-    "@tiptap/core": "https://esm.sh/@tiptap/core@2.5.7",
-    "@tiptap/react": "https://esm.sh/@tiptap/react@2.5.7?deps=react@18.2.0",
-    "@tiptap/pm/": "https://esm.sh/@tiptap/pm@2.5.7/",
-    "@tiptap/extension-character-count": "https://esm.sh/@tiptap/extension-character-count@2.5.7",
-    "@tiptap/extension-code": "https://esm.sh/@tiptap/extension-code@2.5.7",
-    "@tiptap/extension-code-block": "https://esm.sh/@tiptap/extension-code-block@2.5.7",
-    "@tiptap/extension-code-block-lowlight": "https://esm.sh/@tiptap/extension-code-block-lowlight@2.5.7",
-    "@tiptap/extension-color": "https://esm.sh/@tiptap/extension-color@2.5.7",
-    "@tiptap/extension-highlight": "https://esm.sh/@tiptap/extension-highlight@2.5.7",
-    "@tiptap/extension-placeholder": "https://esm.sh/@tiptap/extension-placeholder@2.5.7",
-    "@tiptap/extension-strike": "https://esm.sh/@tiptap/extension-strike@2.5.7",
-    "@tiptap/extension-text-align": "https://esm.sh/@tiptap/extension-text-align@2.5.7",
-    "@tiptap/extension-text-style": "https://esm.sh/@tiptap/extension-text-style@2.5.7",
-    "@tiptap/extension-underline": "https://esm.sh/@tiptap/extension-underline@2.5.7",
-    "@tiptap/starter-kit": "https://esm.sh/@tiptap/starter-kit@2.5.7",
-    "@tiptap/extension-link": "https://esm.sh/@tiptap/extension-link@2.5.7",
-    "react-dom/": "https://esm.sh/react-dom@^19.1.0/"
+    "@tiptap/core": "https://esm.sh/@tiptap/core@3.0.0",
+    "@tiptap/react": "https://esm.sh/@tiptap/react@3.0.0?deps=react@18.2.0",
+    "@tiptap/pm/": "https://esm.sh/@tiptap/pm@3.0.0/",
+    "@tiptap/extension-character-count": "https://esm.sh/@tiptap/extension-character-count@3.0.0",
+    "@tiptap/extension-code-block": "https://esm.sh/@tiptap/extension-code-block@3.0.0",
+    "@tiptap/extension-code-block-lowlight": "https://esm.sh/@tiptap/extension-code-block-lowlight@3.0.0",
+    "@tiptap/extension-color": "https://esm.sh/@tiptap/extension-color@3.0.0",
+    "@tiptap/extension-highlight": "https://esm.sh/@tiptap/extension-highlight@3.0.0",
+    "@tiptap/extension-placeholder": "https://esm.sh/@tiptap/extension-placeholder@3.0.0",
+    "@tiptap/extension-text-align": "https://esm.sh/@tiptap/extension-text-align@3.0.0",
+    "@tiptap/extension-text-style": "https://esm.sh/@tiptap/extension-text-style@3.0.0",
+    "@tiptap/extension-underline": "https://esm.sh/@tiptap/extension-underline@3.0.0",
+    "@tiptap/starter-kit": "https://esm.sh/@tiptap/starter-kit@3.0.0",
+    "@tiptap/extension-link": "https://esm.sh/@tiptap/extension-link@3.0.0",
+    "@tiptap/extension-task-item": "https://esm.sh/@tiptap/extension-task-item@3.0.0",
+    "@tiptap/extension-task-list": "https://esm.sh/@tiptap/extension-task-list@3.0.0",
+    "@tiptap/extension-bubble-menu": "https://esm.sh/@tiptap/extension-bubble-menu@^3.0.0",
+    "@tiptap/extension-paragraph": "https://esm.sh/@tiptap/extension-paragraph@3.0.0",
+    "@tiptap/extension-heading": "https://esm.sh/@tiptap/extension-heading@3.0.0",
+    "react-dom/": "https://esm.sh/react-dom@18.2.0/",
+    "re": "https://esm.sh/re@^0.1.4"
   }
 }
 </script>

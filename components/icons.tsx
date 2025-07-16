@@ -11,6 +11,7 @@ export const StrikethroughIcon = () => <i className="fa-solid fa-strikethrough f
 export const CodeIcon = () => <i className="fa-solid fa-code fa-fw" style={faStyle} aria-hidden="true"></i>;
 export const ListIcon = () => <i className="fa-solid fa-list-ul fa-fw" style={faStyle} aria-hidden="true"></i>;
 export const ListOrderedIcon = () => <i className="fa-solid fa-list-ol fa-fw" style={faStyle} aria-hidden="true"></i>;
+export const TaskListIcon = () => <i className="fa-solid fa-list-check fa-fw" style={faStyle} aria-hidden="true"></i>;
 export const EllipsisVerticalIcon = ({ size = 'small' }: { size?: 'small' | 'large' }) => <i className="fa-solid fa-ellipsis-vertical fa-fw" style={size === 'large' ? faStyle : {...faStyle, fontSize: '16px'}} aria-hidden="true"></i>;
 export const TextColorIcon = () => <i className="fa-solid fa-font fa-fw" style={faStyle} aria-hidden="true"></i>;
 export const HighlighterIcon = () => <i className="fa-solid fa-highlighter fa-fw" style={faStyle} aria-hidden="true"></i>;
@@ -59,8 +60,8 @@ export const SearchIcon = () => <i className="fa-solid fa-magnifying-glass fa-fw
 
 export const BlockBackgroundColorIcon = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect x="3" y="3" width="18" height="18" rx="4" fill="currentColor" fillOpacity="0.5" />
-    <text x="12" y="17" fontFamily="sans-serif" fontSize="12" fontWeight="bold" fill="currentColor" textAnchor="middle">
+    <rect x="2" y="1" width="21" height="20" rx="4" fill="currentColor" fillOpacity="0.5" />
+    <text x="12" y="16" fontFamily="sans-serif" fontSize="12" fontWeight="bold" fill="currentColor" textAnchor="middle">
       Ab
     </text>
   </svg>

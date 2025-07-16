@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "mkdir -p dist && esbuild index.tsx --bundle --outfile=dist/index.js --format=esm --jsx=automatic --external:react --external:react-dom --external:react-dom/client --external:@google/genai --external:lowlight --external:'highlight.js/*' --external:@tiptap/core --external:@tiptap/react --external:'@tiptap/pm/*' --external:@tiptap/extension-character-count --external:@tiptap/extension-code --external:@tiptap/extension-code-block --external:@tiptap/extension-code-block-lowlight --external:@tiptap/extension-color --external:@tiptap/extension-highlight --external:@tiptap/extension-placeholder --external:@tiptap/extension-strike --external:@tiptap/extension-text-align --external:@tiptap/extension-text-style --external:@tiptap/extension-underline --external:@tiptap/starter-kit --external:@tiptap/extension-link && cp index.html metadata.json dist/"
+    "build": "mkdir -p dist && esbuild index.tsx --bundle --outfile=dist/index.js --format=esm --jsx=automatic --external:react --external:react-dom --external:react-dom/client --external:@google/genai --external:lowlight --external:'highlight.js/*' --external:@tiptap/core --external:@tiptap/react --external:'@tiptap/pm/*' --external:@tiptap/extension-character-count --external:@tiptap/extension-code-block --external:@tiptap/extension-code-block-lowlight --external:@tiptap/extension-color --external:@tiptap/extension-highlight --external:@tiptap/extension-placeholder --external:@tiptap/extension-text-align --external:@tiptap/extension-text-style --external:@tiptap/extension-underline --external:@tiptap/starter-kit --external:@tiptap/extension-link --external:@tiptap/extension-task-item --external:@tiptap/extension-task-list && cp index.html metadata.json dist/"
   },
   "dependencies": {
     "react": "18.2.0",
@@ -11,20 +11,20 @@
     "@google/genai": "0.14.0",
     "lowlight": "3.1.0",
     "esbuild": "0.23.0",
-    "@tiptap/core": "2.5.7",
-    "@tiptap/react": "2.5.7",
-    "@tiptap/starter-kit": "2.5.7",
-    "@tiptap/extension-underline": "2.5.7",
-    "@tiptap/extension-strike": "2.5.7",
-    "@tiptap/extension-code": "2.5.7",
-    "@tiptap/extension-text-align": "2.5.7",
-    "@tiptap/extension-text-style": "2.5.7",
-    "@tiptap/extension-color": "2.5.7",
-    "@tiptap/extension-highlight": "2.5.7",
-    "@tiptap/extension-placeholder": "2.5.7",
-    "@tiptap/extension-code-block-lowlight": "2.5.7",
-    "@tiptap/extension-code-block": "2.5.7",
-    "@tiptap/extension-character-count": "2.5.7",
-    "@tiptap/extension-link": "2.5.7"
+    "@tiptap/core": "3.0.0",
+    "@tiptap/react": "3.0.0",
+    "@tiptap/starter-kit": "3.0.0",
+    "@tiptap/extension-underline": "3.0.0",
+    "@tiptap/extension-text-align": "3.0.0",
+    "@tiptap/extension-text-style": "3.0.0",
+    "@tiptap/extension-color": "3.0.0",
+    "@tiptap/extension-highlight": "3.0.0",
+    "@tiptap/extension-placeholder": "3.0.0",
+    "@tiptap/extension-code-block-lowlight": "3.0.0",
+    "@tiptap/extension-code-block": "3.0.0",
+    "@tiptap/extension-character-count": "3.0.0",
+    "@tiptap/extension-link": "3.0.0",
+    "@tiptap/extension-task-item": "3.0.0",
+    "@tiptap/extension-task-list": "3.0.0"
   }
 }
