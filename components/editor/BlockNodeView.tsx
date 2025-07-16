@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { NodeViewWrapper, NodeViewContent } from '@tiptap/react';
 import { EMOJIS, TRANSPARENT } from '../../utils/constants';
@@ -44,7 +45,7 @@ const BlockNodeView = ({ node, updateAttributes }) => {
             style={wrapperStyle}
             data-emoji={emoji || undefined}
         >
-            <NodeViewContent />
+            <NodeViewContent as={'span' as any} />
             {hasBg && (
                 <div
                     ref={menuRef}
