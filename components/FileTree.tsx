@@ -336,7 +336,7 @@ export const FileTree: React.FC<FileTreeProps> = ({ isOpen, onMouseEnterButton, 
                     >
                         <div 
                             className="flex-shrink-0 w-6 h-6 flex items-center justify-center text-gray-500 dark:text-gray-400 transition-all duration-300"
-                            style={{ marginLeft: isOpen ? `${level * 16}px` : '0px' }}
+                            style={{ marginLeft: isOpen ? `${level * 10}px` : '0px' }}
                         >
                              {isFolder ? (
                                 <>
@@ -417,7 +417,7 @@ export const FileTree: React.FC<FileTreeProps> = ({ isOpen, onMouseEnterButton, 
 
                 {isFolder && isExpanded && isOpen && (
                     <div
-                        className={`pl-4`}
+                        className={`pl-0`}
                         onDragOver={handleDragOver}
                         onDragEnter={e => {
                             // When entering the children container, the drop target is the parent folder.
@@ -450,11 +450,11 @@ export const FileTree: React.FC<FileTreeProps> = ({ isOpen, onMouseEnterButton, 
                             >
                                 <div
                                     className="flex-shrink-0 w-1 h-6"
-                                    style={{ marginLeft: `${(level + 1) * 12}px` }}
+                                    style={{ marginLeft: `${(level + 1) * 10}px` }}
                                 >
                                     {/* Empty spacer for icon alignment */}
                                 </div>
-                                <span className="ml-1">No pages here</span>
+                                <span className="ml-1">No pages here.</span>
                             </div>
                         )}
                     </div>
