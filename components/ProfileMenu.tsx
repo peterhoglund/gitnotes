@@ -82,9 +82,9 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({ isSidePanelOpen, onMouseEnter
           <div className="p-1 mb-1">
             {isLoggedIn ? (
               <div className="flex items-center p-2 border-b border-gray-100 dark:border-zinc-700 pb-3">
-                <img src={user.avatar_url} alt={user.name} className="w-8 h-8 rounded-full bg-gray-200 dark:bg-zinc-700" />
+                <img src={user.avatar_url} alt={user.name || user.login} className="w-8 h-8 rounded-full bg-gray-200 dark:bg-zinc-700" />
                 <div className="ml-3 flex-1 overflow-hidden">
-                  <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 truncate" title={user.name}>{user.name}</p>
+                  <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 truncate" title={user.name || user.login}>{user.name || user.login}</p>
                   <p className="text-xs text-gray-500 dark:text-gray-400 truncate" title={user.email}>{user.email}</p>
                 </div>
               </div>
@@ -149,13 +149,13 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({ isSidePanelOpen, onMouseEnter
       >
         <div className="flex-shrink-0 h-4 flex items-center justify-center">
           {isLoggedIn && user?.avatar_url ? (
-            <img src={user.avatar_url} alt={user.name} style={{ width: '24px', height: '24px' }} className="rounded-full" />
+            <img src={user.avatar_url} alt={user.name || user.login} style={{ width: '24px', height: '24px' }} className="rounded-full" />
           ) : (
             <ProfileIcon />
           )}
         </div>
         <div className={`overflow-hidden whitespace-nowrap transition-all duration-200 ${isSidePanelOpen ? 'flex-1 ml-3 opacity-100' : 'w-0 ml-0 opacity-0'}`}>
-            <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 truncate">{isLoggedIn ? user?.name : 'Guest'}</p>
+            <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 truncate">{isLoggedIn ? (user.name || user.login) : 'Guest'}</p>
         </div>
       </button>
     </div>

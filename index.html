@@ -419,6 +419,21 @@
       .dropdown-item.active {
         background-color: #e5e7eb; /* gray-200 */
       }
+
+      /* -- Drag and Drop -- */
+      .drop-target {
+          background-color: rgba(59, 130, 246, 0.2); /* blue-500 with opacity */
+          outline: 1px dashed #3b82f6;
+          outline-offset: -2px;
+          border-radius: 4px;
+      }
+      html.dark .drop-target {
+          background-color: rgba(96, 165, 250, 0.2); /* blue-400 with opacity */
+          outline-color: #60a5fa;
+      }
+      .is-dragging {
+          opacity: 0.5;
+      }
       
       /******************************************/
       /* -- Table Controls & Selection --       */

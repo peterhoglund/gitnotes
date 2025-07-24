@@ -8,7 +8,7 @@ declare const netlify: any;
 
 // DEV_NOTE: Set this to `false` for deployment.
 // When true, the app uses dummy data for local development without GitHub auth.
-const DUMMY_MODE = false;
+const DUMMY_MODE = true;
 
 // --- DUMMY MODE PROVIDER ---
 const dummyFileTreeData: RepoContentNode[] = ([
@@ -33,6 +33,39 @@ const dummyFileTreeData: RepoContentNode[] = ([
     { name: 'README.md', path: 'README.md', sha: 'file-readme-sha', type: 'file' },
     { name: 'package.json', path: 'package.json', sha: 'file-pkg-sha', type: 'file' },
 ] as RepoContentNode[]).sort((a,b) => (a.type === 'dir' && b.type !== 'dir') ? -1 : (a.type !== 'dir' && b.type === 'dir') ? 1 : a.name.localeCompare(b.name));
+
+const removeNodeFromTreeHelper = (nodes: RepoContentNode[], path: string): { newNodes: RepoContentNode[], foundNode: RepoContentNode | null } => {
+    let foundNode: RepoContentNode | null = null;
+
+    // First, try to find and remove the node at the current level.
+    const remainingNodes = nodes.filter(node => {
+        if (node.path === path) {
+            foundNode = node;
+            return false;
+        }
+        return true;
+    });
+
+    // If we found the node at the top level, we can return early.
+    if (foundNode) {
+        return { newNodes: remainingNodes, foundNode };
+    }
+
+    // If not found, recurse into the children of the remaining nodes.
+    const newNodes = remainingNodes.map(node => {
+        if (node.children && !foundNode) { // Check !foundNode to avoid unnecessary recursion after finding the node
+            const result = removeNodeFromTreeHelper(node.children, path);
+            if (result.foundNode) {
+                foundNode = result.foundNode;
+                return { ...node, children: result.newNodes };
+            }
+        }
+        return node;
+    });
+
+    return { newNodes, foundNode };
+};
+
 
 const DummyGitHubProvider = ({ children }) => {
     const [isDirty, setIsDirty] = useState(false);
@@ -81,6 +114,55 @@ const DummyGitHubProvider = ({ children }) => {
             setActiveFile(null);
         }
     }, [activeFile]);
+
+    const moveNode = useCallback(async (nodeToMove, targetFolderPath) => {
+        console.log('DUMMY: moveNode', nodeToMove.path, 'to', targetFolderPath);
+
+        const updatePaths = (node, newParentPath) => {
+            const newPath = newParentPath ? `${newParentPath}/${node.name}` : node.name;
+            const updatedNode = { ...node, path: newPath };
+            if (updatedNode.children) {
+                updatedNode.children = updatedNode.children.map(child => updatePaths(child, newPath));
+            }
+            return updatedNode;
+        };
+
+        const addNodeToTree = (nodes, path, nodeToAdd) => {
+            if (path === '') { // Root
+                const newNodes = [...nodes, nodeToAdd];
+                return newNodes.sort((a,b) => (a.type === 'dir' && b.type !== 'dir') ? -1 : (a.type !== 'dir' && b.type === 'dir') ? 1 : a.name.localeCompare(b.name));
+            }
+            return nodes.map(node => {
+                if (node.path === path) {
+                    const newChildren = node.children ? [...node.children, nodeToAdd] : [nodeToAdd];
+                    return { ...node, isOpen: true, children: newChildren.sort((a,b) => (a.type === 'dir' && b.type !== 'dir') ? -1 : (a.type !== 'dir' && b.type === 'dir') ? 1 : a.name.localeCompare(b.name)) };
+                }
+                if (node.children && path.startsWith(node.path + '/')) {
+                    return { ...node, children: addNodeToTree(node.children, path, nodeToAdd) };
+                }
+                return node;
+            });
+        };
+        
+        setFileTree(currentTree => {
+            const { newNodes, foundNode } = removeNodeFromTreeHelper(currentTree, nodeToMove.path);
+            if (!foundNode) return currentTree;
+
+            const updatedNode = updatePaths(foundNode, targetFolderPath);
+            const finalTree = addNodeToTree(newNodes, targetFolderPath, updatedNode);
+            
+            return finalTree;
+        });
+
+        // Update active file if it was moved
+        if (activeFile && activeFile.path.startsWith(nodeToMove.path)) {
+            const oldPath = nodeToMove.path;
+            const newPath = targetFolderPath ? `${targetFolderPath}/${nodeToMove.name}` : nodeToMove.name;
+            const newActiveFilePath = activeFile.path.replace(oldPath, newPath);
+            setActiveFile(af => af ? { ...af, path: newActiveFilePath } : null);
+        }
+
+    }, [activeFile]);
     
     const value = {
         token: 'dummy-token',
@@ -97,7 +179,7 @@ const DummyGitHubProvider = ({ children }) => {
         selectRepo: (repo) => console.log('DUMMY: selectRepo', repo),
         clearRepoSelection: () => console.log('DUMMY: clearRepoSelection'),
         createAndSelectRepo: async (repoName) => console.log('DUMMY: createAndSelectRepo', repoName),
-        loadFile, saveFile, toggleFolder, deleteNode,
+        loadFile, saveFile, toggleFolder, deleteNode, moveNode,
         createFile: async (path, content) => console.log('DUMMY: createFile', path, content),
         createFolder: async (path) => console.log('DUMMY: createFolder', path),
     };
@@ -163,6 +245,7 @@ interface GitHubContextType {
     createFile: (path: string, content?: string) => Promise<void>;
     createFolder: (path: string) => Promise<void>;
     deleteNode: (node: RepoContentNode) => Promise<void>;
+    moveNode: (nodeToMove: RepoContentNode, targetFolderPath: string) => Promise<void>;
 }
 
 export const GitHubContext = createContext<GitHubContextType | undefined>(undefined);
@@ -583,11 +666,110 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         }
     }, [token, selectedRepo, activeFile, refreshPath]);
 
+    const moveNode = useCallback(async (nodeToMove: RepoContentNode, targetFolderPath: string) => {
+        if (!token || !selectedRepo) throw new Error("Not authenticated or no repo selected.");
+    
+        const sourcePath = nodeToMove.path;
+        const nodeName = nodeToMove.name;
+    
+        // Validation
+        if (nodeToMove.type === 'dir' && (targetFolderPath === sourcePath || targetFolderPath.startsWith(sourcePath + '/'))) {
+            throw new Error("Cannot move a folder into itself or a subfolder.");
+        }
+        const newPath = targetFolderPath ? `${targetFolderPath}/${nodeName}` : nodeName;
+        if (sourcePath === newPath) return; // No change
+    
+        setIsSaving(true);
+        setError(null);
+    
+        try {
+            // Check for collision
+            const destinationContents = await api.getRepoContents(token, selectedRepo.full_name, targetFolderPath);
+            if (destinationContents.some(item => item.name === nodeName)) {
+                throw new Error(`An item named "${nodeName}" already exists in this folder.`);
+            }
+    
+            if (nodeToMove.type === 'file') {
+                const sourceFile = await api.getFileContent(token, selectedRepo.full_name, sourcePath);
+                const content = sourceFile.encoding === 'base64' ? decodeURIComponent(escape(atob(sourceFile.content))) : sourceFile.content;
+                const createResponse = await api.createFile(token, selectedRepo.full_name, newPath, content);
+                await api.deleteFile(token, selectedRepo.full_name, sourcePath, sourceFile.sha);
+                
+                if (activeFile?.path === sourcePath) {
+                    setActiveFile({ path: newPath, content, sha: createResponse.content.sha });
+                }
+    
+            } else { // 'dir'
+                const filesToMove: { path: string; sha: string }[] = [];
+                const emptyFoldersToCreate: string[] = [];
+    
+                const collectItems = async (currentPath: string) => {
+                    const contents = await api.getRepoContents(token, selectedRepo.full_name, currentPath);
+                    if (contents.length === 0 && currentPath !== sourcePath) {
+                        emptyFoldersToCreate.push(currentPath);
+                    }
+                    for (const item of contents) {
+                        if (item.type === 'file') {
+                            filesToMove.push({ path: item.path, sha: item.sha });
+                        } else if (item.type === 'dir') {
+                            await collectItems(item.path);
+                        }
+                    }
+                };
+    
+                await collectItems(sourcePath);
+    
+                // Create structure for empty sub-folders
+                for (const emptyFolderPath of emptyFoldersToCreate) {
+                    const relativePath = emptyFolderPath.substring(sourcePath.length);
+                    const newDirPath = newPath + relativePath;
+                    await api.createFile(token, selectedRepo.full_name, `${newDirPath}/.gitkeep`, '');
+                }
+    
+                // Move each file individually
+                for (const file of filesToMove) {
+                    const relativePath = file.path.substring(sourcePath.length);
+                    const newFilePath = newPath + relativePath;
+                    const sourceFile = await api.getFileContent(token, selectedRepo.full_name, file.path);
+                    const content = sourceFile.encoding === 'base64' ? decodeURIComponent(escape(atob(sourceFile.content))) : sourceFile.content;
+                    
+                    await api.createFile(token, selectedRepo.full_name, newFilePath, content);
+                    await api.deleteFile(token, selectedRepo.full_name, file.path, file.sha);
+                }
+    
+                // If the source folder itself was empty, create the new empty folder.
+                if (filesToMove.length === 0 && emptyFoldersToCreate.length === 0) {
+                    await api.createFile(token, selectedRepo.full_name, `${newPath}/.gitkeep`, '');
+                    // And delete the old .gitkeep if it existed
+                    try {
+                        const oldGitkeep = await api.getFileContent(token, selectedRepo.full_name, `${sourcePath}/.gitkeep`);
+                        await api.deleteFile(token, selectedRepo.full_name, oldGitkeep.path, oldGitkeep.sha);
+                    } catch (e) { /* .gitkeep may not exist, ignore */ }
+                }
+
+                if (activeFile?.path.startsWith(sourcePath + '/')) {
+                    const relativePath = activeFile.path.substring(sourcePath.length);
+                    const newActiveFilePath = newPath + relativePath;
+                    await loadFile(newActiveFilePath); // Reload to get new sha etc.
+                }
+            }
+    
+            await fetchFileTree(selectedRepo); // Refresh the whole tree
+    
+        } catch (err: any) {
+            setError(err.message);
+            // Re-throw to be caught in the component for alerts
+            throw err;
+        } finally {
+            setIsSaving(false);
+        }
+    }, [token, selectedRepo, activeFile, fetchFileTree, loadFile]);
+
     const value = {
         token, user, repositories, selectedRepo, isLoading, isSaving, error, tokenScopes, fileTree, allFilesForSearch, activeFile, initialContent: INITIAL_CONTENT,
         isDirty, setIsDirty,
         login, logout, switchAccount, connectRepoAccess, selectRepo, clearRepoSelection, createAndSelectRepo,
-        loadFile, saveFile, toggleFolder, createFile, createFolder, deleteNode
+        loadFile, saveFile, toggleFolder, createFile, createFolder, deleteNode, moveNode
     };
 
     return (

@@ -61,6 +61,7 @@ export const FileTree: React.FC<FileTreeProps> = ({ isOpen, onMouseEnterButton, 
         createFile,
         createFolder,
         deleteNode,
+        moveNode,
     } = useGitHub();
     const { showPrompt, showConfirm, showAlert } = useModal();
     const [contextMenuPath, setContextMenuPath] = useState<string | null>(null);
@@ -71,6 +72,10 @@ export const FileTree: React.FC<FileTreeProps> = ({ isOpen, onMouseEnterButton, 
     const [isSearching, setIsSearching] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const searchInputRef = useRef<HTMLInputElement>(null);
+
+    // Drag and Drop State
+    const [draggedNode, setDraggedNode] = useState<RepoContentNode | null>(null);
+    const [dropTargetPath, setDropTargetPath] = useState<string | null>(null);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -153,17 +158,148 @@ export const FileTree: React.FC<FileTreeProps> = ({ isOpen, onMouseEnterButton, 
             deleteNode(node);
         }
     };
+
+    // --- Drag and Drop Handlers ---
+    const handleDragStart = (e: React.DragEvent, node: RepoContentNode) => {
+        if (isSaving) {
+            e.preventDefault();
+            return;
+        }
+        e.dataTransfer.setData('sourceNode', JSON.stringify(node));
+        e.dataTransfer.effectAllowed = 'move';
+        setDraggedNode(node);
+    };
+
+    const handleDragEnd = () => {
+        setDraggedNode(null);
+        setDropTargetPath(null);
+    };
+
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+    };
+
+    const handleDragEnter = (e: React.DragEvent, targetNode: RepoContentNode, parentNode: RepoContentNode | null) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!draggedNode) return;
+
+        const destinationFolderNode = targetNode.type === 'dir' ? targetNode : parentNode;
+        if (!destinationFolderNode) {
+            setDropTargetPath(null); // Can't drop on a root file
+            return;
+        }
     
-    const renderNode = (node: RepoContentNode, level: number) => {
+        // Prevent dropping a folder into itself or a descendant
+        if (draggedNode.type === 'dir' && destinationFolderNode.path.startsWith(draggedNode.path + '/')) {
+            setDropTargetPath(null);
+            return;
+        }
+        if (draggedNode.path === destinationFolderNode.path) {
+            setDropTargetPath(null);
+            return;
+        }
+        
+        setDropTargetPath(destinationFolderNode.path);
+    };
+
+    const handleDrop = async (e: React.DragEvent, dropOnNode: RepoContentNode | null, parentOfDropOnNode: RepoContentNode | null) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setDropTargetPath(null);
+        setDraggedNode(null);
+
+        const sourceNodeJSON = e.dataTransfer.getData('sourceNode');
+        if (!sourceNodeJSON) return;
+
+        const sourceNode = JSON.parse(sourceNodeJSON) as RepoContentNode;
+        if (!sourceNode || isSaving) return;
+
+        // Determine the actual destination folder path
+        const destinationFolderNode = dropOnNode ? (dropOnNode.type === 'dir' ? dropOnNode : parentOfDropOnNode) : null;
+        const targetFolderPath = destinationFolderNode ? destinationFolderNode.path : '';
+        
+        // Prevent dropping a folder into itself or a descendant
+        if (sourceNode.type === 'dir' && (targetFolderPath === sourceNode.path || targetFolderPath.startsWith(sourceNode.path + '/'))) {
+            return;
+        }
+        
+        // Prevent dropping a file into its own parent folder (no change)
+        const sourceParentPath = sourceNode.path.includes('/') ? sourceNode.path.substring(0, sourceNode.path.lastIndexOf('/')) : '';
+        if (sourceParentPath === targetFolderPath) {
+            return;
+        }
+        
+        try {
+            await moveNode(sourceNode, targetFolderPath);
+        } catch(err: any) {
+            showAlert({ title: 'Move Failed', message: err.message, confirmButtonText: 'OK' });
+        }
+    };
+
+    const handleRootDrop = (e: React.DragEvent) => {
+        // Check if dropping on the root container, not on a child element
+        if (e.target === e.currentTarget) {
+            handleDrop(e, null, null);
+        }
+    };
+
+    const handleRootDragEnter = (e: React.DragEvent) => {
+        if (e.target === e.currentTarget) {
+             e.preventDefault();
+             e.stopPropagation();
+             if (draggedNode) {
+                setDropTargetPath('__root__');
+             }
+        }
+    };
+    
+    const handleRootDragLeave = (e: React.DragEvent) => {
+        if (e.target === e.currentTarget) {
+            e.preventDefault();
+            e.stopPropagation();
+            setDropTargetPath(null);
+        }
+    };
+    
+    const renderNode = (node: RepoContentNode, level: number, parent: RepoContentNode | null) => {
         const isFolder = node.type === 'dir';
         const isExpanded = isFolder && node.isOpen;
         const isActive = !isFolder && activeFile?.path === node.path;
         const showContextMenu = contextMenuPath === node.path;
         const showNewItemMenu = newItemMenuPath === node.path;
 
+        const isBeingDragged = draggedNode?.path === node.path;
+
+        const isFolderDropTarget = dropTargetPath === node.path && node.type === 'dir';
+        
+        // Highlight the folder item itself only if it's collapsed.
+        const isCollapsedFolderDropTarget = isFolderDropTarget && !isExpanded;
+        // The wrapper for an expanded folder is the drop target, creating a unified highlight.
+        const isExpandedFolderDropTarget = isFolderDropTarget && isExpanded;
+
         return (
-            <React.Fragment key={node.path}>
-                <div className="relative group">
+            <div key={node.path} className={isExpandedFolderDropTarget ? 'drop-target rounded-md' : ''}>
+                <div
+                    draggable={!isSaving}
+                    onDragStart={e => handleDragStart(e, node)}
+                    onDragEnd={handleDragEnd}
+                    onDragOver={handleDragOver}
+                    onDragEnter={e => handleDragEnter(e, node, parent)}
+                    onDragLeave={e => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        // This logic handles leaving a collapsed folder that is a drop target.
+                        // It does NOT clear the highlight when leaving a file that is inside
+                        // a drop target folder, which fixes the flickering.
+                        if (dropTargetPath === node.path && !(e.currentTarget as HTMLElement).contains(e.relatedTarget as Node)) {
+                            setDropTargetPath(null);
+                        }
+                    }}
+                    onDrop={e => handleDrop(e, node, parent)}
+                    className={`group ${isBeingDragged ? 'is-dragging' : ''} ${isCollapsedFolderDropTarget ? 'drop-target rounded-md' : ''}`}
+                >
                     <div 
                         className={`file-tree-item flex items-center text-sm py-1 px-2 rounded-md cursor-pointer text-gray-600 dark:text-gray-400 transition-colors duration-200 ${isActive ? 'active' : ''}`}
                         onClick={() => isFolder ? toggleFolder(node.path) : handleFileClick(node.path)}
@@ -245,17 +381,41 @@ export const FileTree: React.FC<FileTreeProps> = ({ isOpen, onMouseEnterButton, 
                 </div>
 
                 {isFolder && isExpanded && isOpen && (
-                    <div>
-                        {node.isLoading && <div className="pl-12 py-1"><RefreshCwIcon className="animate-spin" /></div>}
+                    <div
+                        className={`pl-4`}
+                        onDragOver={handleDragOver}
+                        onDragEnter={e => {
+                            // When entering the children container, the drop target is the parent folder.
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleDragEnter(e, node, parent);
+                        }}
+                        onDragLeave={e => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            // Only clear the target if we are leaving the container for an element outside of it.
+                            if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                                setDropTargetPath(null);
+                            }
+                        }}
+                        onDrop={e => {
+                            // Only handle the drop if it occurred directly on this container,
+                            // not on one of the child items inside it.
+                            if (e.target === e.currentTarget) {
+                                handleDrop(e, node, parent);
+                            }
+                        }}
+                    >
+                        {node.isLoading && <div className="pl-8 py-1"><RefreshCwIcon className="animate-spin" /></div>}
                         {node.children && node.children.length > 0 ? (
-                            node.children.map(child => renderNode(child, level + 1))
+                            node.children.map(child => renderNode(child, level + 1, node))
                         ) : (
                            !node.isLoading && <div 
-                                className="text-sm text-gray-400 dark:text-gray-500 py-1 px-2 flex items-center"
+                                className="text-sm text-gray-400 dark:text-gray-500 py-1 px-2 flex items-center h-10"
                             >
                                 <div
                                     className="flex-shrink-0 w-1 h-6"
-                                    style={{ marginLeft: `${(level + 1) * 16}px` }}
+                                    style={{ marginLeft: `${(level + 1) * 12}px` }}
                                 >
                                     {/* Empty spacer for icon alignment */}
                                 </div>
@@ -264,13 +424,15 @@ export const FileTree: React.FC<FileTreeProps> = ({ isOpen, onMouseEnterButton, 
                         )}
                     </div>
                 )}
-            </React.Fragment>
+            </div>
         );
     };
 
     if (isLoading && fileTree.length === 0 && !isSearching) {
         return <div className="flex justify-center p-4"><RefreshCwIcon className="animate-spin"/></div>
     }
+
+    const isRootDropTarget = dropTargetPath === '__root__';
 
     return (
         <div className="py-2 px-2 flex flex-col h-full">
@@ -314,7 +476,13 @@ export const FileTree: React.FC<FileTreeProps> = ({ isOpen, onMouseEnterButton, 
                 </div>
             )}
 
-            <div className="flex-grow overflow-y-auto min-h-0">
+            <div
+                className={`flex-grow overflow-y-auto min-h-0 rounded-md ${isRootDropTarget ? 'drop-target' : ''}`}
+                onDragOver={handleDragOver}
+                onDragEnter={handleRootDragEnter}
+                onDragLeave={handleRootDragLeave}
+                onDrop={handleRootDrop}
+            >
                 {isOpen && (
                     <>
                         {!searchTerm && selectedRepo && (
@@ -352,7 +520,7 @@ export const FileTree: React.FC<FileTreeProps> = ({ isOpen, onMouseEnterButton, 
                             </div>
                         )}
                         
-                        {displayedTree.map(node => renderNode(node, 0))}
+                        {displayedTree.map(node => renderNode(node, 0, null))}
 
                         {displayedTree.length === 0 && searchTerm && (
                             <div className="px-2 py-4 text-center text-xs text-gray-500 italic">

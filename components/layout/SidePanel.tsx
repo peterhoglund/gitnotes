@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import ProfileMenu from '../ProfileMenu';
@@ -40,6 +41,8 @@ const SidePanel = () => {
         return null;
     }
 
+    const profileTooltipText = user ? (user.name || user.login) : "Profile and settings";
+
     return (
         <>
             <aside className={`side-panel flex-shrink-0 flex flex-col transition-all duration-300 ${isOpen ? 'w-64' : 'w-14'}`}>
@@ -65,7 +68,7 @@ const SidePanel = () => {
                 <footer className="side-panel-footer p-2 flex-shrink-0">
                     <ProfileMenu 
                         isSidePanelOpen={isOpen} 
-                        onMouseEnter={(e) => handleMouseEnter(e, 'Profile and settings')}
+                        onMouseEnter={(e) => handleMouseEnter(e, profileTooltipText)}
                         onMouseLeave={handleMouseLeave}
                     />
                 </footer>
