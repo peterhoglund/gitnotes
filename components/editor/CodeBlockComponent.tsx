@@ -1,13 +1,14 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { NodeViewWrapper, NodeViewContent } from '@tiptap/react';
+import { NodeViewWrapper, NodeViewContent, ReactNodeViewProps } from '@tiptap/react';
 import { LANGUAGES } from '../../utils/constants';
 import { ChevronDownIcon } from '../icons';
 
-const CodeBlockComponent = ({ node: { attrs }, updateAttributes }) => {
+const CodeBlockComponent: React.FC<ReactNodeViewProps> = ({ node: { attrs }, updateAttributes }) => {
     const { language: currentLanguage } = attrs;
     const [isOpen, setIsOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
+    const listRef = useRef<HTMLUListElement>(null);
 
     const currentLabel = LANGUAGES.find(l => l.value === currentLanguage)?.label ?? 'Text';
 
@@ -20,6 +21,22 @@ const CodeBlockComponent = ({ node: { attrs }, updateAttributes }) => {
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
+    
+    useEffect(() => {
+        if (isOpen) {
+            // Use a timeout to ensure the DOM is ready for scrolling.
+            setTimeout(() => {
+                const listElement = listRef.current;
+                if (!listElement) return;
+
+                const activeButton = listElement.querySelector('.active') as HTMLButtonElement;
+                if (activeButton && activeButton.parentElement) {
+                    // Scroll the parent `li` into view.
+                    activeButton.parentElement.scrollIntoView({ block: 'start' });
+                }
+            }, 0);
+        }
+    }, [isOpen]);
 
     const selectLanguage = (lang: string) => {
         updateAttributes({ language: lang });
@@ -45,7 +62,10 @@ const CodeBlockComponent = ({ node: { attrs }, updateAttributes }) => {
 
                 {isOpen && (
                     <div className="dropdown-panel absolute z-10 mt-1 w-48 rounded-md border border-gray-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-800 right-0">
-                        <ul className="max-h-60 overflow-y-auto py-1">
+                        <ul
+                            ref={listRef}
+                            className="not-prose max-h-60 overflow-y-auto py-1"
+                        >
                             {LANGUAGES.map(lang => (
                                 <li key={lang.value}>
                                     <button

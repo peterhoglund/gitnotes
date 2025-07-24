@@ -1,10 +1,13 @@
+
+
+
 import React, { useState, useEffect, useCallback } from 'react';
-// @ts-ignore
-import { BubbleMenu } from '@tiptap/react';
+import { BubbleMenu } from '@tiptap/react/menus';
 import { PenToSquareIcon, UnlinkIcon, ExternalLinkIcon } from '../icons';
+import { useTiptapEditor } from './useTiptapEditor';
 
 interface LinkMenuProps {
-  editor: any;
+  editor: NonNullable<ReturnType<typeof useTiptapEditor>>;
 }
 
 const LinkMenu: React.FC<LinkMenuProps> = ({ editor }) => {
@@ -33,12 +36,12 @@ const LinkMenu: React.FC<LinkMenuProps> = ({ editor }) => {
     if (editor.isActive('link')) {
       setUrl(editor.getAttributes('link').href);
     }
-  }, [editor.state]);
+  }, [editor, editor.state]);
 
   return (
     <BubbleMenu
       editor={editor}
-      tippyOptions={{
+      tippyProps={{
         duration: 100,
         placement: 'bottom',
         offset: [0, 8],

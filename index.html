@@ -155,14 +155,15 @@
       }
       .prose ul[data-type="taskList"] li {
         display: flex;
-        align-items: flex-start;
+        align-items: flex-start; /* Keeps alignment for multi-line text */
+        gap: 0.65rem; /* Spacing between checkbox and text */
       }
       .prose ul[data-type="taskList"] li > label {
         flex-shrink: 0;
-        margin-right: 0.5rem;
-        padding-top: 0.3em;
         cursor: pointer;
         user-select: none;
+        display: flex;
+        padding-top: 0.5em; /* Vertically align checkbox with first line of text */
       }
       .prose ul[data-type="taskList"] li > div {
         flex: 1 1 0;
@@ -175,8 +176,138 @@
         color: #71717a; /* zinc-500 */
       }
 
+      /* Custom Checkbox Styles */
+      .prose ul[data-type="taskList"] li > label input[type="checkbox"] {
+        -webkit-appearance: none;
+        appearance: none;
+        margin: 0;
+        width: 1.2rem;
+        height: 1.2rem;
+        border-radius: 0.25rem;
+        cursor: pointer;
+        transition: background-color 0.1s, border-color 0.1s;
+        /* Light mode default */
+        background-color: #f9fafb; /* gray-50 (light fill) */
+        border: 1.5px solid #d1d5db; /* gray-300 (darker border) */
+      }
+
+      .prose ul[data-type="taskList"] li > label input[type="checkbox"]:checked {
+        border-color: #2563eb; /* blue-600 */
+        background-color: #2563eb;
+        background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e");
+        background-size: 80% 80%;
+        background-position: center;
+        background-repeat: no-repeat;
+      }
+      
+      .prose ul[data-type="taskList"] li > label input[type="checkbox"]:hover {
+        border-color: #9ca3af; /* gray-400 */
+      }
+
+      .prose ul[data-type="taskList"] li > label input[type="checkbox"]:focus-visible {
+        outline: 2px solid #3b82f6; /* blue-500 */
+        outline-offset: 2px;
+      }
+      
+      /* Dark mode checkbox styles */
+      html.dark .prose ul[data-type="taskList"] li > label input[type="checkbox"] {
+        background-color: #3f3f46; /* zinc-700 */
+        border-color: #52525b; /* zinc-600 */
+      }
+
+      html.dark .prose ul[data-type="taskList"] li > label input[type="checkbox"]:checked {
+        border-color: #3b82f6; /* blue-500 */
+        background-color: #3b82f6;
+      }
+      
+      html.dark .prose ul[data-type="taskList"] li > label input[type="checkbox"]:hover {
+        border-color: #71717a; /* zinc-500 */
+      }
+
+      html.dark .prose ul[data-type="taskList"] li > label input[type="checkbox"]:focus-visible {
+        outline-color: #60a5fa; /* blue-400 */
+      }
+      
+      /* -- Tiptap Table Styles -- */
+      .prose .tableWrapper {
+        margin: 1.5em 0;
+        overflow-x: auto;
+        position: relative;
+      }
+      .prose table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+        border-spacing: 0;
+        border: 1px solid #d1d5db; /* gray-300 */
+      }
+      .prose td, .prose th {
+        padding: 0.75rem 1rem;
+        border: 1px solid #d1d5db; /* gray-300 */
+        vertical-align: top;
+        position: relative;
+        min-width: 4em;
+        text-align: left;
+        box-sizing: border-box;
+        color: #0a0a0a; /* Explicitly set light mode table text color */
+      }
+      .prose th {
+        background-color: #f3f4f6; /* gray-100 */
+      }
+      .prose th p, .prose td p {
+        margin: 0;
+      }
+      .prose th p{
+        font-weight: 700;
+      }
+      .prose .column-resize-handle {
+        position: absolute;
+        right: -2px;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        z-index: 20;
+        cursor: col-resize;
+        background-color: transparent;
+        transition: background-color 0.2s;
+      }
+      .prose .column-resize-handle:hover,
+      .prose .column-resize-handle.active {
+        background-color: #3b82f6; /* blue-500 */
+      }
+      .prose .selectedCell:after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: rgba(59, 130, 246, 0.15);
+        pointer-events: none;
+        z-index: 2;
+      }
+
+      html.dark .prose table {
+        border-color: #3f3f46; /* zinc-700 */
+      }
+      html.dark .prose td, html.dark .prose th {
+        border-color: #3f3f46; /* zinc-700 */
+        color: #d5d5d5; /* Explicitly set dark mode table text color */
+      }
+      html.dark .prose th {
+        background-color: #27272a; /* zinc-800 */
+      }
+      html.dark .prose .selectedCell:after {
+        background: rgba(96, 165, 250, 0.2);
+      }
+      html.dark .prose .column-resize-handle:hover,
+      html.dark .prose .column-resize-handle.active {
+        background-color: #60a5fa; /* blue-400 */
+      }
+      
       .prose .custom-bg-block {
-        padding: 0.5em 1em;
+        padding: 0.5rem 1em;
+        border-radius: 4px;
+      }
+      .prose .custom-bg-block p{
+        margin: 0;
         border-radius: 4px;
       }
       
@@ -213,6 +344,25 @@
       .prose a:hover {
         color: #1d4ed8; /* blue-700 */
       }
+
+      /* -- Text Size Accessibility -- */
+      /* Normal (md) is the default defined in .prose styles */
+
+      /* Small (sm) */
+      .text-size-sm .prose p { font-size: 12pt; }
+      .text-size-sm .prose h1 { font-size: 30pt; }
+      .text-size-sm .prose h2 { font-size: 20pt; }
+      .text-size-sm .prose h3 { font-size: 16pt; }
+      .text-size-sm .prose h6 { font-size: 10pt; }
+      .text-size-sm .prose pre { font-size: 11pt; }
+
+      /* Large (lg) */
+      .text-size-lg .prose p { font-size: 16pt; }
+      .text-size-lg .prose h1 { font-size: 42pt; }
+      .text-size-lg .prose h2 { font-size: 28pt; }
+      .text-size-lg .prose h3 { font-size: 21pt; }
+      .text-size-lg .prose h6 { font-size: 12pt; }
+      .text-size-lg .prose pre { font-size: 15pt; }
 
       /******************************************/
       /*        LIGHT MODE BASE STYLES          */
@@ -268,6 +418,112 @@
       /* -- Active Dropdown Item -- */
       .dropdown-item.active {
         background-color: #e5e7eb; /* gray-200 */
+      }
+      
+      /******************************************/
+      /* -- Table Controls & Selection --       */
+      /******************************************/
+      .table-inserter {
+        position: fixed;
+        z-index: 30;
+        cursor: pointer;
+        border-radius: 50%;
+        transition: background-color 0.15s ease-out;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+      }
+      .table-inserter.dot {
+        background-color: transparent;
+      }
+      .table-inserter.dot::before {
+        content: '';
+        display: block;
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background-color: #a1a1aa; /* zinc-400 */
+      }
+      .table-inserter.plus {
+        background-color: #2563eb; /* blue-600 */
+        border: none;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      }
+      .table-inserter.plus svg {
+        color: white;
+        width: 12px;
+        height: 12px;
+      }
+
+      .table-selection-handle {
+        position: fixed;
+        opacity: 0;
+        pointer-events: none;
+        z-index: 30;
+        background-color: #f3f4f6; /* gray-100 */
+        border: 1px solid #d1d5db; /* gray-300 */
+        transition: opacity 0.15s ease-in-out, background-color 0.1s ease-in-out, border-color 0.1s ease-in-out, width 0.1s ease-in-out, height 0.1s ease-in-out, min-width 0.1s ease-in-out, min-height 0.1s ease-in-out, border-radius 0.1s ease-in-out, transform 0.1s ease-in-out;
+      }
+      .table-selection-handle.visible {
+        opacity: 1;
+        pointer-events: auto;
+        cursor: pointer;
+      }
+      .table-selection-handle:hover {
+        background-color: #2563eb; /* blue-600 */
+        border-color: #1d4ed8; /* blue-700 */
+      }
+
+      .table-selection-handle.row-handle {
+        width: 10px;
+        min-height: 24px;
+        border-radius: 4px;
+        transform: translate(-50%, -50%);
+      }
+      .table-selection-handle.row-handle:hover {
+        width: 14px;
+        min-height: 28px;
+        border-radius: 8px;
+      }
+
+      .table-selection-handle.col-handle {
+        height: 10px;
+        min-width: 24px;
+        border-radius: 4px;
+        transform: translate(-50%, calc(2em - 7px));
+      }
+      .table-selection-handle.col-handle:hover {
+        height: 14px;
+        min-width: 28px;
+        border-radius: 8px;
+        transform: translate(-50%, calc(2em - 9px));
+      }
+
+      .table-selection-handle .handle-dot-container {
+        display: none;
+        width: 100%;
+        height: 100%;
+        align-items: center;
+        justify-content: center;
+      }
+      .table-selection-handle:hover .handle-dot-container {
+        display: flex;
+      }
+      .table-selection-handle.row-handle .handle-dot-container {
+        flex-direction: column;
+        gap: 2px;
+      }
+      .table-selection-handle.col-handle .handle-dot-container {
+        flex-direction: row;
+        gap: 2px;
+      }
+      .table-selection-handle .handle-dot {
+        width: 3px;
+        height: 3px;
+        border-radius: 50%;
+        background-color: white;
       }
 
       /******************************************/
@@ -486,6 +742,23 @@
       html.dark .color-picker-trigger:hover {
         background-color: #52525b; /* zinc-600 */
       }
+      
+      /* -- Dark Table Controls -- */
+      html.dark .table-inserter.dot::before {
+        background-color: #52525b; /* zinc-600 */
+        border-color: #1E1E1E; /* dark main bg */
+      }
+      html.dark .table-inserter.plus {
+        background-color: #3b82f6; /* blue-500 */
+      }
+      html.dark .table-selection-handle {
+        background-color: #27272a; /* zinc-800 */
+        border-color: #3f3f46; /* zinc-700 */
+      }
+      html.dark .table-selection-handle:hover {
+        background-color: #3b82f6; /* blue-500 */
+        border-color: #2563eb; /* blue-600 */
+      }
 
       /* -- Dark Mode Modal -- */
       html.dark .modal-container {
@@ -521,32 +794,58 @@
   "imports": {
     "react/": "https://esm.sh/react@18.2.0/",
     "react": "https://esm.sh/react@18.2.0",
+    "react/jsx-runtime": "https://esm.sh/react@18.2.0/jsx-runtime",
+    "react/jsx-dev-runtime": "https://esm.sh/react@18.2.0/jsx-dev-runtime",
     "react-dom": "https://esm.sh/react-dom@18.2.0",
     "react-dom/client": "https://esm.sh/react-dom@18.2.0/client?deps=react@18.2.0",
     "@google/genai": "https://esm.sh/@google/genai@0.14.0",
     "lowlight": "https://esm.sh/lowlight@3.1.0",
     "highlight.js/": "https://esm.sh/highlight.js@11.9.0/",
-    "@tiptap/core": "https://esm.sh/@tiptap/core@3.0.0",
-    "@tiptap/react": "https://esm.sh/@tiptap/react@3.0.0?deps=react@18.2.0",
-    "@tiptap/pm/": "https://esm.sh/@tiptap/pm@3.0.0/",
-    "@tiptap/extension-character-count": "https://esm.sh/@tiptap/extension-character-count@3.0.0",
-    "@tiptap/extension-code-block": "https://esm.sh/@tiptap/extension-code-block@3.0.0",
-    "@tiptap/extension-code-block-lowlight": "https://esm.sh/@tiptap/extension-code-block-lowlight@3.0.0",
-    "@tiptap/extension-color": "https://esm.sh/@tiptap/extension-color@3.0.0",
-    "@tiptap/extension-highlight": "https://esm.sh/@tiptap/extension-highlight@3.0.0",
-    "@tiptap/extension-placeholder": "https://esm.sh/@tiptap/extension-placeholder@3.0.0",
-    "@tiptap/extension-text-align": "https://esm.sh/@tiptap/extension-text-align@3.0.0",
-    "@tiptap/extension-text-style": "https://esm.sh/@tiptap/extension-text-style@3.0.0",
-    "@tiptap/extension-underline": "https://esm.sh/@tiptap/extension-underline@3.0.0",
-    "@tiptap/starter-kit": "https://esm.sh/@tiptap/starter-kit@3.0.0",
-    "@tiptap/extension-link": "https://esm.sh/@tiptap/extension-link@3.0.0",
-    "@tiptap/extension-task-item": "https://esm.sh/@tiptap/extension-task-item@3.0.0",
-    "@tiptap/extension-task-list": "https://esm.sh/@tiptap/extension-task-list@3.0.0",
-    "@tiptap/extension-bubble-menu": "https://esm.sh/@tiptap/extension-bubble-menu@^3.0.0",
-    "@tiptap/extension-paragraph": "https://esm.sh/@tiptap/extension-paragraph@3.0.0",
-    "@tiptap/extension-heading": "https://esm.sh/@tiptap/extension-heading@3.0.0",
-    "react-dom/": "https://esm.sh/react-dom@18.2.0/",
-    "re": "https://esm.sh/re@^0.1.4"
+    "@tiptap/core": "https://esm.sh/@tiptap/core@3.0.7",
+    "@tiptap/react": "https://esm.sh/@tiptap/react@3.0.7?deps=react@18.2.0",
+    "@tiptap/react/menus": "https://esm.sh/@tiptap/react@3.0.7/menus?deps=react@18.2.0",
+    "@tiptap/pm/": "https://esm.sh/@tiptap/pm@3.0.7/",
+    "@tiptap/extension-character-count": "https://esm.sh/@tiptap/extension-character-count@3.0.7",
+    "@tiptap/extension-code-block": "https://esm.sh/@tiptap/extension-code-block@3.0.7",
+    "@tiptap/extension-code-block-lowlight": "https://esm.sh/@tiptap/extension-code-block-lowlight@3.0.7",
+    "@tiptap/extension-color": "https://esm.sh/@tiptap/extension-color@3.0.7",
+    "@tiptap/extension-highlight": "https://esm.sh/@tiptap/extension-highlight@3.0.7",
+    "@tiptap/extension-placeholder": "https://esm.sh/@tiptap/extension-placeholder@3.0.7",
+    "@tiptap/extension-text-align": "https://esm.sh/@tiptap/extension-text-align@3.0.7",
+    "@tiptap/extension-text-style": "https://esm.sh/@tiptap/extension-text-style@3.0.7",
+    "@tiptap/extension-underline": "https://esm.sh/@tiptap/extension-underline@3.0.7",
+    "@tiptap/starter-kit": "https://esm.sh/@tiptap/starter-kit@3.0.7",
+    "@tiptap/extension-link": "https://esm.sh/@tiptap/extension-link@3.0.7",
+    "@tiptap/extension-task-item": "https://esm.sh/@tiptap/extension-task-item@3.0.7",
+    "@tiptap/extension-task-list": "https://esm.sh/@tiptap/extension-task-list@3.0.7",
+    "@tiptap/extension-paragraph": "https://esm.sh/@tiptap/extension-paragraph@3.0.7",
+    "@tiptap/extension-heading": "https://esm.sh/@tiptap/extension-heading@3.0.7",
+    "re": "https://esm.sh/re@^0.1.4",
+    "@tiptap/extension-table": "https://esm.sh/@tiptap/extension-table@^3.0.7",
+    "@tiptap/extension-table-row": "https://esm.sh/@tiptap/extension-table-row@^3.0.7",
+    "@tiptap/extension-table-header": "https://esm.sh/@tiptap/extension-table-header@^3.0.7",
+    "@tiptap/extension-table-cell": "https://esm.sh/@tiptap/extension-table-cell@^3.0.7",
+    "@tiptap/extension-blockquote": "https://esm.sh/@tiptap/extension-blockquote@^3.0.7",
+    "@tiptap/extension-bold": "https://esm.sh/@tiptap/extension-bold@^3.0.7",
+    "@tiptap/extension-bubble-menu": "https://esm.sh/@tiptap/extension-bubble-menu@^3.0.7",
+    "@tiptap/extension-bullet-list": "https://esm.sh/@tiptap/extension-bullet-list@^3.0.7",
+    "@tiptap/extension-code": "https://esm.sh/@tiptap/extension-code@^3.0.7",
+    "@tiptap/extension-document": "https://esm.sh/@tiptap/extension-document@^3.0.7",
+    "@tiptap/extension-dropcursor": "https://esm.sh/@tiptap/extension-dropcursor@^3.0.7",
+    "@tiptap/extension-gapcursor": "https://esm.sh/@tiptap/extension-gapcursor@^3.0.7",
+    "@tiptap/extension-hard-break": "https://esm.sh/@tiptap/extension-hard-break@^3.0.7",
+    "@tiptap/extension-history": "https://esm.sh/@tiptap/extension-history@^3.0.7",
+    "@tiptap/extension-horizontal-rule": "https://esm.sh/@tiptap/extension-horizontal-rule@^3.0.7",
+    "@tiptap/extension-italic": "https://esm.sh/@tiptap/extension-italic@^3.0.7",
+    "@tiptap/extension-list-item": "https://esm.sh/@tiptap/extension-list-item@^3.0.7",
+    "@tiptap/extension-ordered-list": "https://esm.sh/@tiptap/extension-ordered-list@^3.0.7",
+    "@tiptap/extension-strike": "https://esm.sh/@tiptap/extension-strike@^3.0.7",
+    "@tiptap/extension-text": "https://esm.sh/@tiptap/extension-text@^3.0.7",
+    "@tiptap/extension-focus": "https://esm.sh/@tiptap/extension-focus@^3.0.7",
+    "prosemirror-state": "https://esm.sh/prosemirror-state@^1.4.3",
+    "prosemirror-tables": "https://esm.sh/prosemirror-tables@^1.7.1",
+    "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
+    "@tiptap/react/": "https://esm.sh/@tiptap/react@^3.0.7/"
   }
 }
 </script>

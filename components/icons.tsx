@@ -1,3 +1,5 @@
+
+
 import React from 'react';
 
 // Using Font Awesome icons - using fa-solid (free) instead of fa-light (pro).
@@ -56,17 +58,25 @@ export const NewFileIcon = () => <i className="fa-solid fa-file-circle-plus fa-f
 export const FolderPlusIcon = () => <i className="fa-solid fa-folder-plus fa-fw" style={{...faStyle, fontSize: '16px'}} aria-hidden="true"></i>;
 export const TrashIcon = () => <i className="fa-solid fa-trash-can fa-fw" style={{...faStyle, fontSize: '16px'}} aria-hidden="true"></i>;
 export const SearchIcon = () => <i className="fa-solid fa-magnifying-glass fa-fw" style={{...faStyle, fontSize: '16px'}} aria-hidden="true"></i>;
+export const TableIcon = () => <i className="fa-solid fa-table fa-fw" style={faStyle}></i>;
+export const TableCellsLargeIcon = () => <i className="fa-solid fa-table-cells-large fa-fw" style={faStyle}></i>;
+export const TextSizeIcon = () => <i className="fa-solid fa-text-height fa-fw" style={{...faStyle, fontSize: '16px'}} aria-hidden="true"></i>;
 
+// Table menu icons
+const tableMenuStyle = { width: '18px', height: '18px', textAlign: 'center' } as const;
 
-export const BlockBackgroundColorIcon = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect x="2" y="1" width="21" height="20" rx="4" fill="currentColor" fillOpacity="0.5" />
-    <text x="12" y="16" fontFamily="sans-serif" fontSize="12" fontWeight="bold" fill="currentColor" textAnchor="middle">
-      Ab
-    </text>
-  </svg>
+export const TableTrashIcon = () => <i className="fa-solid fa-trash-can" style={{...tableMenuStyle, fontSize: '16px'}} aria-hidden="true"></i>;
+export const TableRemoveIcon = () => <i className="fa-solid fa-square-xmark" style={{...tableMenuStyle, fontSize: '18px'}} aria-hidden="true"></i>;
+
+export const TableControlPlusIcon = () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 5V19" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M5 12H19" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
 );
 
+
+export const FillDripIcon = () => <i className="fa-solid fa-fill-drip fa-fw" style={faStyle} aria-hidden="true"></i>;
 
 // For consistency, SVGs are also made slightly larger.
 export const AlignLeftIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="21" x2="3" y1="6" y2="6"></line><line x1="15" x2="3" y1="12" y2="12"></line><line x1="17" x2="3" y1="18" y2="18"></line></svg>;

@@ -1,12 +1,16 @@
+
+
+
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { Editor } from '@tiptap/core';
 import ToolbarButton from '../ToolbarButton';
 import Dropdown from '../Dropdown';
 import ColorPicker from '../ColorPicker';
 import {
   BoldIcon, ItalicIcon, UnderlineIcon, StrikethroughIcon, CodeIcon, LinkIcon,
   ListIcon, ListOrderedIcon, TaskListIcon, AlignLeftIcon, AlignCenterIcon, AlignRightIcon,
-  AlignJustifyIcon, EllipsisVerticalIcon, TextColorIcon, HighlighterIcon, BlockBackgroundColorIcon,
-  SaveIcon, RefreshCwIcon,
+  AlignJustifyIcon, EllipsisVerticalIcon, TextColorIcon, HighlighterIcon,
+  SaveIcon, RefreshCwIcon, FillDripIcon, TableCellsLargeIcon,
 } from '../icons';
 import { useGitHub } from '../../hooks/useGitHub';
 import { useTheme } from '../../hooks/useTheme';
@@ -22,7 +26,7 @@ const BLOCK_TYPES = [
 ];
 
 interface EditorToolbarProps {
-    editor: any;
+    editor: Editor;
 }
 
 const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
@@ -58,7 +62,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
     if (editor.isActive('heading', { level: 6 })) return 'h6';
     if (editor.isActive('codeBlock')) return 'pre';
     return 'p';
-  }, [editor.state]);
+  }, [editor, editor.state]);
 
   const handleBlockTypeChange = useCallback((value: string) => {
     const chain = editor.chain().focus();
@@ -76,49 +80,20 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
   const handleColor = useCallback((color: string) => editor.chain().focus().setColor(color).run(), [editor]);
   const handleHighlight = useCallback((color: string) => editor.chain().focus().toggleHighlight({ color }).run(), [editor]);
   
-  const handleBlockBg = useCallback((color: string) => {
-    const newBg = color === TRANSPARENT ? null : color;
-    const nodeTypesToUpdate = ['paragraph', 'heading'];
-    const { tr } = editor.state;
-    const { from, to } = editor.state.selection;
-
-    let wasHandled = false;
-
-    // Iterate over nodes in the selection to find list items
-    editor.state.doc.nodesBetween(from, to, (node, pos) => {
-      if (node.type.name === 'listItem') {
-        node.descendants((childNode, childPos) => {
-          if (nodeTypesToUpdate.includes(childNode.type.name)) {
-            const absolutePos = pos + 1 + childPos;
-            const currentAttrs = childNode.attrs;
-            const newAttrs = {
-              ...currentAttrs,
-              backgroundColor: newBg,
-              emoji: newBg ? currentAttrs.emoji : null,
-            };
-            tr.setNodeMarkup(absolutePos, undefined, newAttrs);
-            wasHandled = true;
-            return false; // Don't descend into paragraphs/headings
-          }
-          return true;
-        });
+  const handleBackgroundColor = useCallback((color: string) => {
+    if (color === TRANSPARENT) {
+      if (editor.isActive('backgroundColorBlock')) {
+        editor.chain().focus().lift('backgroundColorBlock').run();
       }
-    });
-
-    if (wasHandled) {
-      editor.view.dispatch(tr);
     } else {
-      // Fallback for standalone paragraphs/headings
-      const activeNodeType = nodeTypesToUpdate.find(type => editor.isActive(type));
-      if (activeNodeType) {
-        editor.chain().focus().updateAttributes(activeNodeType, {
-            backgroundColor: newBg,
-            emoji: newBg ? editor.getAttributes(activeNodeType).emoji : null,
-        }).run();
+      if (editor.isActive('backgroundColorBlock')) {
+        editor.chain().focus().updateAttributes('backgroundColorBlock', { color }).run();
+      } else {
+        editor.chain().focus().wrapIn('backgroundColorBlock', { color }).run();
       }
     }
   }, [editor]);
-  
+
   const handleLink = useCallback(() => {
     if (editor.isActive('link')) {
         editor.chain().focus().unsetLink().run();
@@ -131,25 +106,8 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
 
   const textColor = editor.getAttributes('textStyle').color || (theme === 'dark' ? '#d5d5d5' : '#0a0a0a');
   const highlightColor = editor.getAttributes('highlight').color || TRANSPARENT;
+  const backgroundColor = editor.getAttributes('backgroundColorBlock').color || TRANSPARENT;
   const canSetLink = !editor.state.selection.empty;
-
-  const getBlockBgColor = () => {
-    const nodeTypes = ['paragraph', 'heading'];
-    for (const type of nodeTypes) {
-        if (editor.isActive(type)) {
-            return editor.getAttributes(type).backgroundColor || TRANSPARENT;
-        }
-    }
-    if (editor.isActive('listItem')) {
-        // Attempt to get color from the first child paragraph/heading inside the list item
-        const { $from } = editor.state.selection;
-        const listItem = $from.node(-1); // li
-        if (listItem && listItem.firstChild) {
-            return listItem.firstChild.attrs.backgroundColor || TRANSPARENT;
-        }
-    }
-    return TRANSPARENT;
-  };
 
   return (
     <div className="toolbar-wrapper bg-white rounded-xl shadow-md p-2 flex items-center gap-x-1 text-gray-800">
@@ -233,6 +191,14 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
                 <LinkIcon />
               </ToolbarButton>
 
+               <ToolbarButton
+                onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
+                isActive={editor.isActive('table')}
+                title="Insert Table"
+              >
+                <TableCellsLargeIcon />
+              </ToolbarButton>
+
               <div className="toolbar-divider h-6 border-l border-gray-300 mx-2"></div>
 
               <ToolbarButton onClick={() => editor.chain().focus().setTextAlign('right').run()} isActive={editor.isActive({ textAlign: 'right' })} title="Align Right">
@@ -271,24 +237,20 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
                   ></div>
                 </div>
               </ColorPicker>
-
-              <div className="toolbar-divider h-6 border-l border-gray-300 mx-2"></div>
-              
               <ColorPicker
-                onSelect={handleBlockBg}
-                currentColor={getBlockBgColor()}
+                onSelect={handleBackgroundColor}
+                currentColor={backgroundColor}
                 title="Block Background Color"
                 noColorLabel="No Background"
               >
                 <div className="flex flex-col items-center justify-center">
-                    <BlockBackgroundColorIcon />
-                    <div
-                      className="w-5 h-1 rounded"
-                      style={{ backgroundColor: getBlockBgColor() }}
-                    ></div>
-                  </div>
+                  <FillDripIcon />
+                  <div
+                    className="w-5 h-1 rounded"
+                    style={{ backgroundColor: backgroundColor }}
+                  ></div>
+                </div>
               </ColorPicker>
-
            </div>
         )}
       </div>

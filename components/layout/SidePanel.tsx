@@ -8,6 +8,7 @@ import ConnectRepo from '../ConnectRepo';
 import { SidebarOpenIcon, SidebarCloseIcon } from '../icons';
 import Logo from '../Logo';
 import { useGitHub } from '../../hooks/useGitHub';
+import LoginPrompt from '../LoginPrompt';
 
 const SidePanel = () => {
     const [isOpen, setIsOpen] = useState(true);
@@ -26,11 +27,13 @@ const SidePanel = () => {
     };
 
     const hasRepoScope = tokenScopes.includes('repo');
+    const showLoginPrompt = !user;
     const showConnectRepo = user && !hasRepoScope;
     const showRepoSelector = user && hasRepoScope && !selectedRepo;
     const showFileTree = user && hasRepoScope && selectedRepo;
 
     const renderContent = () => {
+        if (showLoginPrompt) return <LoginPrompt isOpen={isOpen} />;
         if (showConnectRepo) return <ConnectRepo isOpen={isOpen} />;
         if (showRepoSelector) return <RepoSelector isOpen={isOpen} />;
         if (showFileTree) return <FileTree isOpen={isOpen} onMouseEnterButton={handleMouseEnter} onMouseLeaveButton={handleMouseLeave} />;
@@ -55,7 +58,7 @@ const SidePanel = () => {
                     </button>
                 </header>
 
-                <nav className="flex-grow overflow-y-auto overflow-x-hidden">
+                <nav className={`flex-grow overflow-y-auto overflow-x-hidden ${showLoginPrompt || showConnectRepo ? 'flex flex-col justify-center' : ''}`}>
                     {renderContent()}
                 </nav>
 

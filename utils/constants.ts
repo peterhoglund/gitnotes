@@ -5,7 +5,24 @@ export const INITIAL_CONTENT = `
 	<h2>Header</h2>
 	<h3>Subheader</h3>
 	<p>This is a paragraph of normal text. Use the toolbar to style your content.</p>
-	<h6>This is an example of small text, useful for notes or captions.</h6>
+  <table>
+    <tr>
+      <th><p>Company</p></th>
+      <th><p>Contact</p></th>
+      <th><p>Country</p></th>
+    </tr>
+    <tr>
+      <td><p>Alfreds Futterkiste</p></td>
+      <td><p>Maria Anders</p></td>
+      <td><p>Germany</p></td>
+    </tr>
+    <tr>
+      <td><p>Centro comercial Moctezuma</p></td>
+      <td><p>Francisco Chang</p></td>
+      <td><p>Mexico</p></td>
+    </tr>
+  </table>
+  <h6>This is an example of small text, useful for notes or captions.</h6>
 <pre><code class="language-js">
 // This is a code block.
 // Select text or place your cursor here to see the language selector!
@@ -36,5 +53,3 @@ export const LANGUAGES = [
   { value: 'bash', label: 'Bash/Shell' },
   { value: 'text', label: 'Text' },
 ];
-
-export const EMOJIS = ['💡', 'ℹ️', '⚠️', '✅', '👍', '📌', '💬', '🔥', '🎯', '🎉', '❓', '🛑'];

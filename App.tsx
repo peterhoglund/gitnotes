@@ -11,10 +11,16 @@ import { useTiptapEditor } from './components/editor/useTiptapEditor';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { ModalProvider } from './context/ModalContext';
 import LinkMenu from './components/editor/LinkMenu';
+import TableMenu from './components/editor/TableMenu';
+import { TableControls } from './components/editor/TableControls';
+import { TableSelectionControls } from './components/editor/TableSelectionControls';
+import { FontSizeProvider } from './context/FontSizeContext';
+import { useFontSize } from './hooks/useFontSize';
 
 const PlitaEditor: React.FC = () => {
     const { activeFile, initialContent, isDirty, setIsDirty, saveFile } = useGitHub();
     const editor = useTiptapEditor(initialContent);
+    const { fontSize } = useFontSize();
 
     const { handleKeyDown } = useKeyboardShortcuts(editor);
 
@@ -65,7 +71,7 @@ const PlitaEditor: React.FC = () => {
 
     return (
         <AppShell>
-            <main className="relative flex-grow flex flex-col overflow-hidden">
+            <main className={`relative flex-grow flex flex-col overflow-hidden text-size-${fontSize}`}>
                 <div className="absolute top-0 left-0 right-0 z-20 flex justify-center py-4 pointer-events-none">
                     <div className="pointer-events-auto">
                         <EditorToolbar editor={editor} />
@@ -73,6 +79,9 @@ const PlitaEditor: React.FC = () => {
                 </div>
                 
                 <LinkMenu editor={editor} />
+                <TableMenu editor={editor} />
+                <TableControls editor={editor} />
+                <TableSelectionControls editor={editor} />
 
                 <EditorCanvas
                     editor={editor}
@@ -87,9 +96,11 @@ const App: React.FC = () => {
 	return (
 		<GitHubProvider>
 			<ThemeProvider>
-                <ModalProvider>
-                    <PlitaEditor />
-                </ModalProvider>
+                <FontSizeProvider>
+                    <ModalProvider>
+                        <PlitaEditor />
+                    </ModalProvider>
+                </FontSizeProvider>
 			</ThemeProvider>
 		</GitHubProvider>
 	);

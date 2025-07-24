@@ -3,13 +3,44 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTheme } from '../hooks/useTheme';
 import { useGitHub } from '../hooks/useGitHub';
-import { ProfileIcon, SunIcon, MoonIcon, GitHubIcon, LogOutIcon, BookIcon, RefreshCwIcon } from './icons';
+import { ProfileIcon, SunIcon, MoonIcon, GitHubIcon, LogOutIcon, BookIcon, RefreshCwIcon, TextSizeIcon } from './icons';
+import { useFontSize } from '../hooks/useFontSize';
+import type { FontSize } from '../context/FontSizeContext';
 
 interface ProfileMenuProps {
   isSidePanelOpen: boolean;
   onMouseEnter?: (e: React.MouseEvent) => void;
   onMouseLeave?: () => void;
 }
+
+const TextSizeControl: React.FC = () => {
+    const { fontSize, setFontSize } = useFontSize();
+    const sizes: { id: FontSize, label: string, title: string }[] = [
+        { id: 'sm', label: 'S', title: 'Small' },
+        { id: 'md', label: 'M', title: 'Normal' },
+        { id: 'lg', label: 'L', title: 'Large' },
+    ];
+
+    return (
+        <div className="flex items-center p-0.5 rounded-md bg-gray-200 dark:bg-zinc-700">
+            {sizes.map(size => (
+                <button
+                    key={size.id}
+                    onClick={() => setFontSize(size.id)}
+                    title={size.title}
+                    className={`px-3 py-0.5 text-sm font-medium rounded transition-colors ${
+                        fontSize === size.id
+                            ? 'bg-white dark:bg-zinc-600 text-gray-800 dark:text-gray-100 shadow-sm'
+                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                    }`}
+                >
+                    {size.label}
+                </button>
+            ))}
+        </div>
+    );
+};
+
 
 const ProfileMenu: React.FC<ProfileMenuProps> = ({ isSidePanelOpen, onMouseEnter, onMouseLeave }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -87,6 +118,13 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({ isSidePanelOpen, onMouseEnter
           <button onClick={() => handleAction(toggleTheme)} className="dropdown-item w-full text-left px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-zinc-700 rounded-md flex items-center gap-3">
             {theme === 'light' ? <MoonIcon /> : <SunIcon />} <span>Switch to {theme === 'light' ? 'Dark' : 'Light'} Mode</span>
           </button>
+          <div className="flex items-center justify-between px-2 py-1.5 text-sm text-gray-700 dark:text-gray-200">
+            <div className="flex items-center gap-3">
+                <TextSizeIcon />
+                <span>Text Size</span>
+            </div>
+            <TextSizeControl />
+          </div>
           
           {/* Account Actions */}
           {isLoggedIn && (

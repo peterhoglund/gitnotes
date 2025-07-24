@@ -6,6 +6,7 @@ interface ColorPickerProps {
   children: React.ReactNode;
   title: string;
   noColorLabel?: string;
+  triggerWrapperClassName?: string;
 }
 
 const NO_COLOR = 'transparent';
@@ -23,7 +24,7 @@ const COLOR_ROWS = [
 ];
 
 
-const ColorPicker = ({ onSelect, currentColor, children, title, noColorLabel }: ColorPickerProps) => {
+const ColorPicker = ({ onSelect, currentColor, children, title, noColorLabel, triggerWrapperClassName = 'p-2' }: ColorPickerProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
 
@@ -52,7 +53,7 @@ const ColorPicker = ({ onSelect, currentColor, children, title, noColorLabel }: 
           e.preventDefault();
           setIsOpen(!isOpen);
         }}
-        className="color-picker-trigger p-2 rounded flex items-center justify-center"
+        className={`color-picker-trigger rounded flex items-center ${triggerWrapperClassName}`}
       >
         {children}
       </button>

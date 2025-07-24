@@ -1,5 +1,6 @@
 import React from 'react';
-import { EditorContent, Editor } from '@tiptap/react';
+import { EditorContent } from '@tiptap/react';
+import { Editor } from '@tiptap/core';
 
 interface EditorCanvasProps {
   editor: Editor;
