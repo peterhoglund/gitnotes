@@ -217,6 +217,28 @@ const removeNodeFromTree = (nodes: RepoContentNode[], path: string): RepoContent
     });
 };
 
+// Helper to recursively update the path of a node and all its descendants.
+const recursivelyUpdateNodePaths = (node: RepoContentNode, oldPath: string, newPath: string): RepoContentNode => {
+    let currentPath = node.path;
+    if (currentPath === oldPath) {
+        currentPath = newPath;
+    } else if (currentPath.startsWith(oldPath + '/')) {
+        currentPath = newPath + currentPath.substring(oldPath.length);
+    }
+    
+    const updatedNode: RepoContentNode = {
+        ...node,
+        path: currentPath,
+        name: currentPath.split('/').pop() || currentPath,
+    };
+    
+    if (updatedNode.children) {
+        updatedNode.children = updatedNode.children.map(child => recursivelyUpdateNodePaths(child, oldPath, newPath));
+    }
+    
+    return updatedNode;
+};
+
 interface GitHubContextType {
     token: string | null;
     user: GitHubUser | null;
@@ -674,6 +696,9 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         const sourcePath = sourceNode.path;
         if (sourcePath === newPath) return; // No change
     
+        const getParent = (p: string) => p.includes('/') ? p.substring(0, p.lastIndexOf('/')) : '';
+        const isRenameOnly = getParent(sourcePath) === getParent(newPath);
+    
         const nodeName = newPath.split('/').pop() || newPath;
     
         setIsSaving(true);
@@ -681,7 +706,7 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     
         try {
             // Check for collision
-            const targetFolderPath = newPath.includes('/') ? newPath.substring(0, newPath.lastIndexOf('/')) : '';
+            const targetFolderPath = getParent(newPath);
             const destinationContents = await api.getRepoContents(token, selectedRepo.full_name, targetFolderPath);
             if (destinationContents.some(item => item.name === nodeName)) {
                 throw new Error(`An item named "${nodeName}" already exists in the destination.`);
@@ -689,11 +714,16 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     
             if (sourceNode.type === 'file') {
                 const sourceFile = await api.getFileContent(token, selectedRepo.full_name, sourcePath);
+                // Note: This reads from GitHub. If the file is dirty in the editor, changes will be lost.
+                // A robust implementation would disable rename/move for dirty files or pass editor content.
+                // For now, we prioritize a smooth UX for non-dirty files.
                 const content = sourceFile.encoding === 'base64' ? decodeURIComponent(escape(atob(sourceFile.content))) : sourceFile.content;
                 const createResponse = await api.createFile(token, selectedRepo.full_name, newPath, content);
                 await api.deleteFile(token, selectedRepo.full_name, sourcePath, sourceFile.sha);
                 
                 if (activeFile?.path === sourcePath) {
+                    // If the active file was renamed, update its state directly
+                    // without a full reload, keeping the content in the editor intact.
                     setActiveFile({ path: newPath, content, sha: createResponse.content.sha });
                 }
     
@@ -744,15 +774,48 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                         await api.deleteFile(token, selectedRepo.full_name, oldGitkeep.path, oldGitkeep.sha);
                     } catch (e) { /* .gitkeep may not exist, ignore */ }
                 }
-
+    
                 if (activeFile?.path.startsWith(sourcePath + '/')) {
                     const relativePath = activeFile.path.substring(sourcePath.length);
                     const newActiveFilePath = newPath + relativePath;
-                    await loadFile(newActiveFilePath); // Reload to get new sha etc.
+    
+                    if (isRenameOnly) {
+                        // Folder containing active file was renamed.
+                        // Fetch the new SHA for the active file to keep state consistent,
+                        // but don't do a full `loadFile` which would be disruptive.
+                        const newFileData = await api.getFileContent(token, selectedRepo.full_name, newActiveFilePath);
+                        setActiveFile(af => af ? { ...af, path: newActiveFilePath, sha: newFileData.sha } : null);
+                    } else {
+                        // It's a move, which is more complex. A reload is acceptable here.
+                        await loadFile(newActiveFilePath);
+                    }
                 }
             }
     
-            await fetchFileTree(selectedRepo); // Refresh the whole tree
+            if (isRenameOnly) {
+                // For renames, update the file tree in-place for a smooth experience.
+                setFileTree(currentTree => {
+                    const updateTree = (nodes: RepoContentNode[]): RepoContentNode[] => {
+                        return nodes.map(node => {
+                            if (node.path === sourcePath) {
+                                return recursivelyUpdateNodePaths(node, sourcePath, newPath);
+                            }
+                            if (node.children && sourcePath.startsWith(node.path + '/')) {
+                                return { ...node, children: updateTree(node.children) };
+                            }
+                            return node;
+                        }).sort((a,b) => {
+                            if (a.type === 'dir' && b.type !== 'dir') return -1;
+                            if (a.type !== 'dir' && b.type === 'dir') return 1;
+                            return a.name.localeCompare(b.name);
+                        });
+                    };
+                    return updateTree(currentTree);
+                });
+            } else {
+                // For moves, refresh the entire tree.
+                await fetchFileTree(selectedRepo);
+            }
     
         } catch (err: any) {
             setError(err.message);
