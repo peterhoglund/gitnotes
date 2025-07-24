@@ -182,6 +182,7 @@ const DummyGitHubProvider = ({ children }) => {
         loadFile, saveFile, toggleFolder, deleteNode, moveNode,
         createFile: async (path, content) => console.log('DUMMY: createFile', path, content),
         createFolder: async (path) => console.log('DUMMY: createFolder', path),
+        renameNode: async (node, newName) => console.log(`DUMMY: renameNode ${node.path} to ${newName}`),
     };
 
     return <GitHubContext.Provider value={value}>{children}</GitHubContext.Provider>;
@@ -246,6 +247,7 @@ interface GitHubContextType {
     createFolder: (path: string) => Promise<void>;
     deleteNode: (node: RepoContentNode) => Promise<void>;
     moveNode: (nodeToMove: RepoContentNode, targetFolderPath: string) => Promise<void>;
+    renameNode: (nodeToRename: RepoContentNode, newName: string) => Promise<void>;
 }
 
 export const GitHubContext = createContext<GitHubContextType | undefined>(undefined);
@@ -666,30 +668,26 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         }
     }, [token, selectedRepo, activeFile, refreshPath]);
 
-    const moveNode = useCallback(async (nodeToMove: RepoContentNode, targetFolderPath: string) => {
+    const _moveOrRenameNode = useCallback(async (sourceNode: RepoContentNode, newPath: string) => {
         if (!token || !selectedRepo) throw new Error("Not authenticated or no repo selected.");
     
-        const sourcePath = nodeToMove.path;
-        const nodeName = nodeToMove.name;
-    
-        // Validation
-        if (nodeToMove.type === 'dir' && (targetFolderPath === sourcePath || targetFolderPath.startsWith(sourcePath + '/'))) {
-            throw new Error("Cannot move a folder into itself or a subfolder.");
-        }
-        const newPath = targetFolderPath ? `${targetFolderPath}/${nodeName}` : nodeName;
+        const sourcePath = sourceNode.path;
         if (sourcePath === newPath) return; // No change
+    
+        const nodeName = newPath.split('/').pop() || newPath;
     
         setIsSaving(true);
         setError(null);
     
         try {
             // Check for collision
+            const targetFolderPath = newPath.includes('/') ? newPath.substring(0, newPath.lastIndexOf('/')) : '';
             const destinationContents = await api.getRepoContents(token, selectedRepo.full_name, targetFolderPath);
             if (destinationContents.some(item => item.name === nodeName)) {
-                throw new Error(`An item named "${nodeName}" already exists in this folder.`);
+                throw new Error(`An item named "${nodeName}" already exists in the destination.`);
             }
     
-            if (nodeToMove.type === 'file') {
+            if (sourceNode.type === 'file') {
                 const sourceFile = await api.getFileContent(token, selectedRepo.full_name, sourcePath);
                 const content = sourceFile.encoding === 'base64' ? decodeURIComponent(escape(atob(sourceFile.content))) : sourceFile.content;
                 const createResponse = await api.createFile(token, selectedRepo.full_name, newPath, content);
@@ -764,12 +762,28 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             setIsSaving(false);
         }
     }, [token, selectedRepo, activeFile, fetchFileTree, loadFile]);
+    
+    const moveNode = useCallback(async (nodeToMove: RepoContentNode, targetFolderPath: string) => {
+        const sourcePath = nodeToMove.path;
+        if (nodeToMove.type === 'dir' && (targetFolderPath === sourcePath || targetFolderPath.startsWith(sourcePath + '/'))) {
+            throw new Error("Cannot move a folder into itself or a subfolder.");
+        }
+        
+        const newPath = targetFolderPath ? `${targetFolderPath}/${nodeToMove.name}` : nodeToMove.name;
+        await _moveOrRenameNode(nodeToMove, newPath);
+    }, [_moveOrRenameNode]);
+
+    const renameNode = useCallback(async (nodeToRename: RepoContentNode, newName: string) => {
+        const parentPath = nodeToRename.path.includes('/') ? nodeToRename.path.substring(0, nodeToRename.path.lastIndexOf('/')) : '';
+        const newPath = parentPath ? `${parentPath}/${newName}` : newName;
+        await _moveOrRenameNode(nodeToRename, newPath);
+    }, [_moveOrRenameNode]);
 
     const value = {
         token, user, repositories, selectedRepo, isLoading, isSaving, error, tokenScopes, fileTree, allFilesForSearch, activeFile, initialContent: INITIAL_CONTENT,
         isDirty, setIsDirty,
         login, logout, switchAccount, connectRepoAccess, selectRepo, clearRepoSelection, createAndSelectRepo,
-        loadFile, saveFile, toggleFolder, createFile, createFolder, deleteNode, moveNode
+        loadFile, saveFile, toggleFolder, createFile, createFolder, deleteNode, moveNode, renameNode,
     };
 
     return (

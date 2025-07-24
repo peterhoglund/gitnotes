@@ -85,7 +85,6 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({ isSidePanelOpen, onMouseEnter
                 <img src={user.avatar_url} alt={user.name || user.login} className="w-8 h-8 rounded-full bg-gray-200 dark:bg-zinc-700" />
                 <div className="ml-3 flex-1 overflow-hidden">
                   <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 truncate" title={user.name || user.login}>{user.name || user.login}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate" title={user.email}>{user.email}</p>
                 </div>
               </div>
             ) : (

@@ -62,6 +62,7 @@ export const FileTree: React.FC<FileTreeProps> = ({ isOpen, onMouseEnterButton, 
         createFolder,
         deleteNode,
         moveNode,
+        renameNode,
     } = useGitHub();
     const { showPrompt, showConfirm, showAlert } = useModal();
     const [contextMenuPath, setContextMenuPath] = useState<string | null>(null);
@@ -144,6 +145,34 @@ export const FileTree: React.FC<FileTreeProps> = ({ isOpen, onMouseEnterButton, 
             // Error is handled and displayed by the context
         }
     };
+
+    const handleRename = async (node: RepoContentNode) => {
+        setContextMenuPath(null);
+        const newName = await showPrompt({
+            title: `Rename "${node.name}"`,
+            message: `Enter the new name for this ${node.type}:`,
+            defaultValue: node.name,
+            confirmButtonText: 'Rename'
+        });
+
+        if (!newName || newName.trim() === '' || newName === node.name) return;
+
+        if (newName.includes('/')) {
+            await showAlert({
+                title: 'Invalid Name',
+                message: 'Name cannot contain slashes.',
+                confirmButtonText: 'OK'
+            });
+            return;
+        }
+
+        try {
+            await renameNode(node, newName);
+        } catch (err: any) {
+            showAlert({ title: 'Rename Failed', message: err.message, confirmButtonText: 'OK' });
+        }
+    };
+
 
     const handleRemove = async (node: RepoContentNode) => {
         setContextMenuPath(null);
@@ -298,7 +327,7 @@ export const FileTree: React.FC<FileTreeProps> = ({ isOpen, onMouseEnterButton, 
                         }
                     }}
                     onDrop={e => handleDrop(e, node, parent)}
-                    className={`group ${isBeingDragged ? 'is-dragging' : ''} ${isCollapsedFolderDropTarget ? 'drop-target rounded-md' : ''}`}
+                    className={`group relative ${isBeingDragged ? 'is-dragging' : ''} ${isCollapsedFolderDropTarget ? 'drop-target rounded-md' : ''}`}
                 >
                     <div 
                         className={`file-tree-item flex items-center text-sm py-1 px-2 rounded-md cursor-pointer text-gray-600 dark:text-gray-400 transition-colors duration-200 ${isActive ? 'active' : ''}`}
@@ -370,6 +399,12 @@ export const FileTree: React.FC<FileTreeProps> = ({ isOpen, onMouseEnterButton, 
                             className="dropdown-panel absolute z-20 right-2 mt-0 w-40 bg-white dark:bg-zinc-800 rounded-lg shadow-xl border border-gray-200 dark:border-zinc-700 p-1"
                             style={{ top: '100%'}}
                         >
+                            <button
+                                onClick={() => handleRename(node)}
+                                className="dropdown-item w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-zinc-700 rounded-md flex items-center gap-3"
+                            >
+                                <PenToSquareIcon /> <span>Rename</span>
+                            </button>
                             <button
                                 onClick={() => handleRemove(node)}
                                 className="dropdown-item w-full text-left px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/50 rounded-md flex items-center gap-3"
