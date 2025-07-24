@@ -8,7 +8,7 @@ declare const netlify: any;
 
 // DEV_NOTE: Set this to `false` for deployment.
 // When true, the app uses dummy data for local development without GitHub auth.
-const DUMMY_MODE = true;
+const DUMMY_MODE = false;
 
 // --- DUMMY MODE PROVIDER ---
 const dummyFileTreeData: RepoContentNode[] = ([
