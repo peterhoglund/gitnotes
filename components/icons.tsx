@@ -61,6 +61,8 @@ export const SearchIcon = () => <i className="fa-solid fa-magnifying-glass fa-fw
 export const TableIcon = () => <i className="fa-solid fa-table fa-fw" style={faStyle}></i>;
 export const TableCellsLargeIcon = () => <i className="fa-solid fa-table-cells-large fa-fw" style={faStyle}></i>;
 export const TextSizeIcon = () => <i className="fa-solid fa-text-height fa-fw" style={{...faStyle, fontSize: '16px'}} aria-hidden="true"></i>;
+export const PenNibIcon = () => <i className="fa-solid fa-pen-nib fa-fw" style={{...faStyle, fontSize: '16px'}} aria-hidden="true"></i>;
+
 
 // Table menu icons
 const tableMenuStyle = { width: '18px', height: '18px', textAlign: 'center' } as const;

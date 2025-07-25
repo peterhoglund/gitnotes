@@ -3,15 +3,45 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTheme } from '../hooks/useTheme';
 import { useGitHub } from '../hooks/useGitHub';
-import { ProfileIcon, SunIcon, MoonIcon, GitHubIcon, LogOutIcon, BookIcon, RefreshCwIcon, TextSizeIcon } from './icons';
+import { ProfileIcon, SunIcon, MoonIcon, GitHubIcon, LogOutIcon, BookIcon, RefreshCwIcon, TextSizeIcon, PenNibIcon } from './icons';
 import { useFontSize } from '../hooks/useFontSize';
 import type { FontSize } from '../context/FontSizeContext';
+import { useFontFamily } from '../hooks/useFontFamily';
+import type { FontFamily } from '../context/FontFamilyContext';
 
 interface ProfileMenuProps {
   isSidePanelOpen: boolean;
   onMouseEnter?: (e: React.MouseEvent) => void;
   onMouseLeave?: () => void;
 }
+
+const FontFamilyControl: React.FC = () => {
+    const { fontFamily, setFontFamily } = useFontFamily();
+    const families: { id: FontFamily; title: string; style: React.CSSProperties }[] = [
+        { id: 'sans', title: 'Sans-Serif', style: { fontFamily: "'Inter', sans-serif" } },
+        { id: 'serif', title: 'Serif', style: { fontFamily: "'Lora', serif" } },
+    ];
+
+    return (
+        <div className="flex items-center p-0.5 rounded-md bg-gray-200 dark:bg-zinc-700">
+            {families.map(family => (
+                <button
+                    key={family.id}
+                    onClick={() => setFontFamily(family.id)}
+                    title={family.title}
+                    style={family.style}
+                    className={`px-3 py-0 text-xl rounded transition-colors ${
+                        fontFamily === family.id
+                            ? 'bg-white dark:bg-zinc-600 text-gray-800 dark:text-gray-100 shadow-sm'
+                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                    }`}
+                >
+                    Ab
+                </button>
+            ))}
+        </div>
+    );
+};
 
 const TextSizeControl: React.FC = () => {
     const { fontSize, setFontSize } = useFontSize();
@@ -117,6 +147,13 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({ isSidePanelOpen, onMouseEnter
           <button onClick={() => handleAction(toggleTheme)} className="dropdown-item w-full text-left px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-zinc-700 rounded-md flex items-center gap-3">
             {theme === 'light' ? <MoonIcon /> : <SunIcon />} <span>Switch to {theme === 'light' ? 'Dark' : 'Light'} Mode</span>
           </button>
+          <div className="flex items-center justify-between px-2 py-1.5 text-sm text-gray-700 dark:text-gray-200">
+            <div className="flex items-center gap-3">
+                <PenNibIcon />
+                <span>Font Style</span>
+            </div>
+            <FontFamilyControl />
+          </div>
           <div className="flex items-center justify-between px-2 py-1.5 text-sm text-gray-700 dark:text-gray-200">
             <div className="flex items-center gap-3">
                 <TextSizeIcon />

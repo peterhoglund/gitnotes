@@ -1,6 +1,7 @@
 
 
 
+
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Editor } from '@tiptap/core';
 import ToolbarButton from '../ToolbarButton';
@@ -65,7 +66,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
   }, [editor, editor.state]);
 
   const handleBlockTypeChange = useCallback((value: string) => {
-    const chain = editor.chain().focus();
+    const chain = editor.chain().focus() as any;
     switch (value) {
         case 'h1': chain.toggleHeading({ level: 1 }); break;
         case 'h2': chain.toggleHeading({ level: 2 }); break;
@@ -77,8 +78,8 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
     chain.run();
   }, [editor]);
   
-  const handleColor = useCallback((color: string) => editor.chain().focus().setColor(color).run(), [editor]);
-  const handleHighlight = useCallback((color: string) => editor.chain().focus().toggleHighlight({ color }).run(), [editor]);
+  const handleColor = useCallback((color: string) => (editor.chain().focus() as any).setColor(color).run(), [editor]);
+  const handleHighlight = useCallback((color: string) => (editor.chain().focus() as any).toggleHighlight({ color }).run(), [editor]);
   
   const handleBackgroundColor = useCallback((color: string) => {
     if (color === TRANSPARENT) {
@@ -96,12 +97,12 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
 
   const handleLink = useCallback(() => {
     if (editor.isActive('link')) {
-        editor.chain().focus().unsetLink().run();
+        (editor.chain().focus() as any).unsetLink().run();
         return;
     }
     // When creating a link, apply the mark with an empty href.
     // The bubble menu will appear for the user to enter the URL.
-    editor.chain().focus().extendMarkRange('link').setLink({ href: '' }).run();
+    (editor.chain().focus().extendMarkRange('link') as any).setLink({ href: '' }).run();
   }, [editor]);
 
   const textColor = editor.getAttributes('textStyle').color || (theme === 'dark' ? '#d5d5d5' : '#0a0a0a');
@@ -132,10 +133,10 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
       <div className="toolbar-divider h-6 border-l border-gray-300 mx-2"></div>
 
       <div className="flex items-center gap-1">
-        <ToolbarButton onClick={() => editor.chain().focus().toggleBold().run()} isActive={editor.isActive('bold')} title="Bold">
+        <ToolbarButton onClick={() => (editor.chain().focus() as any).toggleBold().run()} isActive={editor.isActive('bold')} title="Bold">
           <BoldIcon />
         </ToolbarButton>
-        <ToolbarButton onClick={() => editor.chain().focus().toggleItalic().run()} isActive={editor.isActive('italic')} title="Italic">
+        <ToolbarButton onClick={() => (editor.chain().focus() as any).toggleItalic().run()} isActive={editor.isActive('italic')} title="Italic">
           <ItalicIcon />
         </ToolbarButton>
       </div>
@@ -143,10 +144,10 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
       <div className="toolbar-divider h-6 border-l border-gray-300 mx-2"></div>
 
       <div className="flex items-center gap-1">
-         <ToolbarButton onClick={() => editor.chain().focus().setTextAlign('left').run()} isActive={editor.isActive({ textAlign: 'left' })} title="Align Left">
+         <ToolbarButton onClick={() => (editor.chain().focus() as any).setTextAlign('left').run()} isActive={editor.isActive({ textAlign: 'left' })} title="Align Left">
           <AlignLeftIcon />
         </ToolbarButton>
-        <ToolbarButton onClick={() => editor.chain().focus().setTextAlign('center').run()} isActive={editor.isActive({ textAlign: 'center' })} title="Align Center">
+        <ToolbarButton onClick={() => (editor.chain().focus() as any).setTextAlign('center').run()} isActive={editor.isActive({ textAlign: 'center' })} title="Align Center">
           <AlignCenterIcon />
         </ToolbarButton>
       </div>
@@ -154,13 +155,13 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
       <div className="toolbar-divider h-6 border-l border-gray-300 mx-2"></div>
       
       <div className="flex items-center gap-1">
-        <ToolbarButton onClick={() => editor.chain().focus().toggleBulletList().run()} isActive={editor.isActive('bulletList')} title="Bulleted List">
+        <ToolbarButton onClick={() => (editor.chain().focus() as any).toggleBulletList().run()} isActive={editor.isActive('bulletList')} title="Bulleted List">
           <ListIcon />
         </ToolbarButton>
-        <ToolbarButton onClick={() => editor.chain().focus().toggleOrderedList().run()} isActive={editor.isActive('orderedList')} title="Numbered List">
+        <ToolbarButton onClick={() => (editor.chain().focus() as any).toggleOrderedList().run()} isActive={editor.isActive('orderedList')} title="Numbered List">
           <ListOrderedIcon />
         </ToolbarButton>
-        <ToolbarButton onClick={() => editor.chain().focus().toggleTaskList().run()} isActive={editor.isActive('taskList')} title="Task List">
+        <ToolbarButton onClick={() => (editor.chain().focus() as any).toggleTaskList().run()} isActive={editor.isActive('taskList')} title="Task List">
           <TaskListIcon />
         </ToolbarButton>
       </div>
@@ -173,13 +174,13 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
         </ToolbarButton>
         {isOverflowOpen && (
            <div className="dropdown-panel absolute top-full right-0 mt-2 z-20 bg-white rounded-lg shadow-xl border border-gray-200 p-2 flex flex-row items-center gap-x-1 w-max">
-              <ToolbarButton onClick={() => editor.chain().focus().toggleUnderline().run()} isActive={editor.isActive('underline')} title="Underline">
+              <ToolbarButton onClick={() => (editor.chain().focus() as any).toggleUnderline().run()} isActive={editor.isActive('underline')} title="Underline">
                 <UnderlineIcon />
               </ToolbarButton>
-              <ToolbarButton onClick={() => editor.chain().focus().toggleStrike().run()} isActive={editor.isActive('strike')} title="Strikethrough">
+              <ToolbarButton onClick={() => (editor.chain().focus() as any).toggleStrike().run()} isActive={editor.isActive('strike')} title="Strikethrough">
                 <StrikethroughIcon />
               </ToolbarButton>
-              <ToolbarButton onClick={() => editor.chain().focus().toggleCode().run()} isActive={editor.isActive('code')} title="Code">
+              <ToolbarButton onClick={() => (editor.chain().focus() as any).toggleCode().run()} isActive={editor.isActive('code')} title="Code">
                 <CodeIcon />
               </ToolbarButton>
               <ToolbarButton
@@ -192,7 +193,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
               </ToolbarButton>
 
                <ToolbarButton
-                onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
+                onClick={() => (editor.chain().focus() as any).insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
                 isActive={editor.isActive('table')}
                 title="Insert Table"
               >
@@ -201,10 +202,10 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
 
               <div className="toolbar-divider h-6 border-l border-gray-300 mx-2"></div>
 
-              <ToolbarButton onClick={() => editor.chain().focus().setTextAlign('right').run()} isActive={editor.isActive({ textAlign: 'right' })} title="Align Right">
+              <ToolbarButton onClick={() => (editor.chain().focus() as any).setTextAlign('right').run()} isActive={editor.isActive({ textAlign: 'right' })} title="Align Right">
                 <AlignRightIcon />
               </ToolbarButton>
-              <ToolbarButton onClick={() => editor.chain().focus().setTextAlign('justify').run()} isActive={editor.isActive({ textAlign: 'justify' })} title="Justify">
+              <ToolbarButton onClick={() => (editor.chain().focus() as any).setTextAlign('justify').run()} isActive={editor.isActive({ textAlign: 'justify' })} title="Justify">
                 <AlignJustifyIcon />
               </ToolbarButton>
 

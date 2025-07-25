@@ -16,11 +16,14 @@ import { TableControls } from './components/editor/TableControls';
 import { TableSelectionControls } from './components/editor/TableSelectionControls';
 import { FontSizeProvider } from './context/FontSizeContext';
 import { useFontSize } from './hooks/useFontSize';
+import { FontFamilyProvider } from './context/FontFamilyContext';
+import { useFontFamily } from './hooks/useFontFamily';
 
 const PlitaEditor: React.FC = () => {
     const { activeFile, initialContent, isDirty, setIsDirty, saveFile } = useGitHub();
     const editor = useTiptapEditor(initialContent);
     const { fontSize } = useFontSize();
+    const { fontFamily } = useFontFamily();
 
     const { handleKeyDown } = useKeyboardShortcuts(editor);
 
@@ -71,7 +74,7 @@ const PlitaEditor: React.FC = () => {
 
     return (
         <AppShell>
-            <main className={`relative flex-grow flex flex-col overflow-hidden text-size-${fontSize}`}>
+            <main className={`relative flex-grow flex flex-col overflow-hidden text-size-${fontSize} font-family-${fontFamily}`}>
                 <div className="absolute top-0 left-0 right-0 z-20 flex justify-center py-4 pointer-events-none">
                     <div className="pointer-events-auto">
                         <EditorToolbar editor={editor} />
@@ -97,9 +100,11 @@ const App: React.FC = () => {
 		<GitHubProvider>
 			<ThemeProvider>
                 <FontSizeProvider>
-                    <ModalProvider>
-                        <PlitaEditor />
-                    </ModalProvider>
+                    <FontFamilyProvider>
+                        <ModalProvider>
+                            <PlitaEditor />
+                        </ModalProvider>
+                    </FontFamilyProvider>
                 </FontSizeProvider>
 			</ThemeProvider>
 		</GitHubProvider>

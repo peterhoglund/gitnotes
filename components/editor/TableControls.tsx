@@ -153,18 +153,19 @@ export const TableControls: React.FC<{ editor: Editor | null }> = ({ editor }) =
             if (!editor) {
                 return;
             }
+            const commands = editor.commands as any;
             editor.view.focus();
             if (action === 'addRow') {
                 if (rowIndex === 0) {
-                    editor.commands.addRowBefore();
+                    commands.addRowBefore();
                 } else {
-                    editor.commands.addRowAfter();
+                    commands.addRowAfter();
                 }
             } else {
                 if (colIndex === 0) {
-                    editor.commands.addColumnBefore();
+                    commands.addColumnBefore();
                 } else {
-                    editor.commands.addColumnAfter();
+                    commands.addColumnAfter();
                 }
             }
         }, 50);
