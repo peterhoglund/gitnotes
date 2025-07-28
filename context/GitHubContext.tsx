@@ -335,7 +335,7 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     }, []);
 
     const login = useCallback(() => {
-        performAuth('read:user user:email', (err, data) => {
+        performAuth('read:user user:email repo', (err, data) => {
             if (err) {
                 setError(`GitHub auth failed: ${err.message}`);
                 clearState();
@@ -346,16 +346,11 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         });
     }, [performAuth, clearState]);
 
-    const connectRepoAccess = useCallback(() => {
-        performAuth('repo', (err, data) => {
-            if (err) {
-                setError(`GitHub repo access failed: ${err.message}`);
-            } else if (data) {
-                localStorage.setItem('gh_token', data.token);
-                setToken(data.token); 
-            }
-        });
-    }, [performAuth]);
+    const connectRepoAccess = login;
+
+    const logout = useCallback(() => {
+        clearState();
+    }, [clearState]);
 
     const fetchUserDataAndRepos = useCallback(async (authToken: string) => {
         setIsLoading(true);
@@ -371,14 +366,13 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             setUser({ ...profile, email: primaryEmail || `${profile.login}@users.noreply.github.com` });
             setTokenScopes(scopes);
 
-            if (scopes.includes('repo')) {
-                const repos = await api.getUserRepos(authToken);
-                setRepositories(repos);
-            } else {
-                 setRepositories([]);
-                 setSelectedRepo(null);
-                 localStorage.removeItem('gh_repo');
+            if (!scopes.includes('repo')) {
+                setError("Repository access is required. Please grant permission to continue.");
+                return;
             }
+
+            const repos = await api.getUserRepos(authToken);
+            setRepositories(repos);
         } catch (err: any) {
             setError(err.message);
             if (err.message.includes('token is invalid')) {
@@ -465,10 +459,6 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         setIsDirty(false);
         setAllFilesForSearch([]);
     }, []);
-
-    const logout = useCallback(() => {
-        clearState();
-    }, [clearState]);
 
     const switchAccount = useCallback(() => {
         const ghLogout = window.open('https://github.com/logout', '_blank', 'width=300,height=200');
@@ -845,8 +835,9 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     const value = {
         token, user, repositories, selectedRepo, isLoading, isSaving, error, tokenScopes, fileTree, allFilesForSearch, activeFile, initialContent: INITIAL_CONTENT,
         isDirty, setIsDirty,
-        login, logout, switchAccount, connectRepoAccess, selectRepo, clearRepoSelection, createAndSelectRepo,
+        login, logout, switchAccount, selectRepo, clearRepoSelection, createAndSelectRepo,
         loadFile, saveFile, toggleFolder, createFile, createFolder, deleteNode, moveNode, renameNode,
+        connectRepoAccess,
     };
 
     return (

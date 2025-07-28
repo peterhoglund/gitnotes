@@ -1,15 +1,17 @@
 
 
+
+
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import ProfileMenu from '../ProfileMenu';
 import { FileTree } from '../FileTree';
 import RepoSelector from '../RepoSelector';
-import ConnectRepo from '../ConnectRepo';
 import { SidebarOpenIcon, SidebarCloseIcon } from '../icons';
 import Logo from '../Logo';
 import { useGitHub } from '../../hooks/useGitHub';
 import LoginPrompt from '../LoginPrompt';
+import ConnectRepo from '../ConnectRepo';
 
 const SidePanel = () => {
     const [isOpen, setIsOpen] = useState(true);
