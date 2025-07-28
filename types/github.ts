@@ -1,4 +1,5 @@
 
+
 export interface GitHubUser {
   name: string;
   email: string;
@@ -17,6 +18,7 @@ export interface Repository {
   html_url: string;
   description: string | null;
   updated_at: string;
+  default_branch: string;
 }
 
 // Represents a file or directory in the file tree.

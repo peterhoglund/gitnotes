@@ -73,7 +73,7 @@ export const createRepo = (token: string, name: string): Promise<Repository> => 
 			name,
 			private: true,
 			description: 'Documents created and managed by Plita.',
-			auto_init: true,
+			auto_init: false,
 		}),
 	});
 };
@@ -194,7 +194,7 @@ export const deleteFile = async (
 export const getRepoDetails = (
     token: string,
     repoFullName: string,
-): Promise<any> => {
+): Promise<Repository> => {
     return apiFetch(`/repos/${repoFullName}`, token);
 };
 

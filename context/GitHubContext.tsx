@@ -168,7 +168,7 @@ const DummyGitHubProvider = ({ children }) => {
         token: 'dummy-token',
         user: { name: 'Dummy User', email: 'dummy@example.com', avatar_url: 'https://avatars.githubusercontent.com/u/1024025?v=4', login: 'dummy-user' },
         repositories: [],
-        selectedRepo: { id: 1, full_name: 'dummy/plita-docs', name: 'plita-docs', private: true, owner: { login: 'dummy' }, html_url: '', description: '', updated_at: '' },
+        selectedRepo: { id: 1, full_name: 'dummy/plita-docs', name: 'plita-docs', private: true, owner: { login: 'dummy' }, html_url: '', description: '', updated_at: '', default_branch: 'main' },
         isLoading: false, isSaving, error: null, tokenScopes: ['repo', 'read:user'],
         fileTree, allFilesForSearch: [], activeFile, initialContent: INITIAL_CONTENT,
         isDirty, setIsDirty,
@@ -491,8 +491,18 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         setError(null);
         try {
             const newRepo = await api.createRepo(token, repoName);
-            setRepositories(prev => [newRepo, ...prev].sort((a,b) => b.updated_at.localeCompare(a.updated_at)));
-            selectRepo(newRepo);
+            
+            // Create an initial file to initialize the repository, since auto_init is false.
+            // This also creates the first commit and the default branch.
+            await api.createFile(token, newRepo.full_name, '.gitkeep', '');
+
+            // The newRepo object is mostly fine, but let's fetch its full details
+            // to ensure fields are fresh for subsequent operations.
+            const fullRepoDetails = await api.getRepoDetails(token, newRepo.full_name);
+
+            setRepositories(prev => [fullRepoDetails, ...prev].sort((a,b) => b.updated_at.localeCompare(a.updated_at)));
+            selectRepo(fullRepoDetails);
+
         } catch(err: any) {
             setError(err.message);
             throw err;

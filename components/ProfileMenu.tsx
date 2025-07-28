@@ -120,7 +120,7 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({ isSidePanelOpen, onMouseEnter
             ) : (
               <>
                 <button onClick={() => handleAction(login)} className="dropdown-item w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-zinc-700 rounded-md flex items-center gap-3 justify-center bg-gray-50 dark:bg-zinc-800 font-semibold">
-                  <GitHubIcon /> <span>Login with GitHub</span>
+                  <GitHubIcon /> <span>Connect with GitHub</span>
                 </button>
                 {(error && !isLoading) && <p className="text-xs text-red-500 mt-2 text-center px-1">{error}</p>}
                 {isLoading && <div className="flex justify-center mt-2"><RefreshCwIcon className="animate-spin" /></div>}
