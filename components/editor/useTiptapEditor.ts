@@ -1,6 +1,7 @@
 
 
 
+
 import { useEditor, ReactNodeViewRenderer } from '@tiptap/react';
 import { Editor } from '@tiptap/core';
 import { Underline } from '@tiptap/extension-underline';
@@ -57,7 +58,6 @@ import cpp from 'highlight.js/lib/languages/cpp';
 import c from 'highlight.js/lib/languages/c';
 import go from 'highlight.js/lib/languages/go';
 import rust from 'highlight.js/lib/languages/rust';
-import bash from 'highlight.js/lib/languages/bash';
 import text from 'highlight.js/lib/languages/plaintext';
 
 import CodeBlockComponent from './CodeBlockComponent';
@@ -80,7 +80,6 @@ lowlight.register({
   c,
   go,
   rust,
-  bash,
   text,
 });
 
@@ -216,11 +215,16 @@ export const useTiptapEditor = (content: string) => {
                 lowlight,
             }),
             Link.configure({
-                openOnClick: false, // Set to false to allow editing via bubble menu
-                autolink: true,     // Automatically detect and create links
-                HTMLAttributes: {
-                    rel: 'noopener noreferrer nofollow',
-                    target: '_blank',
+                openOnClick: false,
+                autolink: true,
+                HTMLAttributes: (attributes) => {
+                    const { href } = attributes;
+                    const isExternal = href && /^(https?:\/\/|mailto:|tel:)/.test(href);
+
+                    return {
+                        target: isExternal ? '_blank' : null,
+                        rel: isExternal ? 'noopener noreferrer nofollow' : null,
+                    };
                 },
             }),
             Underline,

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { EditorContent } from '@tiptap/react';
 import { Editor } from '@tiptap/core';
@@ -5,15 +6,17 @@ import { Editor } from '@tiptap/core';
 interface EditorCanvasProps {
   editor: Editor;
   onKeyDown: (event: React.KeyboardEvent<HTMLDivElement>) => void;
+  onClick: (event: React.MouseEvent<HTMLDivElement>) => void;
 }
 
-const EditorCanvas: React.FC<EditorCanvasProps> = ({ editor, onKeyDown }) => {
+const EditorCanvas: React.FC<EditorCanvasProps> = ({ editor, onKeyDown, onClick }) => {
   return (
     // The main canvas container, allowing vertical scrolling.
     // It centers the editor content horizontally.
     <div
       className="flex-grow w-full overflow-y-auto pt-24 pb-16 flex justify-center"
       onKeyDown={onKeyDown}
+      onClick={onClick}
     >
       {/* 
         This wrapper controls the maximum width of the editor content for readability.

@@ -1,5 +1,5 @@
 
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useCallback } from 'react';
 import { Editor } from '@tiptap/core';
 import { ThemeProvider } from './context/ThemeContext';
 import { GitHubProvider } from './context/GitHubContext';
@@ -22,13 +22,29 @@ import { useFontFamily } from './hooks/useFontFamily';
 const AUTOSAVE_DELAY = 2500; // 2.5 seconds
 
 const PlitaEditor: React.FC = () => {
-    const { activeFile, initialContent, isDirty, setIsDirty, saveFile, isSaving } = useGitHub();
+    const { activeFile, initialContent, isDirty, setIsDirty, saveFile, isSaving, loadFile } = useGitHub();
     const editor = useTiptapEditor(initialContent);
     const { fontSize } = useFontSize();
     const { fontFamily } = useFontFamily();
     const autosaveTimerRef = useRef<number | null>(null);
 
     const { handleKeyDown } = useKeyboardShortcuts(editor);
+
+    const handleCanvasClick = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+        const target = event.target as HTMLElement;
+        const link = target.closest('a');
+        
+        if (link && link.href) {
+            const href = link.getAttribute('href');
+            if (href) {
+                const isExternal = /^(https?:\/\/|mailto:|tel:)/.test(href);
+                if (!isExternal) {
+                    event.preventDefault();
+                    loadFile(href);
+                }
+            }
+        }
+    }, [loadFile]);
 
     // Effect to load content into the editor when the active file changes
     useEffect(() => {
@@ -124,6 +140,7 @@ const PlitaEditor: React.FC = () => {
                 <EditorCanvas
                     editor={editor}
                     onKeyDown={handleKeyDown}
+                    onClick={handleCanvasClick}
                 />
             </main>
         </AppShell>
