@@ -11,7 +11,7 @@ const LoginPrompt: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
             <div className={`transition-all duration-300 overflow-hidden ${isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
                 <h2 className="font-semibold text-base mb-2 whitespace-nowrap">Welcome to Plita</h2>
                 <p className="text-gray-600 dark:text-gray-400 mb-4">
-                    Connect with GitHub to save, load, and manage your documents.
+                    Save, load, and manage your documents with GitHub.
                 </p>
             </div>
             <button
@@ -22,12 +22,6 @@ const LoginPrompt: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
                 {isLoading ? <RefreshCwIcon className="animate-spin" /> : <GitHubIcon />}
                 <span className={`whitespace-nowrap transition-opacity duration-100 ${isOpen ? 'opacity-100' : 'opacity-0'}`}>Connect with GitHub</span>
             </button>
-            <div className={`transition-all duration-300 overflow-hidden ${isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
-                <p className="text-xs text-gray-500 mt-3 flex items-center justify-center gap-1.5 whitespace-nowrap">
-                    <LockIcon /> Your work will be saved to a private repository.
-                </p>
-                {error && <p className="text-xs text-red-500 mt-2 text-center">{error}</p>}
-            </div>
         </div>
     );
 };

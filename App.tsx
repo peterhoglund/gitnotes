@@ -1,5 +1,5 @@
 
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { Editor } from '@tiptap/core';
 import { ThemeProvider } from './context/ThemeContext';
 import { GitHubProvider } from './context/GitHubContext';
@@ -19,11 +19,14 @@ import { useFontSize } from './hooks/useFontSize';
 import { FontFamilyProvider } from './context/FontFamilyContext';
 import { useFontFamily } from './hooks/useFontFamily';
 
+const AUTOSAVE_DELAY = 2500; // 2.5 seconds
+
 const PlitaEditor: React.FC = () => {
-    const { activeFile, initialContent, isDirty, setIsDirty, saveFile } = useGitHub();
+    const { activeFile, initialContent, isDirty, setIsDirty, saveFile, isSaving } = useGitHub();
     const editor = useTiptapEditor(initialContent);
     const { fontSize } = useFontSize();
     const { fontFamily } = useFontFamily();
+    const autosaveTimerRef = useRef<number | null>(null);
 
     const { handleKeyDown } = useKeyboardShortcuts(editor);
 
@@ -49,24 +52,56 @@ const PlitaEditor: React.FC = () => {
 
     }, [activeFile, initialContent, editor, setIsDirty]);
 
-    // Effect to track if the editor content is "dirty" (changed from saved state)
+    // Effect to track if the editor content is "dirty" and to handle autosaving
     useEffect(() => {
-        if (!editor) return;
+        if (!editor) {
+            return;
+        }
 
-        const handleUpdate = ({ editor }: { editor: Editor }) => {
+        // If a save operation is in progress, cancel any pending autosave to prevent race conditions.
+        if (isSaving) {
+            if (autosaveTimerRef.current) {
+                clearTimeout(autosaveTimerRef.current);
+                autosaveTimerRef.current = null;
+            }
+            return; // Do not set up new listeners while a save is in progress.
+        }
+
+        const handleUpdate = ({ editor: updatedEditor }: { editor: Editor }) => {
             const savedContent = activeFile ? activeFile.content : initialContent;
-            const isNowDirty = editor.getHTML() !== savedContent;
+            const currentContent = updatedEditor.getHTML();
+            const isNowDirty = currentContent !== savedContent;
+
+            // Always update the dirty status if it has changed.
             if (isNowDirty !== isDirty) {
                 setIsDirty(isNowDirty);
+            }
+
+            // Clear the previous timer on each update to debounce.
+            if (autosaveTimerRef.current) {
+                clearTimeout(autosaveTimerRef.current);
+            }
+
+            // If the document is dirty and part of the repo, set a new autosave timer.
+            if (isNowDirty && activeFile) {
+                autosaveTimerRef.current = window.setTimeout(() => {
+                    saveFile(currentContent);
+                }, AUTOSAVE_DELAY);
             }
         };
 
         editor.on('update', handleUpdate);
 
+        // Cleanup function for the effect.
         return () => {
             editor.off('update', handleUpdate);
+            // Ensure the timer is cleared on unmount or re-run.
+            if (autosaveTimerRef.current) {
+                clearTimeout(autosaveTimerRef.current);
+            }
         };
-    }, [editor, activeFile, initialContent, isDirty, setIsDirty]);
+    }, [editor, activeFile, initialContent, isDirty, setIsDirty, saveFile, isSaving]);
+
 
     if (!editor) {
         return null; // or a loading spinner
