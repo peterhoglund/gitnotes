@@ -1,4 +1,6 @@
 
+
+
 import React, { useMemo, useCallback, useState, useEffect } from 'react';
 import { BubbleMenu } from '@tiptap/react/menus';
 import { Editor } from '@tiptap/core';
@@ -184,7 +186,7 @@ const TableMenu: React.FC<TableMenuProps> = ({ editor }) => {
   return (
     <BubbleMenu
       editor={editor}
-      tippyOptions={{
+      tippyProps={{
         duration: 100,
         getReferenceClientRect,
         placement: showSideMenu ? 'right-start' : 'top',
