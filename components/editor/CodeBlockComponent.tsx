@@ -4,8 +4,9 @@ import { NodeViewWrapper, NodeViewContent, ReactNodeViewProps } from '@tiptap/re
 import { LANGUAGES } from '../../utils/constants';
 import { ChevronDownIcon } from '../icons';
 
-const CodeBlockComponent: React.FC<ReactNodeViewProps> = ({ node: { attrs }, updateAttributes }) => {
-    const { language: currentLanguage } = attrs;
+const CodeBlockComponent: React.FC<ReactNodeViewProps> = (props) => {
+    const { node, updateAttributes } = props;
+    const { language: currentLanguage } = node.attrs;
     const [isOpen, setIsOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
     const listRef = useRef<HTMLUListElement>(null);

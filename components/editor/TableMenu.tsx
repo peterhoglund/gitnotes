@@ -1,6 +1,4 @@
 
-
-
 import React, { useMemo, useCallback, useState, useEffect } from 'react';
 import { BubbleMenu } from '@tiptap/react/menus';
 import { Editor } from '@tiptap/core';
@@ -186,7 +184,7 @@ const TableMenu: React.FC<TableMenuProps> = ({ editor }) => {
   return (
     <BubbleMenu
       editor={editor}
-      tippyProps={{
+      tippyOptions={{
         duration: 100,
         getReferenceClientRect,
         placement: showSideMenu ? 'right-start' : 'top',
@@ -196,22 +194,22 @@ const TableMenu: React.FC<TableMenuProps> = ({ editor }) => {
       className="bg-white dark:bg-zinc-800 rounded-lg shadow-xl border border-gray-200 dark:border-zinc-700 p-1.5 flex flex-col items-stretch gap-y-0.5 w-56"
     >
       {isRowSelection ? (
-        <MenuItem onClick={() => editor.chain().focus().deleteRow().run()} disabled={!editor.can().deleteRow()} title="Delete row">
+        <MenuItem onClick={() => (editor.chain().focus() as any).deleteRow().run()} disabled={!(editor.can() as any).deleteRow()} title="Delete row">
             <span className="w-5 h-5 flex items-center justify-center"><TableTrashIcon /></span>
             <span>Delete Row</span>
         </MenuItem>
       ) : isColSelection ? (
-        <MenuItem onClick={() => editor.chain().focus().deleteColumn().run()} disabled={!editor.can().deleteColumn()} title="Delete column">
+        <MenuItem onClick={() => (editor.chain().focus() as any).deleteColumn().run()} disabled={!(editor.can() as any).deleteColumn()} title="Delete column">
             <span className="w-5 h-5 flex items-center justify-center"><TableTrashIcon /></span>
             <span>Delete Column</span>
         </MenuItem>
       ) : (
         <>
-            <MenuItem onClick={() => editor.chain().focus().deleteRow().run()} disabled={!editor.can().deleteRow()} title="Delete row">
+            <MenuItem onClick={() => (editor.chain().focus() as any).deleteRow().run()} disabled={!(editor.can() as any).deleteRow()} title="Delete row">
                 <span className="w-5 h-5 flex items-center justify-center"><TableTrashIcon /></span>
                 <span>Delete Row</span>
             </MenuItem>
-            <MenuItem onClick={() => editor.chain().focus().deleteColumn().run()} disabled={!editor.can().deleteColumn()} title="Delete column">
+            <MenuItem onClick={() => (editor.chain().focus() as any).deleteColumn().run()} disabled={!(editor.can() as any).deleteColumn()} title="Delete column">
                 <span className="w-5 h-5 flex items-center justify-center"><TableTrashIcon /></span>
                 <span>Delete Column</span>
             </MenuItem>
@@ -221,7 +219,7 @@ const TableMenu: React.FC<TableMenuProps> = ({ editor }) => {
       {(hasHeaderAction || hasColorActions) && <MenuSeparator />}
 
       {hasHeaderAction && (
-        <MenuItem onClick={() => editor.chain().focus().toggleHeaderRow().run()} disabled={!editor.can().toggleHeaderRow()} title="Toggle header row">
+        <MenuItem onClick={() => (editor.chain().focus() as any).toggleHeaderRow().run()} disabled={!(editor.can() as any).toggleHeaderRow()} title="Toggle header row">
             <span className="w-5 h-5 flex items-center justify-center"><TableIcon /></span>
             <span>Toggle Header Row</span>
         </MenuItem>
@@ -260,7 +258,7 @@ const TableMenu: React.FC<TableMenuProps> = ({ editor }) => {
 
       <MenuSeparator />
       
-      <MenuItem onClick={() => editor.chain().focus().deleteTable().run()} disabled={!editor.can().deleteTable()} title="Delete table" isDanger>
+      <MenuItem onClick={() => (editor.chain().focus() as any).deleteTable().run()} disabled={!(editor.can() as any).deleteTable()} title="Delete table" isDanger>
         <span className="w-5 h-5 flex items-center justify-center"><TableRemoveIcon /></span>
         <span>Delete Table</span>
       </MenuItem>
