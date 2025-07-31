@@ -24,8 +24,7 @@ export const LinkIcon = () => <i className="fa-solid fa-link fa-fw" style={faSty
 export const UnlinkIcon = () => <i className="fa-solid fa-link-slash fa-fw" style={{...faStyle, fontSize: '16px'}} aria-hidden="true"></i>;
 export const ExternalLinkIcon = () => <i className="fa-solid fa-arrow-up-right-from-square fa-fw" style={{...faStyle, fontSize: '16px'}} aria-hidden="true"></i>;
 export const CopyIcon = () => <i className="fa-solid fa-copy fa-fw" style={{...faStyle, fontSize: '16px'}} aria-hidden="true"></i>;
-export const CheckIcon = () => <i className="fa-solid fa-check fa-fw" style={{...faStyle, fontSize: '18px'}} aria-hidden="true"></i>;
-export const XMarkIcon = () => <i className="fa-solid fa-xmark fa-fw" style={{...faStyle, fontSize: '18px'}} aria-hidden="true"></i>;
+
 
 // Profile & GitHub icons
 export const ProfileIcon = () => (

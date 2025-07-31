@@ -83,7 +83,7 @@ const TableMenu: React.FC<TableMenuProps> = ({ editor }) => {
   const isRowSelection = isCellSelection && selection.isRowSelection();
   const isColSelection = isCellSelection && selection.isColSelection();
 
-  const getReferenceClientRect = useCallback(() => {
+  const getReferenceClientRect = useCallback((): DOMRect | null => {
     if (!(selection instanceof CellSelection)) return null;
 
     const { view } = editor;
@@ -186,13 +186,14 @@ const TableMenu: React.FC<TableMenuProps> = ({ editor }) => {
   return (
     <BubbleMenu
       editor={editor}
-      tippyProps={{
-        duration: 100,
+      shouldShow={({ state }) => state.selection instanceof CellSelection}
+      tippyOptions={{
         getReferenceClientRect,
         placement: showSideMenu ? 'right-start' : 'top',
-        offset: showSideMenu ? [0, 8] : [0, 10],
+        offset: showSideMenu
+        ? { mainAxis: 8 }
+        : { mainAxis: 10 },
       }}
-      shouldShow={({ state }) => state.selection instanceof CellSelection}
       className="bg-white dark:bg-zinc-800 rounded-lg shadow-xl border border-gray-200 dark:border-zinc-700 p-1.5 flex flex-col items-stretch gap-y-0.5 w-56"
     >
       {isRowSelection ? (

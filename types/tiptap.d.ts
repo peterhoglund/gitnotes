@@ -23,6 +23,7 @@ declare module '@tiptap/core' {
     toggleHighlight: (attributes?: { color?: string }) => ReturnType;
     setLink: (attributes: { href: string; target?: string | null }) => ReturnType;
     unsetLink: () => ReturnType;
+    setTextSelection: (position: number | { from: number; to: number }) => ReturnType;
     
     // Table Commands
     insertTable: (options?: { rows?: number; cols?: number; withHeaderRow?: boolean }) => ReturnType;
