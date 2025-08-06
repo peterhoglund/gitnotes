@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { Editor } from '@tiptap/core';
@@ -30,7 +31,7 @@ const LinkHoverMenu: React.FC<LinkHoverMenuProps> = ({ editor, state, onClose, o
     const handleUnlink = (e: React.MouseEvent) => {
         e.preventDefault();
         // Set the selection to the link's range and unset the link
-        editor.chain().focus().setTextSelection({ from: state.from, to: state.to }).unsetLink().run();
+        (editor.chain().focus().setTextSelection({ from: state.from, to: state.to }) as any).unsetLink().run();
         onClose();
     };
 
@@ -39,7 +40,7 @@ const LinkHoverMenu: React.FC<LinkHoverMenuProps> = ({ editor, state, onClose, o
         top: `${state.rect.bottom}px`,
         left: `${state.rect.left + state.rect.width / 2}px`,
         transform: 'translate(-50%, 8px)',
-        zIndex: 50,
+        zIndex: 40,
     };
 
     return createPortal(

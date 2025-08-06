@@ -1,7 +1,5 @@
 
 
-
-
 import { useEditor, ReactNodeViewRenderer } from '@tiptap/react';
 import { Editor } from '@tiptap/core';
 import { Underline } from '@tiptap/extension-underline';
@@ -61,6 +59,7 @@ import rust from 'highlight.js/lib/languages/rust';
 import text from 'highlight.js/lib/languages/plaintext';
 
 import CodeBlockComponent from './CodeBlockComponent';
+import { Indent } from './extensions/Indent';
 
 // Tiptap command augmentation is now handled in `types/tiptap.d.ts`
 const lowlight = createLowlight();
@@ -97,6 +96,82 @@ const CustomCodeBlock = CodeBlockLowlight.extend({
     addNodeView() {
         return ReactNodeViewRenderer(CodeBlockComponent);
     },
+
+    addKeyboardShortcuts() {
+        return {
+            // Indent with Tab
+            'Tab': () => {
+                const { editor } = this;
+                if (!editor.isActive('codeBlock')) return false;
+
+                const { state } = editor;
+                const { doc, selection } = state;
+                const { from, to } = selection;
+
+                const $from = doc.resolve(from);
+                const node = $from.parent;
+                const blockStart = $from.before($from.depth);
+
+                // Find the start of the first selected line (or current line if selection is empty)
+                let startPos = from;
+                while (startPos > blockStart + 1 && doc.textBetween(startPos - 1, startPos) !== '\n') {
+                    startPos--;
+                }
+
+                // Find the end of the last selected line (or current line if selection is empty)
+                let endPos = to;
+                while (endPos < blockStart + node.nodeSize - 2 && doc.textBetween(endPos, endPos + 1) !== '\n') {
+                    endPos++;
+                }
+
+                const text = doc.textBetween(startPos, endPos, '\n');
+                const indentedText = text.split('\n').map(line => `\t${line}`).join('\n');
+                
+                return editor.chain().focus().insertContentAt({ from: startPos, to: endPos }, indentedText).run();
+            },
+
+            // Outdent with Shift+Tab
+            'Shift-Tab': () => {
+                const { editor } = this;
+                if (!editor.isActive('codeBlock')) return false;
+
+                const { state } = editor;
+                const { doc, selection } = state;
+                const { from, to } = selection;
+                
+                const $from = doc.resolve(from);
+                const node = $from.parent;
+                const blockStart = $from.before($from.depth);
+
+                // Find the start of the first selected line
+                let startPos = from;
+                while (startPos > blockStart + 1 && doc.textBetween(startPos - 1, startPos) !== '\n') {
+                    startPos--;
+                }
+
+                // Find the end of the last selected line
+                let endPos = to;
+                while (endPos < blockStart + node.nodeSize - 2 && doc.textBetween(endPos, endPos + 1) !== '\n') {
+                    endPos++;
+                }
+
+                const text = doc.textBetween(startPos, endPos, '\n');
+                const outdentedText = text.split('\n').map(line => {
+                    if (line.startsWith('\t')) {
+                        return line.substring(1);
+                    }
+                    return line;
+                }).join('\n');
+
+                if (text === outdentedText) {
+                    // Nothing to outdent, so we don't need to do anything.
+                    return true;
+                }
+
+                return editor.chain().focus().insertContentAt({ from: startPos, to: endPos }, outdentedText).run();
+            }
+        };
+    }
 });
 
 const CustomTableRow = TableRow.extend({
@@ -144,26 +219,9 @@ const CustomTable = Table.extend({
     addCommands() {
         return {
             ...this.parent?.(),
-            setRowBackgroundColor: (color: string | null) => ({ state, dispatch }) => {
+            setCellBackgroundColor: (color: string | null) => ({ state, dispatch }) => {
                 const { selection } = state;
-                if (!(selection instanceof CellSelection) || !selection.isRowSelection()) {
-                  return false;
-                }
-        
-                let tr = state.tr;
-                selection.forEachCell((cell, pos) => {
-                  tr = tr.setNodeMarkup(pos, undefined, { ...cell.attrs, backgroundColor: color });
-                });
-        
-                if (tr.docChanged && dispatch) {
-                  dispatch(tr);
-                  return true;
-                }
-                return false;
-            },
-            setColumnBackgroundColor: (color: string | null) => ({ state, dispatch }) => {
-                const { selection } = state;
-                if (!(selection instanceof CellSelection) || !selection.isColSelection()) {
+                if (!(selection instanceof CellSelection)) {
                   return false;
                 }
         
@@ -182,6 +240,9 @@ const CustomTable = Table.extend({
     }
 });
 
+const CustomDocument = Document.extend({
+  content: 'heading block+',
+});
 
 export const useTiptapEditor = (content: string) => {
     const editor = useEditor({
@@ -191,7 +252,7 @@ export const useTiptapEditor = (content: string) => {
             Bold,
             BulletList,
             Code,
-            Document,
+            CustomDocument,
             Dropcursor,
             Gapcursor,
             HardBreak,
@@ -235,7 +296,38 @@ export const useTiptapEditor = (content: string) => {
             Color,
             Highlight.configure({ multicolor: true }),
             Placeholder.configure({
-                placeholder: 'Write something',
+                emptyNodeClass: 'is-editor-empty',
+                placeholder: ({ editor, node }) => {
+                    const { doc } = editor.state;
+                    const isFirstNode = doc.firstChild === node;
+
+                    // Rule 1: Show "Add a title" for the first node if it's a heading.
+                    if (isFirstNode && node.type.name === 'heading') {
+                        return 'Add a title';
+                    }
+
+                    // We only want the "Write something" placeholder on a paragraph.
+                    if (node.type.name !== 'paragraph') {
+                        return null;
+                    }
+
+                    // Check if this is the first paragraph in the document body.
+                    const isFirstParagraph = doc.childCount >= 2 && doc.child(1) === node;
+                    if (!isFirstParagraph) {
+                        return null;
+                    }
+                    
+                    // The body is considered "empty" if it consists of only one node (this paragraph)
+                    // and that node has no content.
+                    const isBodyEmpty = doc.childCount === 2 && node.content.size === 0;
+
+                    if (isBodyEmpty) {
+                        return 'Write something';
+                    }
+
+                    return null;
+                },
+                showOnlyCurrent: false,
             }),
             TaskList,
             TaskItem.configure({
@@ -252,6 +344,9 @@ export const useTiptapEditor = (content: string) => {
             CustomTableRow,
             CustomTableHeader,
             CustomTableCell,
+            
+            // Indent extension
+            Indent,
         ],
         content: content,
         editorProps: {

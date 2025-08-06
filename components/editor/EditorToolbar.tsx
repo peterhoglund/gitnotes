@@ -1,7 +1,4 @@
 
-
-
-
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Editor } from '@tiptap/core';
 import ToolbarButton from '../ToolbarButton';
@@ -36,6 +33,22 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
 
   const [isOverflowOpen, setIsOverflowOpen] = useState(false);
   const overflowRef = useRef<HTMLDivElement>(null);
+
+  // By listening to transactions, we can force a re-render to update the active state of buttons.
+  const [, setForceUpdate] = useState(0);
+  useEffect(() => {
+    if (!editor) return;
+    
+    const handleUpdate = () => {
+        setForceUpdate(val => val + 1);
+    };
+    
+    editor.on('transaction', handleUpdate);
+    
+    return () => {
+        editor.off('transaction', handleUpdate);
+    };
+  }, [editor]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -110,6 +123,11 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
   const backgroundColor = editor.getAttributes('backgroundColorBlock').color || TRANSPARENT;
   const canSetLink = !editor.state.selection.empty;
 
+  const { from } = editor.state.selection;
+  const firstNode = editor.state.doc.firstChild;
+  const endOfFirstNode = firstNode ? firstNode.nodeSize : 0;
+  const isTitleActive = from <= endOfFirstNode;
+
   return (
     <div className="toolbar-wrapper bg-white rounded-xl shadow-md p-2 flex items-center gap-x-1 text-gray-800">
       <ToolbarButton
@@ -128,6 +146,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
         items={BLOCK_TYPES}
         onSelect={handleBlockTypeChange}
         currentValue={currentBlockType}
+        disabled={isTitleActive}
       />
       
       <div className="toolbar-divider h-6 border-l border-gray-300 mx-2"></div>
@@ -173,7 +192,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
           <EllipsisVerticalIcon size="large" />
         </ToolbarButton>
         {isOverflowOpen && (
-           <div className="dropdown-panel absolute top-full right-0 mt-2 z-20 bg-white rounded-lg shadow-xl border border-gray-200 p-2 flex flex-row items-center gap-x-1 w-max">
+           <div className="dropdown-panel absolute top-full right-0 mt-2 z-30 bg-white rounded-lg shadow-xl border border-gray-200 p-2 flex flex-row items-center gap-x-1 w-max">
               <ToolbarButton onClick={() => (editor.chain().focus() as any).toggleUnderline().run()} isActive={editor.isActive('underline')} title="Underline">
                 <UnderlineIcon />
               </ToolbarButton>

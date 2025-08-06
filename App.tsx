@@ -1,7 +1,7 @@
 
-
 import React, { useEffect, useMemo, useRef, useCallback, useState } from 'react';
 import { Editor } from '@tiptap/core';
+import { Selection } from 'prosemirror-state';
 import { ThemeProvider } from './context/ThemeContext';
 import { GitHubProvider } from './context/GitHubContext';
 import { useGitHub } from './hooks/useGitHub';
@@ -11,6 +11,7 @@ import EditorCanvas from './components/editor/EditorCanvas';
 import { useTiptapEditor } from './components/editor/useTiptapEditor';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { ModalProvider } from './context/ModalContext';
+import { useModal } from './hooks/useModal';
 import LinkMenu from './components/editor/LinkMenu';
 import LinkHoverMenu from './components/editor/LinkHoverMenu';
 import TableMenu from './components/editor/TableMenu';
@@ -20,6 +21,7 @@ import { FontSizeProvider } from './context/FontSizeContext';
 import { useFontSize } from './hooks/useFontSize';
 import { FontFamilyProvider } from './context/FontFamilyContext';
 import { useFontFamily } from './hooks/useFontFamily';
+import { RepoContentNode } from './types/github';
 
 const AUTOSAVE_DELAY = 3500; // milliseconds
 
@@ -30,16 +32,90 @@ interface LinkHoverState {
     to: number;
 }
 
+const findNodeByPath = (nodes: RepoContentNode[], path: string): RepoContentNode | null => {
+    for (const node of nodes) {
+        if (node.path === path) {
+            return node;
+        }
+        if (node.type === 'dir' && node.children && path.startsWith(node.path + '/')) {
+            const foundInChild = findNodeByPath(node.children, path);
+            if (foundInChild) {
+                return foundInChild;
+            }
+        }
+    }
+    return null;
+};
+
 const PlitaEditor: React.FC = () => {
-    const { activeFile, initialContent, isDirty, setIsDirty, saveFile, isSaving, loadFile } = useGitHub();
+    const { activeFile, initialContent, isDirty, setIsDirty, saveFile, isSaving, loadFile, fileTree, renameNode, setEditor } = useGitHub();
     const editor = useTiptapEditor(initialContent);
     const { fontSize } = useFontSize();
     const { fontFamily } = useFontFamily();
+    const { showAlert } = useModal();
     const autosaveTimerRef = useRef<number | null>(null);
     const [linkHoverState, setLinkHoverState] = useState<LinkHoverState | null>(null);
     const hoverTimeoutRef = useRef<number | null>(null);
+    const previousSelectionRef = useRef<Selection>();
 
     const { handleKeyDown } = useKeyboardShortcuts(editor);
+
+    // Effect to register the editor instance with the context
+    useEffect(() => {
+        if (editor) {
+            setEditor(editor);
+        }
+        // Cleanup function to avoid stale editor instances
+        return () => {
+            setEditor(null);
+        };
+    }, [editor, setEditor]);
+
+    const handleRenameOnTitleExit = useCallback(async () => {
+        if (isSaving || !activeFile || !editor) {
+            return;
+        }
+
+        const { doc } = editor.state;
+        const firstNode = doc.firstChild;
+        if (!firstNode || firstNode.type.name !== 'heading') {
+            return;
+        }
+
+        const fileName = activeFile.path.split('/').pop() || '';
+        
+        if (!/^New Page( \(\d+\))?$/.test(fileName)) {
+            return;
+        }
+
+        const titleText = firstNode.textContent.trim();
+        
+        if (!titleText) {
+            return;
+        }
+        
+        const newFileName = titleText
+            .toLowerCase()
+            .replace(/\s+/g, '-') // replace spaces with -
+            .replace(/[^\w-]+/g, '') // remove all non-word chars except -
+            .replace(/--+/g, '-') // replace multiple - with single -
+            .replace(/^-+/, '') // trim - from start of text
+            .replace(/-+$/, ''); // trim - from end of text
+
+        if (!newFileName || newFileName === fileName) {
+            return;
+        }
+        
+        const nodeToRename = findNodeByPath(fileTree, activeFile.path);
+        if (nodeToRename) {
+            try {
+                // The context's renameNode will now automatically handle grabbing dirty content
+                await renameNode(nodeToRename, newFileName);
+            } catch (err: any) {
+                showAlert({ title: 'Automatic Rename Failed', message: err.message, confirmButtonText: 'OK' });
+            }
+        }
+    }, [activeFile, editor, fileTree, isSaving, renameNode, showAlert]);
 
     const handleCanvasClick = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
         const selection = window.getSelection();
@@ -168,7 +244,7 @@ const PlitaEditor: React.FC = () => {
             }
 
             // `setContent` resets the history and dirty state
-            editor.commands.setContent(newContent, { emitUpdate: false });
+            editor.commands.setContent(newContent, { emitUpdate: true }); // emitUpdate to ensure active states are correct
             // After setting content, it's no longer dirty
             setIsDirty(false); 
         }, 10);
@@ -227,10 +303,50 @@ const PlitaEditor: React.FC = () => {
         };
     }, [editor, activeFile, initialContent, isDirty, setIsDirty, saveFile, isSaving]);
 
+    // Effect to handle automatic renaming of new pages based on their title
+    useEffect(() => {
+        if (!editor) return;
+
+        const handleTransaction = ({ transaction }) => {
+            const { doc, selection } = transaction;
+            const prevSelection = previousSelectionRef.current;
+            previousSelectionRef.current = selection;
+
+            if (isSaving || !activeFile || !prevSelection) {
+                return;
+            }
+
+            const firstNode = doc.firstChild;
+            if (!firstNode || firstNode.type.name !== 'heading') {
+                return;
+            }
+
+            // -2 to account for start/end tokens of the node
+            const titleRange = { from: 1, to: 1 + firstNode.nodeSize - 2 };
+            const prevSelectedInsideTitle = prevSelection.from >= titleRange.from && prevSelection.to <= titleRange.to;
+            const currentSelectedInsideTitle = selection.from >= titleRange.from && selection.to <= titleRange.to;
+
+            if (prevSelectedInsideTitle && !currentSelectedInsideTitle) {
+                handleRenameOnTitleExit();
+            }
+        };
+
+        editor.on('transaction', handleTransaction);
+        editor.on('blur', handleRenameOnTitleExit);
+
+        return () => {
+            editor.off('transaction', handleTransaction);
+            editor.off('blur', handleRenameOnTitleExit);
+        };
+    }, [editor, activeFile, handleRenameOnTitleExit, isSaving]);
+
 
     if (!editor) {
         return null; // or a loading spinner
     }
+
+    // The Link Edit menu is visible only when a link is active AND text is selected.
+    const isLinkEditMenuVisible = editor.isActive('link') && !editor.state.selection.empty;
 
     return (
         <AppShell>
@@ -242,7 +358,7 @@ const PlitaEditor: React.FC = () => {
                 </div>
                 
                 <LinkMenu editor={editor} />
-                {linkHoverState && !editor.isActive('link') && (
+                {linkHoverState && !isLinkEditMenuVisible && (
                     <LinkHoverMenu
                         editor={editor}
                         state={linkHoverState}

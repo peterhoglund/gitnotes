@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useTheme } from '../hooks/useTheme';
 import { useGitHub } from '../hooks/useGitHub';
@@ -107,7 +108,7 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({ isSidePanelOpen, onMouseEnter
   return (
     <div className="relative" ref={menuRef}>
       {isOpen && (
-        <div className="dropdown-panel absolute bottom-full left-0 mb-2 z-20 w-64 bg-white dark:bg-zinc-800 rounded-lg shadow-xl border border-gray-200 dark:border-zinc-700 p-2">
+        <div className="dropdown-panel absolute bottom-full left-0 mb-2 z-30 w-64 bg-white dark:bg-zinc-800 rounded-lg shadow-xl border border-gray-200 dark:border-zinc-700 p-2">
           {/* User Info / Login Button */}
           <div className="p-1 mb-1">
             {isLoggedIn ? (

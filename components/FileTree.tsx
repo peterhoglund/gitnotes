@@ -1,4 +1,5 @@
 
+
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useGitHub } from '../hooks/useGitHub';
 import { 
@@ -56,6 +57,7 @@ export const FileTree: React.FC<FileTreeProps> = ({ isOpen, onMouseEnterButton, 
         activeFile,
         isLoading, 
         isSaving,
+        allFilesForSearch,
         loadFile, 
         toggleFolder,
         createFile,
@@ -112,17 +114,42 @@ export const FileTree: React.FC<FileTreeProps> = ({ isOpen, onMouseEnterButton, 
 
     const handleCreate = async (type: 'file' | 'folder', basePath: string) => {
         setNewItemMenuPath(null);
-        const defaultName = type === 'file' ? 'new-page' : 'new-folder';
-        
+    
+        if (type === 'file') {
+            let pageName = "New Page";
+            let pagePath = basePath ? `${basePath}/${pageName}` : pageName;
+            let counter = 1;
+    
+            const allPaths = new Set(allFilesForSearch.map(f => f.path));
+    
+            while (allPaths.has(pagePath)) {
+                pageName = `New Page (${counter})`;
+                pagePath = basePath ? `${basePath}/${pageName}` : pageName;
+                counter++;
+            }
+    
+            try {
+                // The document structure requires a heading first, followed by a paragraph.
+                // An empty heading will show the "Add a title" placeholder.
+                const content = `<h1></h1><p></p>`;
+                await createFile(pagePath, content);
+            } catch (e) {
+                // Error is handled by context
+            }
+            return;
+        }
+    
+        // Folder creation logic remains the same
+        const defaultName = 'new-folder';
         const name = await showPrompt({
-            title: `Create New ${type === 'file' ? 'Page' : 'Folder'}`,
-            message: `Enter the name for the new ${type}${basePath ? ` in '${basePath}'` : ''}:`,
+            title: `Create New Folder`,
+            message: `Enter the name for the new folder${basePath ? ` in '${basePath}'` : ''}:`,
             defaultValue: defaultName,
             confirmButtonText: 'Create'
         });
-
+    
         if (!name || name.trim() === '') return;
-
+    
         if (name.includes('/')) {
             await showAlert({
                 title: 'Invalid Name',
@@ -131,18 +158,13 @@ export const FileTree: React.FC<FileTreeProps> = ({ isOpen, onMouseEnterButton, 
             });
             return;
         }
-
+    
         const path = basePath ? `${basePath}/${name}` : name;
-
+    
         try {
-            if (type === 'file') {
-                const content = name.endsWith('.md') || name.endsWith('.mdx') ? `# ${name.replace(/\.mdx?$/, '')}\n\n` : `<!-- ${name} -->`;
-                await createFile(path, content);
-            } else {
-                await createFolder(path);
-            }
+            await createFolder(path);
         } catch (e) {
-            // Error is handled and displayed by the context
+            // Error is handled by context
         }
     };
 
@@ -381,7 +403,7 @@ export const FileTree: React.FC<FileTreeProps> = ({ isOpen, onMouseEnterButton, 
                     {showNewItemMenu && isOpen && (
                          <div
                             ref={newItemMenuRef}
-                            className="dropdown-panel absolute z-20 right-2 mt-0 w-40 bg-white dark:bg-zinc-800 rounded-lg shadow-xl border border-gray-200 dark:border-zinc-700 p-1"
+                            className="dropdown-panel absolute z-30 right-2 mt-0 w-40 bg-white dark:bg-zinc-800 rounded-lg shadow-xl border border-gray-200 dark:border-zinc-700 p-1"
                             style={{ top: '100%'}}
                         >
                             <button onClick={() => handleCreate('file', node.path)} className="dropdown-item w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-zinc-700 rounded-md flex items-center gap-3">
@@ -396,7 +418,7 @@ export const FileTree: React.FC<FileTreeProps> = ({ isOpen, onMouseEnterButton, 
                     {showContextMenu && isOpen && (
                          <div
                             ref={menuRef}
-                            className="dropdown-panel absolute z-20 right-2 mt-0 w-40 bg-white dark:bg-zinc-800 rounded-lg shadow-xl border border-gray-200 dark:border-zinc-700 p-1"
+                            className="dropdown-panel absolute z-30 right-2 mt-0 w-40 bg-white dark:bg-zinc-800 rounded-lg shadow-xl border border-gray-200 dark:border-zinc-700 p-1"
                             style={{ top: '100%'}}
                         >
                             <button
@@ -541,7 +563,7 @@ export const FileTree: React.FC<FileTreeProps> = ({ isOpen, onMouseEnterButton, 
                                     {newItemMenuPath === '__root__' && (
                                         <div
                                             ref={newItemMenuRef}
-                                            className="dropdown-panel absolute z-20 right-0 mt-2 w-48 bg-white dark:bg-zinc-800 rounded-lg shadow-xl border border-gray-200 dark:border-zinc-700 p-1"
+                                            className="dropdown-panel absolute z-30 right-0 mt-2 w-48 bg-white dark:bg-zinc-800 rounded-lg shadow-xl border border-gray-200 dark:border-zinc-700 p-1"
                                         >
                                             <button onClick={() => handleCreate('file', '')} className="dropdown-item w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-zinc-700 rounded-md flex items-center gap-3">
                                                 <NewFileIcon /> New Page

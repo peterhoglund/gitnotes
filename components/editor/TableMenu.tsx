@@ -1,6 +1,10 @@
 
 
 
+
+
+
+
 import React, { useMemo, useCallback, useState, useEffect } from 'react';
 import { BubbleMenu } from '@tiptap/react/menus';
 import { Editor } from '@tiptap/core';
@@ -87,62 +91,65 @@ const TableMenu: React.FC<TableMenuProps> = ({ editor }) => {
     if (!(selection instanceof CellSelection)) return null;
 
     const { view } = editor;
-    const table = findParentTable(selection);
-    if (!table) return null;
+    
+    if (isRowSelection || isColSelection) {
+        const table = findParentTable(selection);
+        if (!table) return null;
+        const map = TableMap.get(table.node);
 
-    const map = TableMap.get(table.node);
+        if (isRowSelection) {
+            const tableNodeDom = view.nodeDOM(table.start) as HTMLElement | null;
+            if (!tableNodeDom) return null;
+            const tableElement = tableNodeDom.querySelector('table');
+            if (!tableElement) return null;
+            
+            const { $anchorCell } = selection as CellSelection;
+            const cellPosInTable = $anchorCell.pos - table.start - 1;
+            const { top: rowIndex } = map.findCell(cellPosInTable);
+            
+            if (rowIndex >= tableElement.rows.length) return null;
 
-    if (isRowSelection) {
-        const tableNodeDom = view.nodeDOM(table.start) as HTMLElement | null;
-        if (!tableNodeDom) return null;
-        const tableElement = tableNodeDom.querySelector('table');
-        if (!tableElement) return null;
-        
-        const { $anchorCell } = selection as CellSelection;
-        const cellPosInTable = $anchorCell.pos - table.start - 1;
-        const { top: rowIndex } = map.findCell(cellPosInTable);
-        
-        if (rowIndex >= tableElement.rows.length) return null;
+            const rowElement = tableElement.rows[rowIndex];
+            const rowRect = rowElement.getBoundingClientRect();
+            const tableRect = tableElement.getBoundingClientRect();
 
-        const rowElement = tableElement.rows[rowIndex];
-        const rowRect = rowElement.getBoundingClientRect();
-        const tableRect = tableElement.getBoundingClientRect();
-
-        const handleCenterX = tableRect.left;
-        const handleCenterY = rowRect.top + rowRect.height / 2;
-        
-        const handleLeft = handleCenterX - 5;
-        const handleWidth = 10;
-        
-        return new DOMRect(handleLeft + handleWidth, handleCenterY, 0, 0);
-    }
-
-    if (isColSelection) {
-        const { $headCell } = selection as CellSelection;
-        const cellPosInTable = $headCell.pos - table.start - 1;
-        const { left: colIndex } = map.findCell(cellPosInTable);
-        
-        const firstCellInColPos = map.positionAt(0, colIndex, table.node);
-        const absolutePos = table.start + 1 + firstCellInColPos;
-
-        const { node: domNode } = view.domAtPos(absolutePos);
-        const containerNode = domNode.nodeType === 3 ? domNode.parentNode : domNode;
-        if (!containerNode || !(containerNode instanceof HTMLElement)) {
-            return null;
+            const handleCenterX = tableRect.left;
+            const handleCenterY = rowRect.top + rowRect.height / 2;
+            
+            const handleLeft = handleCenterX - 5;
+            const handleWidth = 10;
+            
+            return new DOMRect(handleLeft + handleWidth, handleCenterY, 0, 0);
         }
-        
-        const cellElement = containerNode.closest('td, th');
-        if (!cellElement) return null;
 
-        const cellRect = cellElement.getBoundingClientRect();
-        
-        return new DOMRect(cellRect.right, cellRect.top, 0, 0);
+        if (isColSelection) {
+            const { $headCell } = selection as CellSelection;
+            const cellPosInTable = $headCell.pos - table.start - 1;
+            const { left: colIndex } = map.findCell(cellPosInTable);
+            
+            const firstCellInColPos = map.positionAt(0, colIndex, table.node);
+            const absolutePos = table.start + 1 + firstCellInColPos;
+
+            const { node: domNode } = view.domAtPos(absolutePos);
+            const containerNode = domNode.nodeType === 3 ? domNode.parentNode : domNode;
+            if (!containerNode || !(containerNode instanceof HTMLElement)) {
+                return null;
+            }
+            
+            const cellElement = containerNode.closest('td, th');
+            if (!cellElement) return null;
+
+            const cellRect = cellElement.getBoundingClientRect();
+            
+            return new DOMRect(cellRect.right, cellRect.top, 0, 0);
+        }
     }
     
-    return null;
+    // For single or multiple cell selections that are not a full row/column
+    const { $anchorCell } = selection;
+    const cellNodeDom = view.nodeDOM($anchorCell.pos) as HTMLElement | null;
+    return cellNodeDom ? cellNodeDom.getBoundingClientRect() : null;
   }, [editor, selection, isRowSelection, isColSelection]);
-
-  const showSideMenu = isRowSelection || isColSelection;
 
   const isFirstRowSelected = useMemo(() => {
     if (!isRowSelection) return false;
@@ -156,67 +163,41 @@ const TableMenu: React.FC<TableMenuProps> = ({ editor }) => {
     return firstSelectedRow === 0;
   }, [selection, isRowSelection]);
 
-  const currentRowBgColor = useMemo(() => {
-    if (!isRowSelection) return TRANSPARENT;
+  const currentCellBgColor = useMemo(() => {
+    if (!isCellSelection) return TRANSPARENT;
     const { $anchorCell } = selection as CellSelection;
     const cellNode = $anchorCell.node(-1); // Get the cell node
     return cellNode?.attrs.backgroundColor || TRANSPARENT;
-  }, [selection, isRowSelection]);
+  }, [selection, isCellSelection]);
 
-  const currentColBgColor = useMemo(() => {
-    if (!isColSelection) return TRANSPARENT;
-    const { $anchorCell } = selection as CellSelection;
-    const cellNode = $anchorCell.node(-1); // -1 is cell
-    return cellNode?.attrs.backgroundColor || TRANSPARENT;
-  }, [selection, isColSelection]);
-
-  const handleRowBgColorChange = useCallback((color: string) => {
+  const handleCellBgColorChange = useCallback((color: string) => {
     const newColor = color === TRANSPARENT ? null : color;
-    (editor.chain().focus() as any).setRowBackgroundColor(newColor).run();
+    (editor.chain().focus() as any).setCellBackgroundColor(newColor).run();
   }, [editor]);
 
-  const handleColBgColorChange = useCallback((color: string) => {
-    const newColor = color === TRANSPARENT ? null : color;
-    (editor.chain().focus() as any).setColumnBackgroundColor(newColor).run();
-  }, [editor]);
-
-  const hasColorActions = isRowSelection || isColSelection;
-  const hasHeaderAction = isFirstRowSelected;
+  const hasColorActions = isCellSelection;
+  const hasHeaderAction = isRowSelection && isFirstRowSelected;
 
   return (
     <BubbleMenu
       editor={editor}
       shouldShow={({ state }) => state.selection instanceof CellSelection}
       tippyOptions={{
-        getReferenceClientRect,
-        placement: showSideMenu ? 'right-start' : 'top',
-        offset: showSideMenu
-        ? { mainAxis: 8 }
-        : { mainAxis: 10 },
+        placement: 'top',
       }}
-      className="bg-white dark:bg-zinc-800 rounded-lg shadow-xl border border-gray-200 dark:border-zinc-700 p-1.5 flex flex-col items-stretch gap-y-0.5 w-56"
+      className="table-menu bg-white dark:bg-zinc-800 rounded-lg shadow-xl border border-gray-200 dark:border-zinc-700 p-1.5 flex flex-col items-stretch gap-y-0.5 w-56"
     >
-      {isRowSelection ? (
+      {isRowSelection && (
         <MenuItem onClick={() => (editor.chain().focus() as any).deleteRow().run()} disabled={!(editor.can() as any).deleteRow()} title="Delete row">
             <span className="w-5 h-5 flex items-center justify-center"><TableTrashIcon /></span>
             <span>Delete Row</span>
         </MenuItem>
-      ) : isColSelection ? (
+      )}
+      {isColSelection && (
         <MenuItem onClick={() => (editor.chain().focus() as any).deleteColumn().run()} disabled={!(editor.can() as any).deleteColumn()} title="Delete column">
             <span className="w-5 h-5 flex items-center justify-center"><TableTrashIcon /></span>
             <span>Delete Column</span>
         </MenuItem>
-      ) : (
-        <>
-            <MenuItem onClick={() => (editor.chain().focus() as any).deleteRow().run()} disabled={!(editor.can() as any).deleteRow()} title="Delete row">
-                <span className="w-5 h-5 flex items-center justify-center"><TableTrashIcon /></span>
-                <span>Delete Row</span>
-            </MenuItem>
-            <MenuItem onClick={() => (editor.chain().focus() as any).deleteColumn().run()} disabled={!(editor.can() as any).deleteColumn()} title="Delete column">
-                <span className="w-5 h-5 flex items-center justify-center"><TableTrashIcon /></span>
-                <span>Delete Column</span>
-            </MenuItem>
-        </>
       )}
 
       {(hasHeaderAction || hasColorActions) && <MenuSeparator />}
@@ -228,32 +209,17 @@ const TableMenu: React.FC<TableMenuProps> = ({ editor }) => {
         </MenuItem>
       )}
 
-      {isRowSelection && (
+      {hasColorActions && (
         <ColorPicker
-            onSelect={handleRowBgColorChange}
-            currentColor={currentRowBgColor}
-            title="Row Background Color"
+            onSelect={handleCellBgColorChange}
+            currentColor={currentCellBgColor}
+            title="Background Color"
             noColorLabel="No Background"
             triggerWrapperClassName="px-3 py-1.5 w-full justify-start hover:bg-gray-100 dark:hover:bg-zinc-700"
         >
-            <div className="flex items-center gap-x-3 w-full">
+            <div className="flex items-center gap-x-3 w-full text-sm">
                 <span className="w-5 h-5 flex items-center justify-center"><FillDripIcon /></span>
-                <span className="flex-1">Row Background</span>
-                <span className="ml-auto text-gray-400 dark:text-gray-500"><ChevronRightIcon /></span>
-            </div>
-        </ColorPicker>
-      )}
-      {isColSelection && (
-        <ColorPicker
-            onSelect={handleColBgColorChange}
-            currentColor={currentColBgColor}
-            title="Column Background Color"
-            noColorLabel="No Background"
-            triggerWrapperClassName="px-3 py-1.5 w-full justify-start hover:bg-gray-100 dark:hover:bg-zinc-700"
-        >
-            <div className="flex items-center gap-x-3 w-full">
-                <span className="w-5 h-5 flex items-center justify-center"><FillDripIcon /></span>
-                <span className="flex-1">Column Background</span>
+                <span className="flex-1">Background Color</span>
                 <span className="ml-auto text-gray-400 dark:text-gray-500"><ChevronRightIcon /></span>
             </div>
         </ColorPicker>

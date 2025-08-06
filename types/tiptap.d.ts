@@ -1,4 +1,6 @@
+
 import '@tiptap/core';
+import type { Range, NodeType } from '@tiptap/core';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -13,6 +15,8 @@ declare module '@tiptap/core' {
     toggleHeading: (attributes: { level: 1 | 2 | 3 | 4 | 5 | 6 }) => ReturnType;
     toggleBulletList: () => ReturnType;
     toggleOrderedList: () => ReturnType;
+    sinkListItem: (typeOrName: string | NodeType) => ReturnType;
+    liftListItem: (typeOrName: string | NodeType) => ReturnType;
 
     // Other extensions
     toggleUnderline: () => ReturnType;
@@ -23,7 +27,6 @@ declare module '@tiptap/core' {
     toggleHighlight: (attributes?: { color?: string }) => ReturnType;
     setLink: (attributes: { href: string; target?: string | null }) => ReturnType;
     unsetLink: () => ReturnType;
-    setTextSelection: (position: number | { from: number; to: number }) => ReturnType;
     
     // Table Commands
     insertTable: (options?: { rows?: number; cols?: number; withHeaderRow?: boolean }) => ReturnType;
@@ -44,14 +47,17 @@ declare module '@tiptap/core' {
     goToNextCell: () => ReturnType;
     goToPreviousCell: () => ReturnType;
     fixTables: () => ReturnType;
-    setRowBackgroundColor: (color: string | null) => ReturnType;
-    setColumnBackgroundColor: (color: string | null) => ReturnType;
+    setCellBackgroundColor: (color: string | null) => ReturnType;
 
 
     // Custom background block extension commands
     setBackgroundColorBlock: (attributes: { color: string; }) => ReturnType;
     toggleBackgroundColorBlock: (attributes: { color: string; }) => ReturnType;
     unsetBackgroundColorBlock: () => ReturnType;
+
+    // Indent Commands
+    indent: () => ReturnType;
+    outdent: () => ReturnType;
   }
 }
 

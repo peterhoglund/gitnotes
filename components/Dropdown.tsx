@@ -1,4 +1,5 @@
 
+
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDownIcon } from './icons';
 
@@ -7,9 +8,10 @@ interface DropdownProps {
   items: { value: string; label: string }[];
   onSelect: (value: string) => void;
   currentValue: string;
+  disabled?: boolean;
 }
 
-const Dropdown = ({ label, items, onSelect, currentValue }: DropdownProps) => {
+const Dropdown = ({ label, items, onSelect, currentValue, disabled = false }: DropdownProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -35,17 +37,19 @@ const Dropdown = ({ label, items, onSelect, currentValue }: DropdownProps) => {
   return (
     <div className="relative" ref={dropdownRef}>
       <button
+        disabled={disabled}
         onMouseDown={(e) => {
+            if (disabled) return;
             e.preventDefault();
             setIsOpen(!isOpen)
         }}
-        className="dropdown-button flex items-center justify-between w-36 p-2 rounded bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm"
+        className={`dropdown-button flex items-center justify-between w-36 p-2 rounded bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
       >
         <span className="truncate">{currentLabel}</span>
         <ChevronDownIcon />
       </button>
       {isOpen && (
-        <div className="dropdown-panel absolute z-10 mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200">
+        <div className="dropdown-panel absolute z-30 mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200">
           <ul className="py-1">
             {items.map((item) => (
               <li key={item.value}>

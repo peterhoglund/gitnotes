@@ -45,7 +45,8 @@
       .tiptap {
         outline: none;
       }
-      .tiptap p.is-editor-empty:first-child::before {
+      .tiptap h1:first-child.is-editor-empty::before,
+      .tiptap p.is-editor-empty::before {
         content: attr(data-placeholder);
         float: left;
         color: #d1d5db; /* Lighter gray for light mode (gray-300) */
@@ -60,30 +61,32 @@
       .prose h1, .prose h2, .prose h3, .prose h6 {
         color: #0a0a0a; /* Default light-mode heading color */
       }
-      .prose p {
-        font-size: 14pt;
+      .prose p,
+      .prose ul li,
+      .prose ol li {
+        font-size: 12pt;
         font-weight: 400; /* Regular */
       }
       .prose h1 {
-        font-size: 36pt;
+        font-size: 30pt;
         font-weight: 700; /* Bold */
         margin-top: 0.67em;
         margin-bottom: 0.3em;
       }
       .prose h2 {
-        font-size: 24pt;
+        font-size: 20pt;
         font-weight: 700; /* Bold */
         margin-top: 0.83em;
         margin-bottom: 0.4em;
       }
       .prose h3 {
-        font-size: 18pt;
+        font-size: 16pt;
         font-weight: 700; /* Bold */
         margin-top: 1em;
         margin-bottom: 0.5em;
       }
       .prose h6 {
-        font-size: 11pt;
+        font-size: 10pt;
         font-weight: 400; /* Regular weight for small text */
         //margin-top: 1em;
         //margin-bottom: 0.5em;
@@ -110,7 +113,7 @@
         border-radius: 6px;
         overflow-x: auto;
         font-family: monospace;
-        font-size: 13pt; /* Maintain consistent font size */
+        font-size: 11pt; /* Maintain consistent font size */
         background: #f6f8fa;
         color: #24292e;
       }
@@ -145,6 +148,13 @@
       .prose ul li p, .prose ol li p {
         margin-top: 0;
         margin-bottom: 0;
+      }
+
+      .prose ul li::marker {
+        color: inherit;
+      }
+      .prose ol li::marker {
+        color: inherit;
       }
 
       /* -- Tiptap Task List -- */
@@ -268,7 +278,7 @@
         top: 0;
         bottom: 0;
         width: 4px;
-        z-index: 20;
+        z-index: 10;
         cursor: col-resize;
         background-color: transparent;
         transition: background-color 0.2s;
@@ -342,6 +352,7 @@
         text-decoration-thickness: 1px;
         text-underline-offset: 2px;
         transition: color 0.2s ease-in-out;
+        cursor: pointer;
       }
       .prose a:hover {
         color: #1d4ed8; /* blue-700 */
@@ -356,15 +367,15 @@
       /* Normal (md) is the default defined in .prose styles */
 
       /* Small (sm) */
-      .text-size-sm .prose p { font-size: 12pt; }
-      .text-size-sm .prose h1 { font-size: 30pt; }
-      .text-size-sm .prose h2 { font-size: 20pt; }
-      .text-size-sm .prose h3 { font-size: 16pt; }
-      .text-size-sm .prose h6 { font-size: 10pt; }
-      .text-size-sm .prose pre { font-size: 11pt; }
+      .text-size-sm .prose p, .text-size-sm .prose ul li, .text-size-sm .prose ol li { font-size: 9pt; }
+      .text-size-sm .prose h1 { font-size: 24pt; }
+      .text-size-sm .prose h2 { font-size: 18pt; }
+      .text-size-sm .prose h3 { font-size: 12pt; }
+      .text-size-sm .prose h6 { font-size: 7pt; }
+      .text-size-sm .prose pre { font-size: 9pt; }
 
       /* Large (lg) */
-      .text-size-lg .prose p { font-size: 16pt; }
+      .text-size-lg .prose p, .text-size-lg .prose ul li, .text-size-lg .prose ol li { font-size: 16pt; }
       .text-size-lg .prose h1 { font-size: 42pt; }
       .text-size-lg .prose h2 { font-size: 28pt; }
       .text-size-lg .prose h3 { font-size: 21pt; }
@@ -447,7 +458,7 @@
       /******************************************/
       .table-inserter {
         position: fixed;
-        z-index: 30;
+        z-index: 10;
         cursor: pointer;
         border-radius: 50%;
         transition: background-color 0.15s ease-out;
@@ -459,6 +470,7 @@
       }
       .table-inserter.dot {
         background-color: transparent;
+        z-index: 10;
       }
       .table-inserter.dot::before {
         content: '';
@@ -483,7 +495,7 @@
         position: fixed;
         opacity: 0;
         pointer-events: none;
-        z-index: 30;
+        z-index: 10;
         background-color: #f3f4f6; /* gray-100 */
         border: 1px solid #d1d5db; /* gray-300 */
         transition: opacity 0.15s ease-in-out, background-color 0.1s ease-in-out, border-color 0.1s ease-in-out, width 0.1s ease-in-out, height 0.1s ease-in-out, min-width 0.1s ease-in-out, min-height 0.1s ease-in-out, border-radius 0.1s ease-in-out, transform 0.1s ease-in-out;
@@ -546,6 +558,10 @@
         height: 3px;
         border-radius: 50%;
         background-color: white;
+      }
+      .table-menu {
+        position: relative;
+        z-index: 40 !important;
       }
 
       /******************************************/
@@ -688,7 +704,8 @@
         background-color: #374151; /* gray-700 */
         color: #F3F4F6; /* gray-100 */
       }
-      html.dark .tiptap p.is-editor-empty:first-child::before {
+      html.dark .tiptap h1:first-child.is-editor-empty::before,
+      html.dark .tiptap p.is-editor-empty::before {
         color: #4b5563; /* Darker gray for dark mode (gray-600) */
       }
        html.dark .prose a {
@@ -819,12 +836,17 @@
     "react/jsx-runtime": "https://esm.sh/react@18.2.0/jsx-runtime",
     "react/jsx-dev-runtime": "https://esm.sh/react@18.2.0/jsx-dev-runtime",
     "react-dom": "https://esm.sh/react-dom@18.2.0",
+    "react-dom/": "https://esm.sh/react-dom@18.2.0/",
     "react-dom/client": "https://esm.sh/react-dom@18.2.0/client?deps=react@18.2.0",
+
     "@google/genai": "https://esm.sh/@google/genai@0.14.0",
+
     "lowlight": "https://esm.sh/lowlight@3.1.0",
     "highlight.js/": "https://esm.sh/highlight.js@11.9.0/",
+
     "@tiptap/core": "https://esm.sh/@tiptap/core@3.0.7",
     "@tiptap/react": "https://esm.sh/@tiptap/react@3.0.7?deps=react@18.2.0",
+    "@tiptap/react/": "https://esm.sh/@tiptap/react@3.0.7/",
     "@tiptap/react/menus": "https://esm.sh/@tiptap/react@3.0.7/menus?deps=react@18.2.0",
     "@tiptap/pm/": "https://esm.sh/@tiptap/pm@3.0.7/",
     "@tiptap/extension-character-count": "https://esm.sh/@tiptap/extension-character-count@3.0.7",
@@ -842,32 +864,29 @@
     "@tiptap/extension-task-list": "https://esm.sh/@tiptap/extension-task-list@3.0.7",
     "@tiptap/extension-paragraph": "https://esm.sh/@tiptap/extension-paragraph@3.0.7",
     "@tiptap/extension-heading": "https://esm.sh/@tiptap/extension-heading@3.0.7",
-    "re": "https://esm.sh/re@^0.1.4",
-    "@tiptap/extension-table": "https://esm.sh/@tiptap/extension-table@^3.0.7",
-    "@tiptap/extension-table-row": "https://esm.sh/@tiptap/extension-table-row@^3.0.7",
-    "@tiptap/extension-table-header": "https://esm.sh/@tiptap/extension-table-header@^3.0.7",
-    "@tiptap/extension-table-cell": "https://esm.sh/@tiptap/extension-table-cell@^3.0.7",
-    "@tiptap/extension-blockquote": "https://esm.sh/@tiptap/extension-blockquote@^3.0.7",
-    "@tiptap/extension-bold": "https://esm.sh/@tiptap/extension-bold@^3.0.7",
-    "@tiptap/extension-bubble-menu": "https://esm.sh/@tiptap/extension-bubble-menu@^3.0.7",
-    "@tiptap/extension-bullet-list": "https://esm.sh/@tiptap/extension-bullet-list@^3.0.7",
-    "@tiptap/extension-code": "https://esm.sh/@tiptap/extension-code@^3.0.7",
-    "@tiptap/extension-document": "https://esm.sh/@tiptap/extension-document@^3.0.7",
-    "@tiptap/extension-dropcursor": "https://esm.sh/@tiptap/extension-dropcursor@^3.0.7",
-    "@tiptap/extension-gapcursor": "https://esm.sh/@tiptap/extension-gapcursor@^3.0.7",
-    "@tiptap/extension-hard-break": "https://esm.sh/@tiptap/extension-hard-break@^3.0.7",
-    "@tiptap/extension-history": "https://esm.sh/@tiptap/extension-history@^3.0.7",
-    "@tiptap/extension-horizontal-rule": "https://esm.sh/@tiptap/extension-horizontal-rule@^3.0.7",
-    "@tiptap/extension-italic": "https://esm.sh/@tiptap/extension-italic@^3.0.7",
-    "@tiptap/extension-list-item": "https://esm.sh/@tiptap/extension-list-item@^3.0.7",
-    "@tiptap/extension-ordered-list": "https://esm.sh/@tiptap/extension-ordered-list@^3.0.7",
-    "@tiptap/extension-strike": "https://esm.sh/@tiptap/extension-strike@^3.0.7",
-    "@tiptap/extension-text": "https://esm.sh/@tiptap/extension-text@^3.0.7",
-    "@tiptap/extension-focus": "https://esm.sh/@tiptap/extension-focus@^3.0.7",
-    "prosemirror-state": "https://esm.sh/prosemirror-state@^1.4.3",
-    "prosemirror-tables": "https://esm.sh/prosemirror-tables@^1.7.1",
-    "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
-    "@tiptap/react/": "https://esm.sh/@tiptap/react@^3.0.7/"
+    "@tiptap/extension-table": "https://esm.sh/@tiptap/extension-table@3.0.7",
+    "@tiptap/extension-table-row": "https://esm.sh/@tiptap/extension-table-row@3.0.7",
+    "@tiptap/extension-table-header": "https://esm.sh/@tiptap/extension-table-header@3.0.7",
+    "@tiptap/extension-table-cell": "https://esm.sh/@tiptap/extension-table-cell@3.0.7",
+    "@tiptap/extension-blockquote": "https://esm.sh/@tiptap/extension-blockquote@3.0.7",
+    "@tiptap/extension-bold": "https://esm.sh/@tiptap/extension-bold@3.0.7",
+    "@tiptap/extension-bubble-menu": "https://esm.sh/@tiptap/extension-bubble-menu@3.0.7",
+    "@tiptap/extension-bullet-list": "https://esm.sh/@tiptap/extension-bullet-list@3.0.7",
+    "@tiptap/extension-code": "https://esm.sh/@tiptap/extension-code@3.0.7",
+    "@tiptap/extension-document": "https://esm.sh/@tiptap/extension-document@3.0.7",
+    "@tiptap/extension-dropcursor": "https://esm.sh/@tiptap/extension-dropcursor@3.0.7",
+    "@tiptap/extension-gapcursor": "https://esm.sh/@tiptap/extension-gapcursor@3.0.7",
+    "@tiptap/extension-hard-break": "https://esm.sh/@tiptap/extension-hard-break@3.0.7",
+    "@tiptap/extension-history": "https://esm.sh/@tiptap/extension-history@3.0.7",
+    "@tiptap/extension-horizontal-rule": "https://esm.sh/@tiptap/extension-horizontal-rule@3.0.7",
+    "@tiptap/extension-italic": "https://esm.sh/@tiptap/extension-italic@3.0.7",
+    "@tiptap/extension-list-item": "https://esm.sh/@tiptap/extension-list-item@3.0.7",
+    "@tiptap/extension-ordered-list": "https://esm.sh/@tiptap/extension-ordered-list@3.0.7",
+    "@tiptap/extension-strike": "https://esm.sh/@tiptap/extension-strike@3.0.7",
+    "@tiptap/extension-text": "https://esm.sh/@tiptap/extension-text@3.0.7",
+    "@tiptap/extension-focus": "https://esm.sh/@tiptap/extension-focus@3.0.7",
+    "prosemirror-tables": "https://esm.sh/prosemirror-tables@1.7.1",
+    "prosemirror-state": "https://esm.sh/prosemirror-state@1.4.3"
   }
 }
 </script>

@@ -1,9 +1,10 @@
 
 
 
+
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { BubbleMenu } from '@tiptap/react/menus';
-import { PenToSquareIcon, UnlinkIcon, ExternalLinkIcon, FileIcon } from '../icons';
+import { FileIcon, UnlinkIcon } from '../icons';
 import { useTiptapEditor } from './useTiptapEditor';
 import { useGitHub } from '../../hooks/useGitHub';
 
@@ -16,6 +17,7 @@ const LinkMenu: React.FC<LinkMenuProps> = ({ editor }) => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const { allFilesForSearch } = useGitHub();
   const menuRef = useRef<HTMLDivElement>(null);
+  const cancelRef = useRef(false);
 
   const filteredFiles = useMemo(() => {
     // Don't show suggestions for what looks like an external URL or an anchor
@@ -29,38 +31,52 @@ const LinkMenu: React.FC<LinkMenuProps> = ({ editor }) => {
     ).slice(0, 10);
   }, [allFilesForSearch, url]);
 
-  const handleUpdate = useCallback(() => {
-    const trimmedUrl = url.trim();
-    if (trimmedUrl) {
-      (editor.chain().focus().extendMarkRange('link') as any).setLink({ href: trimmedUrl }).run();
-    } else {
-      (editor.chain().focus() as any).unsetLink().run();
+  const updateLink = useCallback(() => {
+    const previousUrl = editor.getAttributes('link').href;
+    const newUrl = url.trim();
+
+    if (newUrl === previousUrl) {
+        return; // No change
     }
-    setShowSuggestions(false);
+    
+    const chain = editor.chain().focus().extendMarkRange('link') as any;
+
+    if (newUrl) {
+      chain.setLink({ href: newUrl }).run();
+    } else {
+      chain.unsetLink().run();
+    }
   }, [editor, url]);
   
-  const handleUnlink = useCallback(() => {
-      (editor.chain().focus() as any).unsetLink().run();
-  }, [editor]);
-
-  const handleOpenLink = useCallback(() => {
-    if (url) {
-        window.open(url, '_blank', 'noopener,noreferrer');
-    }
-  }, [url]);
-
   const setLinkFromFile = useCallback((path: string) => {
     setUrl(path);
     (editor.chain().focus().extendMarkRange('link') as any).setLink({ href: path }).run();
     setShowSuggestions(false);
   }, [editor]);
   
+  const clearLink = useCallback(() => {
+    (editor.chain().focus() as any).unsetLink().run();
+  }, [editor]);
+
   // Update local URL state when link becomes active or selection changes
   useEffect(() => {
     if (editor.isActive('link')) {
       setUrl(editor.getAttributes('link').href);
+      cancelRef.current = false;
     }
-  }, [editor, editor.state]);
+  }, [editor, editor.state.selection]);
+
+  const onHide = () => {
+    setShowSuggestions(false);
+  };
+
+  const handleInputBlur = () => {
+    if (cancelRef.current) {
+        cancelRef.current = false;
+        return;
+    }
+    updateLink();
+  };
 
   // Handle clicks outside the menu to close suggestions
   useEffect(() => {
@@ -77,10 +93,12 @@ const LinkMenu: React.FC<LinkMenuProps> = ({ editor }) => {
     <BubbleMenu
       editor={editor}
       shouldShow={({ editor, state }) => editor.isActive('link') && !state.selection.empty}
-      options={{
-        placement: 'top',
-        offset: { mainAxis: 20, crossAxis: 0 }, 
+      tippyOptions={{
+        placement: 'bottom',
+        offset: [0, 8],
+        zIndex: 40,
       }}
+      onHide={onHide}
     >
       <div 
         ref={menuRef}
@@ -90,6 +108,7 @@ const LinkMenu: React.FC<LinkMenuProps> = ({ editor }) => {
             <input 
                 type="url" 
                 value={url}
+                onBlur={handleInputBlur}
                 onChange={(e) => {
                     setUrl(e.target.value);
                     if (!showSuggestions) {
@@ -100,33 +119,23 @@ const LinkMenu: React.FC<LinkMenuProps> = ({ editor }) => {
                 onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                         e.preventDefault();
-                        handleUpdate();
+                        updateLink();
+                        (e.target as HTMLInputElement).blur();
                     }
                     if(e.key === 'Escape') {
-                        setShowSuggestions(false);
+                        e.preventDefault();
+                        cancelRef.current = true;
+                        setUrl(editor.getAttributes('link').href);
+                        (e.target as HTMLInputElement).blur();
                     }
                 }}
                 placeholder="Enter URL or search pages"
                 className="bg-gray-100 dark:bg-zinc-700 text-sm text-gray-900 dark:text-gray-100 rounded-md px-2 py-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <button
-                onClick={handleOpenLink}
-                title="Open link in new tab"
-                className="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-zinc-600 text-gray-700 dark:text-gray-200"
-            >
-                <ExternalLinkIcon />
-            </button>
-            <button
-                onClick={handleUpdate}
-                title="Update link"
-                className="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-zinc-600 text-gray-700 dark:text-gray-200"
-            >
-                <PenToSquareIcon />
-            </button>
-            <button
-                onClick={handleUnlink}
-                title="Remove link"
-                className="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-zinc-600 text-gray-700 dark:text-gray-200"
+                onClick={clearLink}
+                title="Clear link"
+                className="p-1.5 rounded text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-zinc-700"
             >
                 <UnlinkIcon />
             </button>
@@ -141,6 +150,7 @@ const LinkMenu: React.FC<LinkMenuProps> = ({ editor }) => {
                     {filteredFiles.map(file => (
                         <li key={file.path}>
                             <button 
+                                onMouseDown={(e) => e.preventDefault()}
                                 onClick={() => setLinkFromFile(file.path)}
                                 className="w-full text-left flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-zinc-700"
                             >

@@ -58,7 +58,7 @@ const ColorPicker = ({ onSelect, currentColor, children, title, noColorLabel, tr
         {children}
       </button>
       {isOpen && (
-        <div className="color-picker-panel absolute z-10 mt-2 w-auto rounded-lg shadow-lg p-3 right-0">
+        <div className="color-picker-panel absolute z-30 mt-2 w-auto rounded-lg shadow-lg p-3 right-0">
           <div className="flex flex-col gap-y-2">
             {COLOR_ROWS.map((row, rowIndex) => (
               <div key={rowIndex} className="flex items-center">
